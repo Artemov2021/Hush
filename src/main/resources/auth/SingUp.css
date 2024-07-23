@@ -1,0 +1,67 @@
+.root {
+    -fx-background-color: #181818;
+}
+.main-text {
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-font-size: 46;
+}
+.second-text {
+    -fx-text-fill: #CECECE;
+    -fx-font-size: 14;
+}
+.input-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #565656;
+    -fx-font-size: 14;
+    -fx-border-color: #333333;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 13;
+}
+.input-field:focused {
+    -fx-border-color: #7217E7;
+}
+
+
+.email-label {
+    -fx-background-color: #181818;
+    -fx-text-fill: #565656;
+    -fx-font-size: 15;
+    -fx-alignment: center;
+
+}
+.email-label-small {
+    -fx-text-fill: #838383;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+}
+
+
+
+.main-button {
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-background-color: linear-gradient(from 0% 100% to 100% 0%, #602DF3 4.25%, #A02BD7 96.08%);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+.main-button:pressed {
+    -fx-text-fill: #B7B7B7;
+}
+.bottom-text {
+    -fx-text-fill: #959595;
+    -fx-font-size: 12;
+}
+.bottom-button {
+    -fx-text-fill: #6266BC;
+    -fx-background-color: transparent;
+    -fx-text-underline: true;
+}
+.bottom-button:hover {
+    -fx-text-fill: #8B8FF3;
+}
+.bottom-button:pressed {
+    -fx-text-fill: #4E5198;
+}
