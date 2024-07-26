@@ -2,23 +2,25 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
 <AnchorPane prefHeight="526.0" prefWidth="853.0" stylesheets="@SingUp.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.auth.SingUpController">
    <children>
-      <Label layoutX="356.0" layoutY="61.0" prefHeight="77.0" prefWidth="177.0" styleClass="main-text" text="Sing Up" />
-      <Label layoutX="306.0" layoutY="125.0" prefHeight="61.0" prefWidth="285.0" styleClass="second-text" text="to create a new account you need to fill out the field below" textAlignment="CENTER" wrapText="true" />
-      <TextField fx:id="emailField" layoutX="318.0" layoutY="221.0" prefHeight="48.0" prefWidth="262.0" styleClass="input-field" />
-      <TextField layoutX="319.0" layoutY="278.0" prefHeight="48.0" prefWidth="262.0" promptText="New password" styleClass="input-field" />
-      <Button layoutX="395.0" layoutY="388.0" mnemonicParsing="false" prefHeight="33.0" prefWidth="101.0" styleClass="main-button" text="Sing Up" />
-      <Label layoutX="365.0" layoutY="430.0" prefHeight="24.0" prefWidth="112.0" styleClass="bottom-text" text="You have already an" />
-      <Button fx:id="bottomButton" layoutX="467.0" layoutY="430.0" mnemonicParsing="false" prefHeight="14.0" prefWidth="66.0" styleClass="bottom-button" text="account?" />
-      <Label fx:id="upperLabel" layoutX="331.0" layoutY="233.0" prefHeight="25.0" prefWidth="151.0" styleClass="email-label" text="Email adress or name" textAlignment="CENTER">
+      <Label fx:id="lowerLabel" layoutX="335.0" layoutY="291.0" prefHeight="21.0" prefWidth="101.0" styleClass="input-field-label" text="New password" />
+      <Label fx:id="upperLabel" layoutX="331.0" layoutY="233.0" prefHeight="25.0" prefWidth="151.0" styleClass="input-field-label" text="Email adress or name" textAlignment="CENTER">
          <font>
             <Font size="14.0" />
          </font>
       </Label>
+      <Label layoutX="356.0" layoutY="61.0" prefHeight="77.0" prefWidth="177.0" styleClass="main-text" text="Sing Up" />
+      <Label layoutX="306.0" layoutY="125.0" prefHeight="61.0" prefWidth="285.0" styleClass="second-text" text="to create a new account you need to fill out the field below" textAlignment="CENTER" wrapText="true" />
+      <TextField fx:id="emailField" layoutX="318.0" layoutY="221.0" prefHeight="48.0" prefWidth="262.0" styleClass="input-field" />
+      <Button layoutX="395.0" layoutY="388.0" mnemonicParsing="false" onAction="#singUp" prefHeight="33.0" prefWidth="101.0" styleClass="main-button" text="Sing Up" />
+      <Label layoutX="365.0" layoutY="430.0" prefHeight="24.0" prefWidth="112.0" styleClass="bottom-text" text="You have already an" />
+      <Button fx:id="bottomButton" layoutX="467.0" layoutY="430.0" mnemonicParsing="false" prefHeight="14.0" prefWidth="66.0" styleClass="bottom-button" text="account?" />
+      <PasswordField fx:id="passwordField" layoutX="318.0" layoutY="278.0" prefHeight="21.0" prefWidth="262.0" styleClass="input-field" />
    </children>
 </AnchorPane>
