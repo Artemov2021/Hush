@@ -23,14 +23,21 @@
 .input-field:focused {
     -fx-border-color: #7217E7;
 }
-
-
+.input-field-error {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #565656;
+    -fx-font-size: 14;
+    -fx-border-color: #C72828;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 13;
+}
 .input-field-label {
     -fx-background-color: #181818;
     -fx-text-fill: #565656;
     -fx-font-size: 15;
     -fx-alignment: center;
-
 }
 .input-field-label-small {
     -fx-background-color: #181818;
@@ -39,8 +46,12 @@
     -fx-font-weight: bold;
     -fx-alignment: center;
 }
-
-
+.error-label-invisible {
+    -fx-text-fill: #181818;
+}
+.error-label-visible {
+    -fx-text-fill: #C72828;
+}
 
 .main-button {
     -fx-border-radius: 10;
