@@ -59,6 +59,7 @@
     -fx-background-color: linear-gradient(from 0% 100% to 100% 0%, #602DF3 4.25%, #A02BD7 96.08%);
     -fx-text-fill: white;
     -fx-font-weight: bold;
+    -fx-font-size: 13;
 }
 .main-button:pressed {
     -fx-text-fill: #B7B7B7;
@@ -67,14 +68,20 @@
     -fx-text-fill: #959595;
     -fx-font-size: 12;
 }
-.bottom-button {
+.account-button {
     -fx-text-fill: #6266BC;
     -fx-background-color: transparent;
     -fx-text-underline: true;
 }
-.bottom-button:hover {
+.account-button:hover {
     -fx-text-fill: #8B8FF3;
 }
-.bottom-button:pressed {
+.account-button:pressed {
     -fx-text-fill: #4E5198;
+}
+.progressbar .track {
+    -fx-background-color: transparent;
+}
+.progressbar .bar {
+    -fx-background-color: #364AFF;
 }
