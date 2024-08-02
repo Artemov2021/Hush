@@ -6,11 +6,17 @@ import javafx.scene.control.TextField;
 import javafx.util.Duration;
 
 public class AuthPasswordField {
-    private static final double moveX = -5;
-    private static final double moveY = -22;
-    private static final double widthChange = -14;
-    private static final double heightChange = -4;
+    private static double moveX;
+    private static double moveY;
+    private static double widthChange;
+    private static double heightChange;
 
+    public AuthPasswordField(double moveX,double moveY,double widthChange,double heightChange) {
+        this.moveX = moveX;
+        this.moveY = moveY;
+        this.widthChange = widthChange;
+        this.heightChange = heightChange;
+    }
     public static void setStyle(TextField field, Label label) {
         field.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue && field.getText().isEmpty()) {

@@ -1,6 +1,5 @@
 package com.messenger;
 
-
 import com.messenger.auth.SingUp;
 
 public class Main {

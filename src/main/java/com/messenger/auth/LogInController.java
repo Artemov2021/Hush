@@ -1,7 +1,10 @@
 package com.messenger.auth;
 
+import com.messenger.design.AuthEmailField;
 import com.messenger.design.AuthErrorsDesign;
+import com.messenger.design.AuthPasswordField;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,6 +16,9 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.IOException;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class LogInController {
     @FXML
@@ -33,78 +39,82 @@ public class LogInController {
     private Button accountButton;
     @FXML
     private ProgressBar progressBar;
+    @FXML
+    private Label extraLabel;
 
     private Group passwordGroup;
+    private final String sql = "jdbc:sqlite:auth.db";
 
     public void initialize() {
         emailField.setFocusTraversable(false);
         passwordField.setFocusTraversable(false);
         accountButton.setUnderline(true);
 
-        passwordGroup = new Group(lowerLabel, passwordField, passwordErrorLabel);
+        passwordGroup = new Group(lowerLabel, passwordField, passwordErrorLabel);   // group of all password field elements ( will be moved, if email is invalid )
         anchorPane.getChildren().add(passwordGroup);
 
+        var emailFieldStyled = new AuthEmailField(passwordField,upperLabel);          // makes label animation and solves unnecessary spaces
+        emailFieldStyled.setStyle();
 
+        AuthPasswordField passwordFieldLabelAnimation = new AuthPasswordField(-5,-22,-5,-4);
+        passwordFieldLabelAnimation.setStyle(passwordField,lowerLabel);
 
-//        emailField.focusedProperty().addListener((observable, oldValue, newValue) -> {
-//            if (newValue && emailField.getText().isEmpty()) {
-//                TextFieldDesign.moveUp(upperLabel,-25,-2,-5,-25);
-//            } else if (emailField.getText().trim().isEmpty() && !newValue) {
-//                emailField.setText("");
-//                TextFieldDesign.moveDown(upperLabel,25,2,5,25);
-//            } else {
-//                emailField.setText(emailField.getText().trim());
-//            }
-//        });
-//
-//        passwordField.focusedProperty().addListener((observable, oldValue, newValue) -> {
-//            if (newValue && passwordField.getText().isEmpty()) {
-//                TextFieldDesign.moveUp(lowerLabel,-5,-4,-5,-22);
-//            } else if (passwordField.getText().trim().isEmpty() && !newValue) {
-//                passwordField.setText("");
-//                TextFieldDesign.moveDown(lowerLabel,5,4,5,22);
-//            }
-//        });
-        emailField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.trim().isEmpty()) {
-                emailField.setText("");
-            }
-        });
-        passwordField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.trim().isEmpty()) {
-                passwordField.setText("");
-            }
-        });
     }
 
     public void logIn(ActionEvent e) throws InterruptedException {
         String email = emailField.getText().trim();
         String password = passwordField.getText().trim();
-
         int emailLength = email.length();
 
-        if (!email.isEmpty() && emailLength <= 25 && !password.isEmpty()) {
-            setProgressBar(() -> {
-                ((Stage) (anchorPane.getScene().getWindow())).close();
-            });
+        if (!email.isEmpty() && emailLength <= 25 && !password.isEmpty()) { // if the info is valid
+            passwordGroup.setLayoutY(16); // Initially set the layout
+            try {
+                if (email.contains("@gmail.com")) {
+                    String emailCheckResult = checkEmail(email, password);
+                    System.out.println(emailCheckResult);
+
+                    if (emailCheckResult.equals("valid")) {
+                        setProgressBar(() -> {
+                            ((Stage) (anchorPane.getScene().getWindow())).close();
+                        });
+                    } else if (emailCheckResult.equals("email")) {
+                        Platform.runLater(() -> {
+                            AuthErrorsDesign.setErrorStyle(emailErrorLabel, "Incorrect email address", emailField);
+                            passwordGroup.setLayoutY(16);
+                        });
+                        System.out.println("Email error!");
+                    } else if (emailCheckResult.equals("password")) {
+                        Platform.runLater(() -> {
+                            AuthErrorsDesign.setErrorStyle(passwordErrorLabel, "Incorrect password", passwordField);
+                            passwordGroup.setLayoutY(0);
+                        });
+                    }
+                }
+            } catch (SQLException dbIssues) {
+                extraLabel.setText(dbIssues.getMessage());
+            }
         }
 
+
+
+
+        // if info is invalid:
+
         if (email.isEmpty()) {
-            AuthErrorsDesign.setErrorStyle(emailField, emailErrorLabel);
-            passwordGroup.setLayoutY(16);
+            AuthErrorsDesign.setErrorStyle(emailErrorLabel,"incorrect information",emailField);
+            passwordGroup.setLayoutY(16); // moves password field 16px down, to show email error message
         } else if (email.length()>25 ) {
-            AuthErrorsDesign.setErrorStyle(emailField, emailErrorLabel);
-            emailErrorLabel.setText("email or name is too long");
+            AuthErrorsDesign.setErrorStyle(emailErrorLabel,"email or name is too long",emailField);
             passwordGroup.setLayoutY(16);
         } else {
-            AuthErrorsDesign.deleteErrorStyle(emailField, emailErrorLabel);
+            AuthErrorsDesign.deleteErrorStyle(emailErrorLabel,emailField);
             passwordGroup.setLayoutY(0);
         }
 
         if (password.isEmpty()) {
-            AuthErrorsDesign.setErrorStyle(passwordField, passwordErrorLabel);
+            AuthErrorsDesign.setErrorStyle( passwordErrorLabel,"incorrect information",passwordField);
         } else {
-            AuthErrorsDesign.deleteErrorStyle(passwordField, passwordErrorLabel);
+            AuthErrorsDesign.deleteErrorStyle(passwordErrorLabel,passwordField);
         }
     }
     public void newAccount(ActionEvent e) {
@@ -116,15 +126,15 @@ public class LogInController {
                 throw new RuntimeException(ex);
             }
         });
-
     }
+
     private void openSingUpWindow() throws IOException {
         Stage stage = new Stage();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/auth/SingUp.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         stage.setResizable(false);
         stage.setScene(scene);
-        stage.setTitle("Sing Up");
+        stage.setTitle("Log In");
         stage.show();
     }
 
@@ -140,5 +150,23 @@ public class LogInController {
             pause2.play();
         });
         pause1.play();
+    }
+
+    private String checkEmail(String email, String password) throws SQLException {
+        String statement = "SELECT email,password FROM users WHERE email IS NOT NULL";
+        var conn = DriverManager.getConnection(sql);
+        var stmt = conn.createStatement();
+        stmt.execute(statement);
+        ResultSet result = stmt.getResultSet();
+        while (result.next()) {
+            if (result.getString("email").equals(email)) {
+                if (result.getString("password").equals(password)) {
+                    return "valid";
+                }
+                return "password";  // password is invalid
+            }
+        }
+        conn.close();
+        return "email"; // email is invalid
     }
 }

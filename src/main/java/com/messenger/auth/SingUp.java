@@ -17,7 +17,7 @@ public class SingUp extends Application {
         Scene scene = new Scene(loader.load());
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
-        primaryStage.setTitle("auth");
+        primaryStage.setTitle("Sing Up");
         primaryStage.show();
     }
 }
