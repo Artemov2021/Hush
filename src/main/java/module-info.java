@@ -7,4 +7,7 @@ module com.main.messenger {
 
     opens com.messenger.auth to javafx.fxml;
     exports com.messenger.auth;
+
+    opens com.messenger.main to javafx.fxml;
+    exports com.messenger.main;
 }

@@ -1,12 +1,15 @@
 package com.messenger.auth;
 
-import com.messenger.design.AuthEmailField;
 import com.messenger.design.AuthErrorsDesign;
-import com.messenger.design.AuthPasswordField;
+import com.messenger.design.AuthField;
+import com.messenger.main.MainWindowController;
 import javafx.animation.PauseTransition;
+import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
@@ -16,8 +19,9 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import com.messenger.main.MainWindow;
 
 
 public class SingUpController {
@@ -43,20 +47,31 @@ public class SingUpController {
     private Label extraLabel;
 
     private Group passwordGroup;
+
     private final String sql = "jdbc:sqlite:auth.db";
 
     public void initialize() {
         createDB();
+        countUsers();
         emailField.setFocusTraversable(false);
         passwordField.setFocusTraversable(false);
         accountButton.setUnderline(true);
+        //Platform.setImplicitExit(false);
 
-        passwordGroup = new Group(lowerLabel, passwordField, passwordErrorLabel);   // group of all password field elements ( will be moved, if email is invalid )
+        // group of all password field elements ( will be moved down, if email is invalid )
+        passwordGroup = new Group(lowerLabel, passwordField, passwordErrorLabel);
         anchorPane.getChildren().add(passwordGroup);
 
-        AuthEmailField.setStyle(emailField,upperLabel);            // makes label animation and solves unnecessary spaces
-        AuthPasswordField passwordFieldLabelAnimation = new AuthPasswordField(-5,-22,-14,-4);
-        passwordFieldLabelAnimation.setStyle(passwordField,lowerLabel);
+        // makes label animation and solves unnecessary spaces
+        var emailFieldStyled = new AuthField(emailField, upperLabel);
+        emailFieldStyled.setLabelChanges(-26, -2);
+        emailFieldStyled.setLabelMovePath(-5, -24);
+        emailFieldStyled.setStyle();
+
+        var passwordFieldStyled = new AuthField(passwordField, lowerLabel);
+        passwordFieldStyled.setLabelChanges(-11, -2);
+        passwordFieldStyled.setLabelMovePath(-5, -24);
+        passwordFieldStyled.setStyle();
     }
 
     public void singUp(ActionEvent e) throws InterruptedException {
@@ -68,11 +83,22 @@ public class SingUpController {
             setProgressBar(() -> {
                 try {
                     if (email.contains("@gmail.com")) {
-                        registerEmail(email, password);
+                        if (registerEmail(email, password)) {
+                            AuthErrorsDesign.deleteErrorStyle(emailErrorLabel, emailField);
+                            AuthErrorsDesign.deleteErrorStyle(passwordErrorLabel, passwordField);
+                            passwordGroup.setLayoutY(0);
+                            ((Stage) (anchorPane.getScene().getWindow())).close();
+                            AuthMainWindow.openMainWindow(email);
+                        }
                     } else {
-                        registerName(email, password);
+                        if (registerName(email, password)) {
+                            AuthErrorsDesign.deleteErrorStyle(emailErrorLabel, emailField);
+                            AuthErrorsDesign.deleteErrorStyle(passwordErrorLabel, passwordField);
+                            passwordGroup.setLayoutY(0);
+                            ((Stage) (anchorPane.getScene().getWindow())).close();
+                            AuthMainWindow.openMainWindow(email);
+                        }
                     }
-                    ((Stage) (anchorPane.getScene().getWindow())).close();
                 } catch (SQLException dbIssue) {
                     extraLabel.setText(dbIssue.getMessage());
                 }
@@ -82,22 +108,23 @@ public class SingUpController {
         // if info is invalid:
 
         if (email.isEmpty()) {
-            AuthErrorsDesign.setErrorStyle( emailErrorLabel,"incorrect information",emailField);
+            AuthErrorsDesign.setErrorStyle(emailErrorLabel, "incorrect information", emailField);
             passwordGroup.setLayoutY(16); // moves password field 16px down, to show email error message
-        } else if (email.length()>25 ) {
-            AuthErrorsDesign.setErrorStyle( emailErrorLabel,"email or name is too long",emailField);
+        } else if (email.length() > 25) {
+            AuthErrorsDesign.setErrorStyle(emailErrorLabel, "email or name is too long", emailField);
             passwordGroup.setLayoutY(16);
         } else {
-            AuthErrorsDesign.deleteErrorStyle(emailErrorLabel,emailField);
+            AuthErrorsDesign.deleteErrorStyle(emailErrorLabel, emailField);
             passwordGroup.setLayoutY(0);
         }
 
         if (password.isEmpty()) {
-            AuthErrorsDesign.setErrorStyle(passwordErrorLabel, "incorrect information",passwordField);
+            AuthErrorsDesign.setErrorStyle(passwordErrorLabel, "incorrect information", passwordField);
         } else {
-            AuthErrorsDesign.deleteErrorStyle( passwordErrorLabel,passwordField);
+            AuthErrorsDesign.deleteErrorStyle(passwordErrorLabel, passwordField);
         }
     }
+
     public void oldAccount(ActionEvent e) {
         setProgressBar(() -> {
             ((Stage) (anchorPane.getScene().getWindow())).close();
@@ -133,8 +160,9 @@ public class SingUpController {
         });
         pause1.play();
     }
+
     private void createDB() {
-        String statement = "CREATE TABLE IF NOT EXISTS users(id integer PRIMARY KEY, name text, email text, password text)";
+        String statement = "CREATE TABLE IF NOT EXISTS users(id integer PRIMARY KEY, name text, email text, password text, contacts integer)";
         try (var conn = DriverManager.getConnection(sql)) {
             var stmt = conn.createStatement();
             stmt.execute(statement);
@@ -143,22 +171,82 @@ public class SingUpController {
         }
     }
 
-    private void registerEmail(String email, String password) throws SQLException {
-        String statement = "INSERT INTO users (email,password) VALUES (?,?)";
+    private boolean registerEmail(String email, String password) throws SQLException {
+        String statement = "INSERT INTO users (email,password,name,contacts) VALUES (?,?,?,?)";
+        if (!(checkEmailPresence(email))) {
+            try (var conn = DriverManager.getConnection(sql)) {
+                var stmt = conn.prepareStatement(statement);
+                stmt.setString(1, email);
+                stmt.setString(2, password);
+                stmt.setString(3, "User" + (countUsers() + 1));
+                stmt.setInt(4, 0);
+                stmt.executeUpdate();
+                return true;
+            }
+        }
+        AuthErrorsDesign.setErrorStyle(emailErrorLabel, "The email is aldready taken", emailField);
+        passwordGroup.setLayoutY(16);
+        return false;
+    }
+
+    private boolean registerName(String name, String password) throws SQLException {
+        String statement = "INSERT INTO users (name,password,contacts) VALUES (?,?,?)";
+        if (!(checkNamePresence(name))) {
+            try (var conn = DriverManager.getConnection(sql)) {
+                var stmt = conn.prepareStatement(statement);
+                stmt.setString(1, name);
+                stmt.setString(2, password);
+                stmt.setInt(3, 0);
+                stmt.executeUpdate();
+                return true;
+            }
+        }
+        AuthErrorsDesign.setErrorStyle(emailErrorLabel, "The name is aldready taken", emailField);
+        passwordGroup.setLayoutY(16);
+        return false;
+    }
+
+    private int countUsers() {
+        String statement = "SELECT COUNT(*) FROM users";
+        try (var conn = DriverManager.getConnection(sql)) {
+            var stmt = conn.createStatement();
+            ResultSet result = stmt.executeQuery(statement);
+            return result.getInt(1);
+        } catch (SQLException exception) {
+            extraLabel.setText(exception.getMessage());
+        }
+        return -1;
+    }
+
+    private boolean checkNamePresence(String name) {
+        String statement = "SELECT name FROM users WHERE name = ?";
         try (var conn = DriverManager.getConnection(sql)) {
             var stmt = conn.prepareStatement(statement);
-            stmt.setString(1,email);
-            stmt.setString(2,password);
-            stmt.executeUpdate();
+            stmt.setString(1, name);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return true;
+            }
+        } catch (SQLException exception) {
+            extraLabel.setText(exception.getMessage());
         }
+        return false;
     }
-    private void registerName(String name, String password) throws SQLException {
-        String statement = "INSERT INTO users (name,password) VALUES (?,?)";
+
+    private boolean checkEmailPresence(String email) {
+        String statement = "SELECT email FROM users WHERE email = ?";
         try (var conn = DriverManager.getConnection(sql)) {
             var stmt = conn.prepareStatement(statement);
-            stmt.setString(1,name);
-            stmt.setString(2,password);
-            stmt.executeUpdate();
+            stmt.setString(1, email);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return true;
+            }
+        } catch (SQLException exception) {
+            extraLabel.setText(exception.getMessage());
         }
+        return false;
     }
+
+
 }
