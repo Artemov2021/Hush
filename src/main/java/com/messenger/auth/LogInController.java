@@ -191,6 +191,11 @@ public class LogInController {
 
     private void openMainWindow (String email) {
         ((Stage) (anchorPane.getScene().getWindow())).close();
-        AuthMainWindow.openMainWindow(email);
+        try {
+            AuthMainWindow.openMainWindow(email);
+        } catch (SQLException e) {
+            extraLabel.setText(e.getMessage());
+        }
+
     }
 }

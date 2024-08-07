@@ -1,14 +1,22 @@
 package com.messenger.main;
 
-import com.messenger.Main;
-import javafx.event.Event;
+import com.messenger.main.smallWindows.NewContactWindow;
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import com.messenger.design.MainStyling;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
+
+import java.sql.SQLException;
 
 public class MainWindowController {
+    @FXML
+    private AnchorPane anchorPane;
     @FXML
     private Label nameLabel;
     @FXML
@@ -30,15 +38,15 @@ public class MainWindowController {
     private String name;
     private String email;
 
-    public void initializeWithValue () {
 
+    public void initializeWithValue () {
         settingsLabel.setMouseTransparent(true);
         addContactLabel.setMouseTransparent(true);
 
         nameLabel.setText(name);
         emailLabel.setText(email);
 
-        // If there is no email, name label will be moved down
+        // If there is no email, email label will become invisible and name label will be moved down
         if (email.isEmpty()) {
             emailLabel.getStyleClass().clear();
             emailLabel.getStyleClass().add("email-label-invisible");
@@ -51,29 +59,37 @@ public class MainWindowController {
         // If the search field is focused, the lupe will change the color
         MainStyling.setFocusStyle(searchField,searchLupeLabel,"search-field-lupe-focused","search-field-lupe-default");
 
-        }
 
-        public void setEmail (String email) {
-            this.email = email;
-            MainDataBase usersDB = new MainDataBase("jdbc:sqlite:auth.db");
-            name = usersDB.getNameWithEmail(email);
-            initializeWithValue();
-        }
 
-        public void setName (String name) {
-            this.name = name;
-            MainDataBase usersDB = new MainDataBase("jdbc:sqlite:auth.db");
-            email = usersDB.getEmailWithName(name);
-            initializeWithValue();
-        }
 
-        public void addContact() {
-            System.out.println("added!");
-        }
+    }
+
+    public void setEmail (String email) throws SQLException {
+        this.email = email;
+        MainDataBase usersDB = new MainDataBase("jdbc:sqlite:auth.db");
+        name = usersDB.getNameWithEmail(email);
+        initializeWithValue();
+    }
+
+    public void setName (String name) throws SQLException {
+        this.name = name;
+        MainDataBase usersDB = new MainDataBase("jdbc:sqlite:auth.db");
+        email = usersDB.getEmailWithName(name);
+        initializeWithValue();
+    }
+
+    public void addContact () {
+        NewContactWindow newContactWindow = new NewContactWindow(anchorPane);
+        newContactWindow.openWindow();
+    }
+
+
+
 
     public void initialize() {
         email = "timur005@gmail.com";
         name = "ahmed";
+
         initializeWithValue();
     }
 }

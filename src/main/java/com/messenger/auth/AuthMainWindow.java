@@ -6,8 +6,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import java.sql.SQLException;
+
 public class AuthMainWindow {
-    public static void openMainWindow(String info) {
+    public static void openMainWindow(String info) throws SQLException {
         try {
             // Load the FXML file and create the root
             FXMLLoader loader = new FXMLLoader(AuthMainWindow.class.getResource("/main/MainWindow.fxml"));
@@ -18,10 +20,8 @@ public class AuthMainWindow {
 
             if (info.contains("@gmail.com")) {
                 mainWindowController.setEmail(info);
-                System.out.println("Setting email!");
             } else {
                 mainWindowController.setName(info);
-                System.out.println("Setting name!");
             }
 
             // Set up the new stage
