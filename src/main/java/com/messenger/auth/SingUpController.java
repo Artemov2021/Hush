@@ -100,8 +100,8 @@ public class SingUpController {
 
     }
 
-    public void openLogIn() {
-        System.out.println("Opening Log In Window....");
+    public void openLogIn() throws IOException {
+        AuthLogInWindow.openLogInWindow((Stage) anchorPane.getScene().getWindow());
     }
 
     private void openManinWindow() throws IOException,SQLException {

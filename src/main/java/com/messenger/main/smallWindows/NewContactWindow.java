@@ -31,7 +31,7 @@ public class NewContactWindow {
 
         Pane contactPane = new Pane();
         contactPane.setPrefWidth(337);
-        contactPane.setPrefHeight(363);
+        contactPane.setPrefHeight(293);
         contactPane.getStyleClass().add("add-contact-window");
         contactPane.setLayoutX(475);
         contactPane.setLayoutY(160);
@@ -70,7 +70,7 @@ public class NewContactWindow {
         addContactLabel.setLayoutX(25);
         addContactLabel.setLayoutY(25);
 
-        Label secondaryContactLabel = new Label("Fill the following fields to add a new contact");
+        Label secondaryContactLabel = new Label("Fill the following field to add a new contact");
         secondaryContactLabel.getStyleClass().add("add-contact-secondary-label");
         secondaryContactLabel.setLayoutX(25);
         secondaryContactLabel.setLayoutY(52);
@@ -92,39 +92,39 @@ public class NewContactWindow {
         contactInfoField.getStyleClass().add("add-contact-field");
         contactInfoField.setLayoutX(25);
         contactInfoField.setLayoutY(145);
-        contactInfoField.setPromptText("Phone number or email");
+        contactInfoField.setPromptText("Name or phone number");
 
-        Label contactName = new Label("User name");
-        contactName.getStyleClass().add("add-contact-small-label");
-        contactName.setLayoutX(25);
-        contactName.setLayoutY(205);
-
-        TextField contactNameField = new TextField();
-        contactNameField.setPrefHeight(40);
-        contactNameField.setPrefWidth(280);
-        contactNameField.getStyleClass().add("add-contact-field");
-        contactNameField.setLayoutX(25);
-        contactNameField.setLayoutY(230);
-        contactNameField.setPromptText("Person's name");
+//        Label contactName = new Label("User name");
+//        contactName.getStyleClass().add("add-contact-small-label");
+//        contactName.setLayoutX(25);
+//        contactName.setLayoutY(205);
+//
+//        TextField contactNameField = new TextField();
+//        contactNameField.setPrefHeight(40);
+//        contactNameField.setPrefWidth(280);
+//        contactNameField.getStyleClass().add("add-contact-field");
+//        contactNameField.setLayoutX(25);
+//        contactNameField.setLayoutY(230);
+//        contactNameField.setPromptText("Person's name");
 
         Button contactAddButton = new Button();
         contactAddButton.setPrefWidth(72);
         contactAddButton.setPrefHeight(30);
         contactAddButton.getStyleClass().add("add-contact-add-button");
         contactAddButton.setLayoutX(235);
-        contactAddButton.setLayoutY(310);
+        contactAddButton.setLayoutY(240);
 
         Button contactCancelButton = new Button();
         contactCancelButton.setPrefWidth(78);
         contactCancelButton.setPrefHeight(29);
         contactCancelButton.getStyleClass().add("add-contact-cancel-button");
         contactCancelButton.setLayoutX(148);
-        contactCancelButton.setLayoutY(310);
+        contactCancelButton.setLayoutY(240);
 
         Label contactErrorLabel = new Label();
         contactErrorLabel.getStyleClass().add("add-contact-error-label");
         contactErrorLabel.setLayoutX(25);
-        contactErrorLabel.setLayoutY(275);
+        contactErrorLabel.setLayoutY(205);
         contactErrorLabel.setText("Person was not found");
         contactErrorLabel.setVisible(false);
 
@@ -135,8 +135,8 @@ public class NewContactWindow {
                 exitButton,
                 contactInfo,
                 contactInfoField,
-                contactName,
-                contactNameField,
+//                contactName,
+//                contactNameField,
                 contactAddButton,
                 contactCancelButton,
                 contactErrorLabel
