@@ -129,6 +129,9 @@
     -fx-prompt-text-fill: #595664;
     -fx-padding: 0 0 0 13;
 }
+.add-contact-field-error {
+    -fx-border-color: #F04343;
+}
 .add-contact-add-button {
     -fx-background-image: url("elements/addButtonDefault.png");
     -fx-background-radius: 8;

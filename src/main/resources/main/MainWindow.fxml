@@ -8,10 +8,10 @@
 <AnchorPane fx:id="anchorPane" prefHeight="658.0" prefWidth="1156.0" stylesheets="@MainWindow.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainWindowController">
    <children>
       <Label layoutX="-1.0" layoutY="-1.0" prefHeight="658.0" prefWidth="310.0" styleClass="left-background" />
-      <Label layoutX="659.0" layoutY="224.0" prefHeight="50.0" prefWidth="202.0" styleClass="main-title" text="Getting started" />
-      <Label layoutX="594.0" layoutY="261.0" prefHeight="70.0" prefWidth="337.0" styleClass="small-title" text="To start a conversation choose a contact or create a new one" textAlignment="CENTER" wrapText="true" />
+      <Label fx:id="mainTitle" layoutX="659.0" layoutY="224.0" prefHeight="50.0" prefWidth="202.0" styleClass="main-title" text="Getting started" />
+      <Label fx:id="smallTitle" layoutX="594.0" layoutY="261.0" prefHeight="70.0" prefWidth="337.0" styleClass="small-title" text="To start a conversation choose a contact or create a new one" textAlignment="CENTER" wrapText="true" />
       <Label layoutX="22.0" layoutY="24.0" prefHeight="34.0" prefWidth="34.0" styleClass="avatar-button-default" />
-      <Label fx:id="nameLabel" layoutX="68.0" layoutY="22.0" prefHeight="22.0" prefWidth="161.0" styleClass="name-label" text="Tymur Artemov" />
+      <Label fx:id="nameLabel" layoutX="68.0" layoutY="22.0" prefHeight="22.0" prefWidth="187.0" styleClass="name-label" text="Tymur Artemov" />
       <Label fx:id="emailLabel" layoutX="70.0" layoutY="44.0" prefHeight="17.0" prefWidth="187.0" styleClass="email-label-default" text="timurt005@gmail.com" />
       <Button fx:id="settingsButton" layoutX="257.0" layoutY="30.0" mnemonicParsing="false" prefHeight="28.0" prefWidth="34.0" styleClass="settings-button" />
       <Label fx:id="settingsLabel" layoutX="266.0" layoutY="35.0" prefHeight="17.0" prefWidth="23.0" styleClass="settings-label-default" />

@@ -1,5 +1,6 @@
 package com.messenger.main;
 
+import com.messenger.database.UsersDataBase;
 import com.messenger.main.smallWindows.NewContactWindow;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
@@ -12,6 +13,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 
+import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class MainWindowController {
@@ -33,11 +35,14 @@ public class MainWindowController {
     private Button addContactButton;
     @FXML
     private Label addContactLabel;
+    @FXML
+    private Label mainTitle;
+    @FXML
+    private Label smallTitle;
 
 
     private String name;
     private String email;
-
 
     public void initializeWithValue () {
         settingsLabel.setMouseTransparent(true);
@@ -47,7 +52,7 @@ public class MainWindowController {
         emailLabel.setText(email);
 
         // If there is no email, email label will become invisible and name label will be moved down
-        if (email.isEmpty()) {
+        if (email == null) {
             emailLabel.getStyleClass().clear();
             emailLabel.getStyleClass().add("email-label-invisible");
             nameLabel.setLayoutY(30);
@@ -60,36 +65,30 @@ public class MainWindowController {
         MainStyling.setFocusStyle(searchField,searchLupeLabel,"search-field-lupe-focused","search-field-lupe-default");
 
 
-
-
     }
 
     public void setEmail (String email) throws SQLException {
         this.email = email;
-        MainDataBase usersDB = new MainDataBase("jdbc:sqlite:auth.db");
-        name = usersDB.getNameWithEmail(email);
+        name = UsersDataBase.getNameWithEmail(email);
         initializeWithValue();
     }
 
-    public void setName (String name) throws SQLException {
+    public void setName (String name) {
         this.name = name;
-        MainDataBase usersDB = new MainDataBase("jdbc:sqlite:auth.db");
-        email = usersDB.getEmailWithName(name);
         initializeWithValue();
     }
 
     public void addContact () {
-        NewContactWindow newContactWindow = new NewContactWindow(anchorPane);
+        NewContactWindow newContactWindow = new NewContactWindow(anchorPane,name);
         newContactWindow.openWindow();
     }
 
 
 
-
-    public void initialize() {
-        email = "timur005@gmail.com";
-        name = "ahmed";
-
-        initializeWithValue();
-    }
+//    public void initialize() throws SQLException {
+//        email = "timur005@gmail.com";
+//        name = "ahmed";
+//
+//        initializeWithValue();
+//    }
 }

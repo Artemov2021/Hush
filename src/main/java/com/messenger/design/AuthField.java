@@ -82,4 +82,20 @@ public class AuthField {
         translateTransition.play();
     }
 
+    public static void setErrorStyle(TextInputControl textField,Label errorLabel,String message) {
+        textField.getStyleClass().clear();
+        textField.getStyleClass().add("input-field-error");
+
+        errorLabel.setText(message);
+        errorLabel.setVisible(true);
+    }
+    public static void deleteErrorStyle(TextInputControl textField,Label errorLabel) {
+        textField.getStyleClass().clear();
+        textField.getStyleClass().add("input-field");
+
+        errorLabel.setVisible(false);
+    }
+
+
+
 }

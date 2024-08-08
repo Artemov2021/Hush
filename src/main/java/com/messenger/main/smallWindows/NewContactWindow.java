@@ -1,6 +1,7 @@
 package com.messenger.main.smallWindows;
 
 import com.messenger.main.MainDataBase;
+import com.messenger.main.MainDetailedDataBase;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
 import javafx.scene.control.Button;
@@ -13,10 +14,13 @@ import javafx.util.Duration;
 import java.sql.SQLException;
 
 public class NewContactWindow {
+    private String name;
     private AnchorPane anchorPane;
+    private MainDataBase usersDB = new MainDataBase("jdbc:sqlite:auth.db");
 
-    public NewContactWindow (AnchorPane anchorPane) {
+    public NewContactWindow (AnchorPane anchorPane, String name) {
         this.anchorPane = anchorPane;
+        this.name = name;
     }
 
     public void openWindow() {
@@ -27,7 +31,7 @@ public class NewContactWindow {
 
         Pane contactPane = new Pane();
         contactPane.setPrefWidth(337);
-        contactPane.setPrefHeight(373);
+        contactPane.setPrefHeight(363);
         contactPane.getStyleClass().add("add-contact-window");
         contactPane.setLayoutX(475);
         contactPane.setLayoutY(160);
@@ -141,18 +145,8 @@ public class NewContactWindow {
         exitButton.setOnAction(actionEvent -> { hideWindow(overlay, contactPane); });
         contactCancelButton.setOnAction(actionEvent -> { hideWindow(overlay, contactPane); });
 
-        contactAddButton.setOnAction(actionEvent -> {
-            MainDataBase usersDB = new MainDataBase("jdbc:sqlite:auth.db");
-            try {
-                if(usersDB.checkPerson(contactInfoField.getText())) {
-
-                } else {
-                    throw new SQLException();
-                }
-            } catch (SQLException e) {
-                contactErrorLabel.setVisible(true);
-            }
-        });
-
+        // Checking, whether new contact exists / is in database
+        contactAddButton.setOnAction(actionEvent -> { System.out.println("New Contact Window was closed.");});
     }
+
 }

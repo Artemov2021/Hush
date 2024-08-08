@@ -21,10 +21,10 @@
       <TextField fx:id="emailField" layoutX="318.0" layoutY="221.0" prefHeight="48.0" prefWidth="262.0" styleClass="input-field" />
       <Button layoutX="395.0" layoutY="412.0" mnemonicParsing="false" onAction="#singUp" prefHeight="33.0" prefWidth="101.0" styleClass="main-button" text="Sing Up" />
       <Label layoutX="365.0" layoutY="454.0" prefHeight="24.0" prefWidth="112.0" styleClass="bottom-text" text="You have already an" />
-      <Button fx:id="accountButton" layoutX="467.0" layoutY="454.0" mnemonicParsing="false" onAction="#oldAccount" prefHeight="14.0" prefWidth="66.0" styleClass="account-button" text="account?" />
+      <Button fx:id="accountButton" layoutX="467.0" layoutY="454.0" mnemonicParsing="false" onAction="#openLogIn" prefHeight="14.0" prefWidth="66.0" styleClass="account-button" text="account?" />
       <PasswordField fx:id="passwordField" layoutX="318.0" layoutY="282.0" prefHeight="21.0" prefWidth="262.0" styleClass="input-field" />
-      <Label fx:id="emailErrorLabel" layoutX="325.0" layoutY="269.0" prefHeight="17.0" prefWidth="188.0" styleClass="error-label-invisible" text="incorrect information" />
-      <Label fx:id="passwordErrorLabel" layoutX="327.0" layoutY="331.0" prefHeight="17.0" prefWidth="112.0" styleClass="error-label-invisible" text="incorrect information" />
+      <Label fx:id="emailErrorLabel" layoutX="325.0" layoutY="269.0" prefHeight="17.0" prefWidth="188.0" styleClass="error-label" text="incorrect information" />
+      <Label fx:id="passwordErrorLabel" layoutX="327.0" layoutY="331.0" prefHeight="17.0" prefWidth="112.0" styleClass="error-label" text="incorrect information" />
       <ProgressBar fx:id="progressBar" layoutX="-4.0" layoutY="-3.0" prefHeight="11.0" prefWidth="869.0" progress="0.0" styleClass="progressbar" />
       <Label fx:id="extraLabel" layoutX="252.0" layoutY="478.0" prefHeight="33.0" prefWidth="396.0" style="-fx-alignment: center;" textAlignment="CENTER" textFill="#f83333" />
    </children>

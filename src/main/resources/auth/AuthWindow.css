@@ -46,10 +46,7 @@
     -fx-font-weight: bold;
     -fx-alignment: center;
 }
-.error-label-invisible {
-    -fx-text-fill: #181818;
-}
-.error-label-visible {
+.error-label {
     -fx-text-fill: #C72828;
 }
 
