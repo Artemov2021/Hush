@@ -11,6 +11,9 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class SingUpController {
@@ -64,12 +67,12 @@ public class SingUpController {
         try {
 
             // settings all text fields to a normal state
-            AuthField.deleteErrorStyle(emailField,emailErrorLabel);
-            AuthField.deleteErrorStyle(passwordField,passwordErrorLabel);
+            AuthField.deleteErrorStyle(emailField, emailErrorLabel);
+            AuthField.deleteErrorStyle(passwordField, passwordErrorLabel);
             passwordGroup.setLayoutY(0);
 
-            if (checkInformationValidity(identifier,password)) {
-                UsersDataBase.addUser(identifier,password);
+            if (checkInformationValidity(identifier, password)) {
+                UsersDataBase.addUser(identifier, password);
                 closeSingUpWindow();
                 openManinWindow();
             }
@@ -81,18 +84,18 @@ public class SingUpController {
 
         } catch (IncorrectWholeInformation IncorrectWholeInformation) {
 
-            AuthField.setErrorStyle(emailField,emailErrorLabel,IncorrectWholeInformation.getMessage());
+            AuthField.setErrorStyle(emailField, emailErrorLabel, IncorrectWholeInformation.getMessage());
             passwordGroup.setLayoutY(16);
-            AuthField.setErrorStyle(passwordField,passwordErrorLabel,IncorrectWholeInformation.getMessage());
+            AuthField.setErrorStyle(passwordField, passwordErrorLabel, IncorrectWholeInformation.getMessage());
 
         } catch (IncorrectIdentifierInformation | LengthException | TakenException identifierException) {
 
-            AuthField.setErrorStyle(emailField,emailErrorLabel,identifierException.getMessage());
+            AuthField.setErrorStyle(emailField, emailErrorLabel, identifierException.getMessage());
             passwordGroup.setLayoutY(16);
 
-        } catch (IncorrectPasswordInformation passwordException ) {
+        } catch (IncorrectPasswordInformation passwordException) {
 
-            AuthField.setErrorStyle(passwordField,passwordErrorLabel,passwordException.getMessage());
+            AuthField.setErrorStyle(passwordField, passwordErrorLabel, passwordException.getMessage());
             passwordGroup.setLayoutY(0);
 
         }
@@ -104,8 +107,12 @@ public class SingUpController {
         AuthLogInWindow.openLogInWindow((Stage) anchorPane.getScene().getWindow());
     }
 
-    private void openManinWindow() throws IOException,SQLException {
+    private void openManinWindow() throws IOException, SQLException {
         AuthMainWindow.openMainWindow(identifier);
+    }
+
+    private void closeSingUpWindow() {
+        ((Stage) (anchorPane.getScene().getWindow())).close();
     }
 
     private void fieldsApplyStyle() {
@@ -135,6 +142,10 @@ public class SingUpController {
             throw new TakenException("Email or name is already taken");
         }
 
+        if (hasNumbers(identifier)) {
+            throw new IncorrectIdentifierInformation("Name must not contain numbers");
+        }
+
         if (password.isEmpty()) {
             throw new IncorrectPasswordInformation("Incorrect information");
         }
@@ -142,9 +153,16 @@ public class SingUpController {
         return true;
     }
 
-    private void closeSingUpWindow() {
-        ((Stage) (anchorPane.getScene().getWindow())).close();
-    }
+    private boolean hasNumbers(String name) {
+        String[] symbols = {"1","2","3","4","5","6","7","8","9","0","+","-"," "};
+        Set<String> allowedSymbols = new HashSet<>(Arrays.asList(symbols));
+        for (char s : name.toCharArray()) {
+            if (!allowedSymbols.contains(String.valueOf(s))) {
+                return false;
+            }
+        }
+        return true;
+      }
 
 
 }

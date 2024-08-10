@@ -1,5 +1,6 @@
 package com.messenger.main;
 
+import com.messenger.database.DetailedDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.main.smallWindows.NewContactWindow;
 import javafx.animation.FadeTransition;
@@ -7,10 +8,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import com.messenger.design.MainStyling;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.sql.DriverManager;
@@ -39,12 +42,16 @@ public class MainWindowController {
     private Label mainTitle;
     @FXML
     private Label smallTitle;
+    @FXML
+    private ScrollPane contactsScrollPane;
+    @FXML
+    private VBox contactsVBox;
 
 
     private String name;
     private String email;
 
-    public void initializeWithValue () {
+    public void initializeWithValue () throws SQLException {
         settingsLabel.setMouseTransparent(true);
         addContactLabel.setMouseTransparent(true);
 
@@ -64,7 +71,19 @@ public class MainWindowController {
         // If the search field is focused, the lupe will change the color
         MainStyling.setFocusStyle(searchField,searchLupeLabel,"search-field-lupe-focused","search-field-lupe-default");
 
+        if (UsersDataBase.getContactsAmount(name) > 0) {
+            mainTitle.setVisible(false);
+            smallTitle.setVisible(false);
+            Label title = new Label();
+            title.setLayoutX(610);
+            title.setLayoutY(300);
+            title.getStyleClass().add("login-title");
+            title.setPrefWidth(300);
+            title.setPrefHeight(51);
+            anchorPane.getChildren().add(title);
 
+            MainContactList.addContactsToList(contactsScrollPane,contactsVBox,name);
+        }
     }
 
     public void setEmail (String email) throws SQLException {
@@ -73,21 +92,20 @@ public class MainWindowController {
         initializeWithValue();
     }
 
-    public void setName (String name) {
+    public void setName (String name) throws SQLException {
         this.name = name;
         initializeWithValue();
     }
 
-    public void addContact () {
+    public void addContactWindow () {
         NewContactWindow newContactWindow = new NewContactWindow(anchorPane,name);
         newContactWindow.openWindow();
     }
 
 
-
 //    public void initialize() throws SQLException {
 //        email = "timur005@gmail.com";
-//        name = "ahmed";
+//        name = "Tymur Artemov";
 //
 //        initializeWithValue();
 //    }

@@ -35,6 +35,36 @@ public class UsersDataBase {
         return false;
     }
 
+    public static boolean checkNamePresence(String name) throws SQLException {
+        // works only with a name
+        String statement = "SELECT name FROM users WHERE name = ?";
+
+        try (Connection connection = DriverManager.getConnection(url)) {
+            PreparedStatement stmt = connection.prepareStatement(statement);
+            stmt.setString(1,name);
+            ResultSet result = stmt.executeQuery();
+            if (result.next()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean checkPhonePresence(String phone) throws SQLException {
+        // works only with a name
+        String statement = "SELECT phone_number FROM users WHERE phone_number = ?";
+
+        try (Connection connection = DriverManager.getConnection(url)) {
+            PreparedStatement stmt = connection.prepareStatement(statement);
+            stmt.setString(1,phone);
+            ResultSet result = stmt.executeQuery();
+            if (result.next()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean checkPasswordValidity(String identifier,String password) throws SQLException {
         // works only with a name or an email
         String identifierType = identifier.contains("@gmail.com") ? "email" : "name";
@@ -56,6 +86,19 @@ public class UsersDataBase {
         try (var conn = DriverManager.getConnection(url)) {
             var stmt = conn.prepareStatement(statement);
             stmt.setString(1,email);
+            ResultSet result = stmt.executeQuery();
+            if (result.next()) {
+                return result.getString("name");
+            }
+        }
+        return "";
+    }
+
+    public static String getNameWithPhoneNumber( String phoneNumber ) throws SQLException {
+        String statement = "SELECT name FROM users WHERE  phone_number = ?";
+        try (var conn = DriverManager.getConnection(url)) {
+            var stmt = conn.prepareStatement(statement);
+            stmt.setString(1, phoneNumber);
             ResultSet result = stmt.executeQuery();
             if (result.next()) {
                 return result.getString("name");
