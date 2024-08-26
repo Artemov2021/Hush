@@ -182,5 +182,6 @@ public class SingUpController {
             return true;
         }
         return false;
+
     }
 }
