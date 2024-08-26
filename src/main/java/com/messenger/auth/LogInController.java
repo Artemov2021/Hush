@@ -1,9 +1,9 @@
 package com.messenger.auth;
 
+import com.messenger.Log;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.AuthField;
 import com.messenger.exceptions.*;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.control.*;
@@ -39,7 +39,7 @@ public class LogInController {
     private String password;
 
 
-    public void initialize () {
+    public void initialize () throws IOException {
         emailField.setFocusTraversable(false);
         passwordField.setFocusTraversable(false);
         accountButton.setUnderline(true);
@@ -54,11 +54,13 @@ public class LogInController {
 
         // makes label animation and solves unnecessary spaces
         fieldsApplyStyle();
+        Log.writeNewActionLog("Log In stage was initialized!");
     }
 
-    public void logIn() {
+    public void logIn() throws IOException {
         identifier = emailField.getText().trim();
         password = passwordField.getText().trim();
+        Log.writeNewActionLog(String.format("New entered information: identifier - \"%s\"; password - \"%s\" \n",identifier,password));
 
         try {
 
@@ -68,14 +70,15 @@ public class LogInController {
             passwordGroup.setLayoutY(0);
 
             if (checkInformationValidity(identifier,password)) {
+                openMainWindow();
                 closeLogInWindow();
-                openManinWindow();
             }
 
         } catch (SQLException | IOException extraException) {
 
             // if there is issues with database, they will be displayed on extra label
             extraLabel.setText(extraException.getMessage());
+            Log.writeNewExceptionLog(extraException);
 
         } catch (IncorrectWholeInformation IncorrectWholeInformation) {
 
@@ -100,7 +103,7 @@ public class LogInController {
         AuthSingUpWindow.openSingUpWindow((Stage) anchorPane.getScene().getWindow());
     }
 
-    private void openManinWindow() throws IOException, SQLException {
+    private void openMainWindow() throws IOException, SQLException {
         AuthMainWindow.openMainWindow(identifier);
     }
 
@@ -116,7 +119,7 @@ public class LogInController {
         passwordFieldStyled.setStyle();
     }
 
-    private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, InvalidPassword {
+    private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, InvalidPassword, IOException {
         if (identifier.isEmpty() && password.isEmpty()) {
             throw new IncorrectWholeInformation("Incorrect information");
         }

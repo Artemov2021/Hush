@@ -20,12 +20,15 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.io.IOException;
 import java.io.NotActiveException;
 import java.util.Arrays;
 import java.util.HashSet;
 
 import java.sql.SQLException;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class NewContactWindow {
@@ -156,7 +159,7 @@ public class NewContactWindow {
                     String contactName = infoType.contains("phone number") ? UsersDataBase.getNameWithPhoneNumber(convertToPhoneStyle(info)) : info;
                     MainContactList.addContactToList((ScrollPane) anchorPane.getScene().lookup("#contactsScrollPane"), (VBox) anchorPane.getScene().lookup("#contactsVBox"), name, contactName);
                 }
-            } catch (SQLException e) {
+            } catch (SQLException | IOException e) {
                 contactErrorLabel.setText(e.getMessage());
             }
 
@@ -177,7 +180,9 @@ public class NewContactWindow {
             }
 
             String infoType = isPhoneNumber(convertToPhoneStyle(info)) ? "phone number" : "name";
-            boolean presenceInDB = infoType.equals("phone number") ? UsersDataBase.checkPhonePresence(convertToPhoneStyle(info)) : UsersDataBase.checkNamePresence(info);
+            System.out.println("Converted Info: " + convertToPhoneStyle(info));
+            System.out.println("Info Type: " + infoType);
+            boolean presenceInDB = infoType.equals("phone number") ? UsersDataBase.checkPhonePresence(convertToPhoneStyle(info)) : UsersDataBase.checkUserPresence(info);
 
             if (!presenceInDB) {
                 throw new NotInDataBase("The person was not found");
@@ -190,7 +195,7 @@ public class NewContactWindow {
             addContact(isPhoneNumber(info) ? convertToPhoneStyle(info) : info);
             hideWindow(overlay,contactPane);
             return true;
-        } catch (SQLException e) {
+        } catch (Exception e) {
 
             // applying error style on field and label
             field.getStyleClass().clear();
@@ -199,30 +204,20 @@ public class NewContactWindow {
             errorLabel.setVisible(true);
             return false;
 
-        } catch (IncorrectIdentifierInformation | AlreadyInDataBase | NotInDataBase e) {
-
-            field.getStyleClass().clear();
-            field.getStyleClass().add("add-contact-field-error");
-            errorLabel.setText(e.getMessage());
-            errorLabel.setVisible(true);
-            return false;
-
         }
     }
 
-    private boolean isPhoneNumber(String info) {
-        String[] symbols = {"1","2","3","4","5","6","7","8","9","0","+","-"," "};
-        Set<String> allowedSymbols = new HashSet<>(Arrays.asList(symbols));
-        for (char s : info.toCharArray()) {
-            if (!allowedSymbols.contains(String.valueOf(s))) {
-                return false;
-            }
+    private static boolean isPhoneNumber(String info) {
+        String phoneNumberPattern = "^[0-9-+ ]+$";
+        Pattern pattern = Pattern.compile(phoneNumberPattern);
+        Matcher matcher = pattern.matcher(info);
+        if (matcher.find()) {
+            return true;
         }
-        return true;
+        return false;
     }
 
-
-    // convert to a phone number style, that is in data base
+    // convert to a phone number style, that is in database
     // Input: 45 283 1843645
     // Converted: +452831843645
     private String convertToPhoneStyle(String phoneNumber) {
@@ -235,7 +230,7 @@ public class NewContactWindow {
         return convertedPhoneNumber;
     }
 
-    private void addContact(String info) throws SQLException{
+    private void addContact(String info) throws SQLException, IOException, InterruptedException {
         DetailedDataBase.addContact(name,info);
     }
 

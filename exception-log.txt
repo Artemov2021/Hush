@@ -1,0 +1,9 @@
+26-08 18:11 [SQLITE_ERROR] SQL error or missing database (no such table: Tymur Artemov)
+       | class: com.messenger.database.DetailedDataBase | method:      getLastMessage | line: 107 |
+       | class:      com.messenger.main.MainContactList | method:    addContactToList | line:  67 |
+       | class:      com.messenger.main.MainContactList | method:   addContactsToList | line:  90 |
+       | class: com.messenger.main.MainWindowController | method: initializeWithValue | line:  87 |
+       | class: com.messenger.main.MainWindowController | method:             setName | line:  99 |
+       | class:       com.messenger.auth.AuthMainWindow | method:      openMainWindow | line:  25 |
+       | class:      com.messenger.auth.LogInController | method:      openMainWindow | line: 105 |
+       | class:      com.messenger.auth.LogInController | method:               logIn | line:  71 |

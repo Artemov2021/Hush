@@ -10,12 +10,14 @@ import javafx.scene.control.Label;
 import com.messenger.design.MainStyling;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
+import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
@@ -51,7 +53,7 @@ public class MainWindowController {
     private String name;
     private String email;
 
-    public void initializeWithValue () throws SQLException {
+    public void initializeWithValue () throws SQLException, IOException {
         settingsLabel.setMouseTransparent(true);
         addContactLabel.setMouseTransparent(true);
 
@@ -86,13 +88,13 @@ public class MainWindowController {
         }
     }
 
-    public void setEmail (String email) throws SQLException {
+    public void setEmail (String email) throws SQLException, IOException {
         this.email = email;
         name = UsersDataBase.getNameWithEmail(email);
         initializeWithValue();
     }
 
-    public void setName (String name) throws SQLException {
+    public void setName (String name) throws SQLException, IOException {
         this.name = name;
         initializeWithValue();
     }
@@ -101,11 +103,8 @@ public class MainWindowController {
         NewContactWindow newContactWindow = new NewContactWindow(anchorPane,name);
         newContactWindow.openWindow();
     }
-
-
-//    public void initialize() throws SQLException {
-//        email = "timur005@gmail.com";
-//        name = "Tymur Artemov";
+//    public void initialize() throws SQLException, IOException {
+//        name = "Andrew Tate";
 //
 //        initializeWithValue();
 //    }
