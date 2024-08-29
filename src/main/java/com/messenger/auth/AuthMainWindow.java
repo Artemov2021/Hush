@@ -1,5 +1,6 @@
 package com.messenger.auth;
 
+import com.messenger.Log;
 import com.messenger.database.DetailedDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.main.MainWindowController;
@@ -10,6 +11,8 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AuthMainWindow {
     public static void openMainWindow(String info) throws IOException, SQLException {
@@ -18,7 +21,7 @@ public class AuthMainWindow {
 
         // Retrieve the controller and set the email
         MainWindowController mainWindowController = loader.getController();
-        if (info.contains("@gmail.com")) {
+        if (isEmailOrName(info).equals("email")) {
             mainWindowController.setEmail(info);
             DetailedDataBase.createUserDataBase(UsersDataBase.getNameWithEmail(info));
         } else {
@@ -34,5 +37,15 @@ public class AuthMainWindow {
         newStage.setTitle("Main");
         newStage.show();
 
+    }
+
+    private static String isEmailOrName(String identifier) {
+        String emailPattern = "@\\S*\\.[a-z]{2,}$";
+        Pattern pattern = Pattern.compile(emailPattern);
+        Matcher emailMatcher = pattern.matcher(identifier);
+        if (emailMatcher.find()) {
+            return "email";
+        }
+        return "name";
     }
 }

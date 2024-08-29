@@ -25,10 +25,9 @@ public class DetailedDataBase {
     }
 
     public static void addContact(String mainUser,String info) throws SQLException, IOException, InterruptedException {
-        System.out.println(mainUser + " has new contact: " + info +  "(length "+info.length() + ")");
 
         // Adding a new contact to the contact list of the user
-        String contactName = isPhoneNumber(info) ? UsersDataBase.getNameWithPhoneNumber(info) : info;
+        String contactName = getIdentifierType(info).equals("email") ? UsersDataBase.getNameWithEmail(info) : info;
         String detailedDBLink = sqlPath + mainUser + ".db";
         String statement1 = "INSERT INTO contact_list (name) VALUES (?)";
         try (Connection connection1 = DriverManager.getConnection(detailedDBLink)) {
@@ -39,19 +38,16 @@ public class DetailedDataBase {
             Log.writeNewExceptionLog(e);
             throw e;
         }
-        System.out.println("Connection 1");
 
         // Creating new contact table in user database
         try (Connection connection2 = DriverManager.getConnection(detailedDBLink)) {
             String statement2 = String.format("CREATE TABLE IF NOT EXISTS %s (id integer PRIMARY KEY,message text,message_time text,photo text)","\""+contactName+"\"");
             Statement stmt2 = connection2.createStatement();
-            System.out.println(info);
             stmt2.execute(statement2);
         } catch (Exception e) {
             Log.writeNewExceptionLog(e);
             throw e;
         }
-        System.out.println("Connection 2");
 
         // Changing contacts amount of the user
         String UsersDBLink = "jdbc:sqlite:auth.db";
@@ -108,6 +104,24 @@ public class DetailedDataBase {
         }
         connection.close();
         return lastMessage;
+    }
+
+    private static String getIdentifierType(String identifier) {
+        String emailPattern = "^.+@\\S*\\.[a-z]{2,}$";
+        Pattern emailPatternCompile = Pattern.compile(emailPattern);
+        Matcher emailMatcher = emailPatternCompile.matcher(identifier);
+
+        String namePattern = "^[a-zA-Z][a-zA-Z0-9 ]+$";
+        Pattern namePatternCompile = Pattern.compile(namePattern);
+        Matcher nameMatcher = namePatternCompile.matcher(identifier);
+
+        if (emailMatcher.find()) {
+            return "email";
+        } else if (nameMatcher.find()) {
+            return "name";
+        } else {
+            return "-";
+        }
     }
 
     public static ArrayList<String> getContacts(String mainUser) throws SQLException {

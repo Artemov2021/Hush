@@ -12,6 +12,8 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LogInController {
     @FXML
@@ -54,13 +56,18 @@ public class LogInController {
 
         // makes label animation and solves unnecessary spaces
         fieldsApplyStyle();
-        Log.writeNewActionLog("Log In stage was initialized!");
     }
 
     public void logIn() throws IOException {
         identifier = emailField.getText().trim();
         password = passwordField.getText().trim();
-        Log.writeNewActionLog(String.format("New entered information: identifier - \"%s\"; password - \"%s\" \n",identifier,password));
+
+        // Logging the action
+        Log.writeNewActionLog(String.format("\n%0" + 65 + "d" + "\n",0).replace("0","-"));
+        Log.writeNewActionLog("Window: Log In\n");
+        Log.writeNewActionLog(String.format("Identifier: %s (length: %d)\n",identifier,identifier.length()));
+        Log.writeNewActionLog(String.format("Identifier type: %s\n",getIdentifierType(identifier)));
+        Log.writeNewActionLog(String.format("Password: %s (length: %d)\n",password,password.length()));
 
         try {
 
@@ -74,28 +81,33 @@ public class LogInController {
                 closeLogInWindow();
             }
 
-        } catch (SQLException | IOException extraException) {
-
-            // if there is issues with database, they will be displayed on extra label
-            extraLabel.setText(extraException.getMessage());
-            Log.writeNewExceptionLog(extraException);
-
         } catch (IncorrectWholeInformation IncorrectWholeInformation) {
 
             AuthField.setErrorStyle(emailField,emailErrorLabel,IncorrectWholeInformation.getMessage());
             passwordGroup.setLayoutY(16);
             AuthField.setErrorStyle(passwordField,passwordErrorLabel,IncorrectWholeInformation.getMessage());
+            Log.writeNewExceptionLog(IncorrectWholeInformation);
+            Log.writeNewActionLog("Status: error ( invalid whole information )\n");
 
-        } catch (IncorrectIdentifierInformation | LengthException | TakenException identifierException) {
+        } catch (IncorrectIdentifierInformation | LengthException | TakenException | NotInDataBase identifierException ) {
 
             AuthField.setErrorStyle(emailField,emailErrorLabel,identifierException.getMessage());
             passwordGroup.setLayoutY(16);
+            Log.writeNewExceptionLog(identifierException);
+            Log.writeNewActionLog("Status: error ( identifier error )\n");
 
         } catch (IncorrectPasswordInformation | InvalidPassword passwordException ) {
 
             AuthField.setErrorStyle(passwordField,passwordErrorLabel,passwordException.getMessage());
             passwordGroup.setLayoutY(0);
+            Log.writeNewExceptionLog(passwordException);
+            Log.writeNewActionLog("Status: error ( password error )\n");
 
+        } catch (Exception extraException) {
+            // if there is issues with database, they will be displayed on extra label
+            extraLabel.setText(extraException.getMessage());
+            Log.writeNewExceptionLog(extraException);
+            Log.writeNewActionLog("Status: error ( extra error )");
         }
     }
 
@@ -119,16 +131,22 @@ public class LogInController {
         passwordFieldStyled.setStyle();
     }
 
-    private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, InvalidPassword, IOException {
+    private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, InvalidPassword, IOException, NotInDataBase {
         if (identifier.isEmpty() && password.isEmpty()) {
             throw new IncorrectWholeInformation("Incorrect information");
         }
 
-        if (identifier.isEmpty() | !UsersDataBase.checkUserPresence(identifier)) {
-            throw new IncorrectIdentifierInformation("Incorrect information");
+        if (identifier.isEmpty() ) {
+            throw new IncorrectIdentifierInformation("Invalid information");
+        }
+        if (getIdentifierType(identifier).equals("-")) {
+            throw new IncorrectIdentifierInformation("Invalid information");
         }
         if (identifier.length() > 25) {
             throw new LengthException("Email or name is too long");
+        }
+        if (!UsersDataBase.checkUserPresence(identifier)) {
+            throw new NotInDataBase("The person was not found");
         }
 
         if (password.isEmpty()) {
@@ -143,6 +161,24 @@ public class LogInController {
 
     private void closeLogInWindow() {
         ((Stage) (anchorPane.getScene().getWindow())).close();
+    }
+
+    private static String getIdentifierType(String identifier) {
+        String emailPattern = "^.+@\\S*\\.[a-z]{2,}$";
+        Pattern emailPatternCompile = Pattern.compile(emailPattern);
+        Matcher emailMatcher = emailPatternCompile.matcher(identifier);
+
+        String namePattern = "^[a-zA-Z][a-zA-Z0-9 ]+$";
+        Pattern namePatternCompile = Pattern.compile(namePattern);
+        Matcher nameMatcher = namePatternCompile.matcher(identifier);
+
+        if (emailMatcher.find()) {
+            return "email";
+        } else if (nameMatcher.find()) {
+            return "name";
+        } else {
+            return "-";
+        }
     }
 
 }

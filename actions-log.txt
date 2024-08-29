@@ -1,8 +1,633 @@
+Status: singed up/logged in successfully!
 
 -----------------------------------------------------------------
-The table "users" inside "auth.db" was created ( if not existed )
-The stage was initialized!
-Sing Up window: opened
-New entered information: identifier - "+42342"; password - "123" 
-Checking information validity...
-Identifier has no letters (invalid information)!
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (4)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: -

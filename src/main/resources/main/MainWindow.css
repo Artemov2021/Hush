@@ -134,6 +134,9 @@
     -fx-prompt-text-fill: #595664;
     -fx-padding: 0 0 0 13;
 }
+.add-contact-field:focused {
+    -fx-border-color: #672DF0;
+}
 .add-contact-field-error {
     -fx-border-color: #F04343;
     -fx-font-size: 13;
@@ -219,3 +222,68 @@
     -fx-text-fill: #8A8A8A;
 }
 /*-----------------------------------------------------------------------------*/
+/* Settings window */
+.settings-window {
+    -fx-background-color: #161518;
+    -fx-background-radius: 14;
+}
+.settings-title {
+    -fx-font-size: 21;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+.settings-avatar-default {
+    -fx-background-image: url("elements/avatarDefaultSettings.png");
+    -fx-background-color: transparent;
+}
+.settings-identifier-label {
+    -fx-font-size: 12;
+    -fx-text-fill: white;
+}
+.settings-identifier-field {
+    -fx-background-color: #1D1C1F;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #2C2A2F;
+    -fx-text-fill: white;
+    -fx-font-size: 12;
+    -fx-padding: 5 5 5 13;
+    -fx-prompt-text-fill: #6E687A;
+}
+.settings-identifier-field:focused {
+    -fx-border-color: #672DF0;
+}
+.settings-identifier-field-error {
+    -fx-background-color: #1D1C1F;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #F04343;
+    -fx-text-fill: white;
+    -fx-font-size: 12;
+    -fx-padding: 5 5 5 13;
+    -fx-prompt-text-fill: #6E687A;
+}
+.settings-save-button {
+    -fx-background-image: url("elements/saveButtonDefault.png");
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: transparent;
+    -fx-background-repeat: no-repeat;
+    -fx-background-color: transparent;
+}
+.settings-save-button:pressed {
+    -fx-background-image: url("elements/saveButtonFocused.png");
+}
+.settings-cancel-button {
+    -fx-background-image: url("elements/cancelButtonDefault.png");
+    -fx-background-color: transparent;
+}
+.settings-cancel-button:hover {
+    -fx-background-image: url("elements/cancelButtonHovered.png");
+}
+.settings-cancel-button:pressed {
+    -fx-background-image: url("elements/cancelButtonFocused.png");
+}
+.settings-avatar-buttons-background {
+    -fx-background-color: #1D1C20;
+}

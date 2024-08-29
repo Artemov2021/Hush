@@ -64,13 +64,18 @@ public class SingUpController {
         // makes label animation and solves unnecessary spaces
         fieldsApplyStyle();
 
-        Log.writeNewActionLog("The stage was initialized!\n");
     }
 
     public void singUp() throws IOException {
         identifier = emailField.getText().trim();
         password = passwordField.getText().trim();
-        Log.writeNewActionLog(String.format("New entered information: identifier - \"%s\"; password - \"%s\" \n",identifier,password));
+
+        // Logging the action
+        Log.writeNewActionLog(String.format("\n%0" + 65 + "d" + "\n",0).replace("0","-"));
+        Log.writeNewActionLog("Window: Sing Up\n");
+        Log.writeNewActionLog(String.format("Identifier: %s (length: %d)\n",identifier,identifier.length()));
+        Log.writeNewActionLog(String.format("Identifier type: %s\n",getIdentifierType(identifier)));
+        Log.writeNewActionLog(String.format("Password: %s (length: %d)\n",password,password.length()));
 
         try {
 
@@ -80,36 +85,38 @@ public class SingUpController {
             passwordGroup.setLayoutY(0);
 
             if (checkInformationValidity(identifier, password)) {
-                Log.writeNewActionLog("The information is correct!\n");
                 UsersDataBase.addUser(identifier, password);
-                Log.writeNewActionLog("User was added to the \"auth.db\"\n");
                 closeSingUpWindow();
-                Log.writeNewActionLog("Sing Up window was closed\n");
                 openManinWindow();
-                Log.writeNewActionLog("Main window was opened\n");
             }
-
-        } catch (SQLException | IOException extraException) {
-
-            // if there is issues with database, they will be displayed on extra label
-            extraLabel.setText(extraException.getMessage());
 
         } catch (IncorrectWholeInformation IncorrectWholeInformation) {
 
             AuthField.setErrorStyle(emailField, emailErrorLabel, IncorrectWholeInformation.getMessage());
             passwordGroup.setLayoutY(16);
             AuthField.setErrorStyle(passwordField, passwordErrorLabel, IncorrectWholeInformation.getMessage());
+            Log.writeNewExceptionLog(IncorrectWholeInformation);
+            Log.writeNewActionLog("Status: error ( invalid whole information )\n");
 
         } catch (IncorrectIdentifierInformation | LengthException | TakenException identifierException) {
 
             AuthField.setErrorStyle(emailField, emailErrorLabel, identifierException.getMessage());
             passwordGroup.setLayoutY(16);
+            Log.writeNewExceptionLog(identifierException);
+            Log.writeNewActionLog("Status: error ( identifier error )\n");
 
         } catch (IncorrectPasswordInformation passwordException) {
 
             AuthField.setErrorStyle(passwordField, passwordErrorLabel, passwordException.getMessage());
             passwordGroup.setLayoutY(0);
+            Log.writeNewExceptionLog(passwordException);
+            Log.writeNewActionLog("Status: error ( password error )\n");
 
+        } catch (Exception extraException) {
+            // if there is issues with database, they will be displayed on extra label
+            extraLabel.setText(extraException.getMessage());
+            Log.writeNewExceptionLog(extraException);
+            Log.writeNewActionLog("Status: error ( extra error )\n");
         }
 
 
@@ -117,8 +124,6 @@ public class SingUpController {
 
     public void openLogIn() throws IOException {
         AuthLogInWindow.openLogInWindow((Stage) anchorPane.getScene().getWindow());
-        Log.writeNewActionLog(String.format("%0" + 65 + "d" + "\n",0).replace("0","-"));
-        Log.writeNewActionLog("Log In window was: opened\n");
     }
 
     private void openManinWindow() throws IOException, SQLException {
@@ -142,46 +147,46 @@ public class SingUpController {
     }
 
     private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, IOException {
-        Log.writeNewActionLog("Checking information validity...\n");
         if (identifier.isEmpty() && password.isEmpty()) {
-            Log.writeNewActionLog("Identifier and password are empty!\n");
             throw new IncorrectWholeInformation("Incorrect information");
         }
 
         if (identifier.isEmpty()) {
-            Log.writeNewActionLog("Identifier is empty!\n");
-            throw new IncorrectIdentifierInformation("Incorrect information");
+            throw new IncorrectIdentifierInformation("Invalid information");
+        }
+        if (getIdentifierType(identifier).equals("-")) {
+            throw new IncorrectIdentifierInformation("Invalid information");
         }
         if (identifier.length() > 25) {
-            Log.writeNewActionLog(String.format("Identifier length is more than 25! (%d)\n",identifier.length()));
             throw new LengthException("Email or name is too long");
         }
-        if (hasNoLetters(identifier)) {
-            Log.writeNewActionLog("Identifier has no letters (invalid information)!\n");
-            throw new IncorrectIdentifierInformation("Incorrect information");
-        }
         if (UsersDataBase.checkUserPresence(identifier)) {
-            Log.writeNewActionLog("Identifier is already in database!\n");
             throw new TakenException("Email or name is already taken");
         }
 
 
         if (password.isEmpty()) {
-            Log.writeNewActionLog("Password is empty!\n");
             throw new IncorrectPasswordInformation("Incorrect information");
         }
 
         return true;
     }
 
-    private static boolean hasNoLetters(String identifier) {
-        String numbersPattern = "^[^a-z]+$";
-        Pattern pattern = Pattern.compile(numbersPattern);
-        Matcher matcher = pattern.matcher(identifier);
-        if (matcher.find()) {
-            return true;
-        }
-        return false;
+    private static String getIdentifierType(String identifier) {
+        String emailPattern = "^.+@\\S*\\.[a-z]{2,}$";
+        Pattern emailPatternCompile = Pattern.compile(emailPattern);
+        Matcher emailMatcher = emailPatternCompile.matcher(identifier);
 
+        String namePattern = "^[a-zA-Z][a-zA-Z0-9 ]+$";
+        Pattern namePatternCompile = Pattern.compile(namePattern);
+        Matcher nameMatcher = namePatternCompile.matcher(identifier);
+
+        if (emailMatcher.find()) {
+            return "email";
+        } else if (nameMatcher.find()) {
+            return "name";
+        } else {
+            return "-";
+        }
     }
 }

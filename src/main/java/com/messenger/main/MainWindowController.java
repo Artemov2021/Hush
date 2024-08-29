@@ -1,8 +1,10 @@
 package com.messenger.main;
 
+import com.messenger.Log;
 import com.messenger.database.DetailedDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.main.smallWindows.NewContactWindow;
+import com.messenger.main.smallWindows.SettingsWindow;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -54,6 +56,12 @@ public class MainWindowController {
     private String email;
 
     public void initializeWithValue () throws SQLException, IOException {
+        Log.writeNewActionLog("Status: singed up/logged in successfully!\n");
+        Log.writeNewActionLog(String.format("\n%0" + 65 + "d" + "\n",0).replace("0","-"));
+        Log.writeNewActionLog(String.format("%35s\n","Main Window"));
+        Log.writeNewActionLog(String.format("User: %s\n",name));
+        Log.writeNewActionLog(String.format("Email: %s\n",email==null?"-":email));
+
         settingsLabel.setMouseTransparent(true);
         addContactLabel.setMouseTransparent(true);
 
@@ -85,6 +93,7 @@ public class MainWindowController {
             anchorPane.getChildren().add(title);
 
             MainContactList.addContactsToList(contactsScrollPane,contactsVBox,name);
+            Log.writeNewActionLog(String.format("All contacts were displayed (%d)\n",UsersDataBase.getContactsAmount(name)));
         }
     }
 
@@ -103,9 +112,14 @@ public class MainWindowController {
         NewContactWindow newContactWindow = new NewContactWindow(anchorPane,name);
         newContactWindow.openWindow();
     }
-//    public void initialize() throws SQLException, IOException {
-//        name = "Andrew Tate";
-//
-//        initializeWithValue();
-//    }
+
+    public void settings() throws SQLException, IOException {
+        SettingsWindow settingsWindow = new SettingsWindow(name,anchorPane);
+        settingsWindow.openWindow();
+    }
+
+    public void initialize() throws SQLException, IOException {
+        name = "Max";
+        initializeWithValue();
+    }
 }

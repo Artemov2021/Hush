@@ -1,10 +1,10 @@
 package com.messenger.main.smallWindows;
 
+import com.messenger.Log;
 import com.messenger.database.DetailedDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.exceptions.AlreadyInDataBase;
 import com.messenger.exceptions.IncorrectIdentifierInformation;
-import com.messenger.exceptions.IncorrectWholeInformation;
 import com.messenger.exceptions.NotInDataBase;
 import com.messenger.main.MainContactList;
 import javafx.animation.FadeTransition;
@@ -14,19 +14,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.IOException;
-import java.io.NotActiveException;
-import java.util.Arrays;
-import java.util.HashSet;
 
 import java.sql.SQLException;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -109,7 +103,7 @@ public class NewContactWindow {
         contactInfoField.getStyleClass().add("add-contact-field");
         contactInfoField.setLayoutX(25);
         contactInfoField.setLayoutY(135);
-        contactInfoField.setPromptText("Name or phone number");
+        contactInfoField.setPromptText("Name or email address");
 
         Button contactAddButton = new Button();
         contactAddButton.setPrefWidth(72);
@@ -151,13 +145,14 @@ public class NewContactWindow {
         contactAddButton.setOnAction(actionEvent -> {
 
             // checking, whether new contact user is in database, if true, addContact will be called automatically
-            String info = contactInfoField.getText().trim();
+            String identifier = contactInfoField.getText().trim();
 
             try {
-                if (checkValidity(info, contactInfoField, contactErrorLabel, overlay, contactPane)) {
-                    String infoType = isPhoneNumber(info) ? "phone number" : "name";
-                    String contactName = infoType.contains("phone number") ? UsersDataBase.getNameWithPhoneNumber(convertToPhoneStyle(info)) : info;
+                if (checkValidity(name, identifier, contactInfoField, contactErrorLabel, overlay, contactPane)) {
+                    String infoType = getIdentifierType(identifier);
+                    String contactName = infoType.equals("email") ? UsersDataBase.getNameWithEmail(identifier) : identifier;
                     MainContactList.addContactToList((ScrollPane) anchorPane.getScene().lookup("#contactsScrollPane"), (VBox) anchorPane.getScene().lookup("#contactsVBox"), name, contactName);
+                    Log.writeNewActionLog(String.format("All contacts were displayed (%d)\n",UsersDataBase.getContactsAmount(name)));
                 }
             } catch (SQLException | IOException e) {
                 contactErrorLabel.setText(e.getMessage());
@@ -169,30 +164,31 @@ public class NewContactWindow {
 
 
 
-    private boolean checkValidity(String info,TextField field,Label errorLabel,Pane overlay,Pane contactPane) {
+    private boolean checkValidity(String mainUser, String identifier, TextField field, Label errorLabel, Pane overlay, Pane contactPane) {
         try {
             errorLabel.setVisible(false);
             field.getStyleClass().clear();
             field.getStyleClass().add("add-contact-field");
 
-            if (info.isEmpty()) {
+            if (identifier.isEmpty()) {
                 throw new IncorrectIdentifierInformation("Incorrect information");
             }
+            if (getIdentifierType(identifier).equals("-")) {
+                throw new IncorrectIdentifierInformation("Incorrect information");
+            }
+            String identifierType = getIdentifierType(identifier);
+            boolean presenceInDB = UsersDataBase.checkUserPresence(identifier);
 
-            String infoType = isPhoneNumber(convertToPhoneStyle(info)) ? "phone number" : "name";
-            System.out.println("Converted Info: " + convertToPhoneStyle(info));
-            System.out.println("Info Type: " + infoType);
-            boolean presenceInDB = infoType.equals("phone number") ? UsersDataBase.checkPhonePresence(convertToPhoneStyle(info)) : UsersDataBase.checkUserPresence(info);
-
-            if (!presenceInDB) {
+            if (!presenceInDB || mainUser.equals(identifier)) {
                 throw new NotInDataBase("The person was not found");
             }
 
-            if (DetailedDataBase.checkUserPresence(name,isPhoneNumber(convertToPhoneStyle(info)) ? UsersDataBase.getNameWithPhoneNumber(convertToPhoneStyle(info)) : info)) {
+            if (DetailedDataBase.checkUserPresence(name,identifierType.equals("email") ? UsersDataBase.getNameWithEmail(identifier) : identifier)) {
                 throw new AlreadyInDataBase("The contact is already added");
             }
 
-            addContact(isPhoneNumber(info) ? convertToPhoneStyle(info) : info);
+            addContact(identifier);
+            Log.writeNewActionLog(String.format("+ New contact added: %s\n",identifier));
             hideWindow(overlay,contactPane);
             return true;
         } catch (Exception e) {
@@ -207,27 +203,22 @@ public class NewContactWindow {
         }
     }
 
-    private static boolean isPhoneNumber(String info) {
-        String phoneNumberPattern = "^[0-9-+ ]+$";
-        Pattern pattern = Pattern.compile(phoneNumberPattern);
-        Matcher matcher = pattern.matcher(info);
-        if (matcher.find()) {
-            return true;
-        }
-        return false;
-    }
+    private static String getIdentifierType(String identifier) {
+        String emailPattern = "^.+@\\S*\\.[a-z]{2,}$";
+        Pattern emailPatternCompile = Pattern.compile(emailPattern);
+        Matcher emailMatcher = emailPatternCompile.matcher(identifier);
 
-    // convert to a phone number style, that is in database
-    // Input: 45 283 1843645
-    // Converted: +452831843645
-    private String convertToPhoneStyle(String phoneNumber) {
-        String convertedPhoneNumber = String.valueOf(phoneNumber.charAt(0)).equals("+") ? "" : "+";
-        for (int i = 0;i < phoneNumber.length();i++) {
-            if (!String.valueOf(phoneNumber.charAt(i)).equals(" ")) {
-                convertedPhoneNumber += phoneNumber.charAt(i);
-            }
+        String namePattern = "^[a-zA-Z][a-zA-Z0-9 ]+$";
+        Pattern namePatternCompile = Pattern.compile(namePattern);
+        Matcher nameMatcher = namePatternCompile.matcher(identifier);
+
+        if (emailMatcher.find()) {
+            return "email";
+        } else if (nameMatcher.find()) {
+            return "name";
+        } else {
+            return "-";
         }
-        return convertedPhoneNumber;
     }
 
     private void addContact(String info) throws SQLException, IOException, InterruptedException {

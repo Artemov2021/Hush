@@ -27,9 +27,7 @@ public class UsersDataBase {
 
     public static boolean checkUserPresence(String identifier) throws SQLException, IOException {
         // works only with a name or an email
-        Log.writeNewActionLog("Checking user presence in db....\n");
         String identifierType = isEmailOrName(identifier);
-        Log.writeNewActionLog(String.format("Identifier (%s) was defined as a %s\n",identifier,identifierType));
         String statement = "SELECT " + identifierType + " FROM users WHERE " + identifierType + " = ?";
 
         try (Connection connection = DriverManager.getConnection(url)) {
@@ -37,11 +35,9 @@ public class UsersDataBase {
             stmt.setString(1,identifier);
             ResultSet result = stmt.executeQuery();
             if (result.next()) {
-                Log.writeNewActionLog("User is in db!\n");
                 return true;
             }
         }
-        Log.writeNewActionLog("User is not in db!\n");
         return false;
     }
 
@@ -53,21 +49,6 @@ public class UsersDataBase {
             return "email";
         }
         return "name";
-    }
-
-    public static boolean checkPhonePresence(String phone) throws SQLException {
-        // works only with a name
-        String statement = "SELECT phone_number FROM users WHERE phone_number = ?";
-
-        try (Connection connection = DriverManager.getConnection(url)) {
-            PreparedStatement stmt = connection.prepareStatement(statement);
-            stmt.setString(1,phone);
-            ResultSet result = stmt.executeQuery();
-            if (result.next()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public static boolean checkPasswordValidity(String identifier,String password) throws SQLException {
@@ -91,19 +72,6 @@ public class UsersDataBase {
         try (var conn = DriverManager.getConnection(url)) {
             var stmt = conn.prepareStatement(statement);
             stmt.setString(1,email);
-            ResultSet result = stmt.executeQuery();
-            if (result.next()) {
-                return result.getString("name");
-            }
-        }
-        return "";
-    }
-
-    public static String getNameWithPhoneNumber( String phoneNumber ) throws SQLException {
-        String statement = "SELECT name FROM users WHERE  phone_number = ?";
-        try (var conn = DriverManager.getConnection(url)) {
-            var stmt = conn.prepareStatement(statement);
-            stmt.setString(1, phoneNumber);
             ResultSet result = stmt.executeQuery();
             if (result.next()) {
                 return result.getString("name");
@@ -164,15 +132,34 @@ public class UsersDataBase {
     }
 
     public static String getAvatar(String contact) throws SQLException {
+        String identifier = getIdentifierType(contact).equals("email") ? UsersDataBase.getNameWithEmail(contact) : contact;
         String statement = "SELECT avatar FROM users WHERE name = ?";
         try (Connection connection = DriverManager.getConnection(url)) {
             PreparedStatement stmt = connection.prepareStatement(statement);
-            stmt.setString(1,contact);
+            stmt.setString(1,identifier);
             ResultSet result = stmt.executeQuery();
             if (result.next()) {
                 return result.getString(1);
             }
         }
         return "";
+    }
+
+    private static String getIdentifierType(String identifier) {
+        String emailPattern = "^.+@\\S*\\.[a-z]{2,}$";
+        Pattern emailPatternCompile = Pattern.compile(emailPattern);
+        Matcher emailMatcher = emailPatternCompile.matcher(identifier);
+
+        String namePattern = "^[a-zA-Z][a-zA-Z0-9 ]+$";
+        Pattern namePatternCompile = Pattern.compile(namePattern);
+        Matcher nameMatcher = namePatternCompile.matcher(identifier);
+
+        if (emailMatcher.find()) {
+            return "email";
+        } else if (nameMatcher.find()) {
+            return "name";
+        } else {
+            return "-";
+        }
     }
 }

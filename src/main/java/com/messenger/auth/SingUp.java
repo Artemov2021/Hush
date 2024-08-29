@@ -18,9 +18,6 @@ public class SingUp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // the beginning line
-        Log.writeNewActionLog(String.format("%0" + 65 + "d" + "\n",0).replace("0","-"));
-
         createDB();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/auth/SingUp.fxml"));
         Scene scene = new Scene(loader.load());
@@ -28,9 +25,6 @@ public class SingUp extends Application {
         primaryStage.setScene(scene);
         primaryStage.setTitle("Sing Up");
         primaryStage.show();
-
-        Log.writeNewActionLog("Sing Up window: opened\n");
-
     }
 
     private void createDB() throws IOException {
@@ -43,6 +37,5 @@ public class SingUp extends Application {
         } catch (SQLException e) {
             Log.writeNewExceptionLog(e);
         }
-        Log.writeNewActionLog("The table \"users\" inside \"auth.db\" was created ( if not existed )\n");
     }
 }

@@ -1,5 +1,6 @@
 package com.messenger.main;
 
+import com.messenger.Log;
 import com.messenger.database.DetailedDataBase;
 import com.messenger.database.UsersDataBase;
 import javafx.scene.control.Label;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.SimpleTimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,11 +38,8 @@ public class MainContactList {
         Label avatar = new Label();
         avatar.setPrefWidth(38);
         avatar.setPrefHeight(38);
-
         String avatarUrl = "/avatars/" + UsersDataBase.getAvatar(userName);
-        Pattern avatarPresencePattern = Pattern.compile("^.*(?<!null)$");
-        Matcher avatarMatcher = avatarPresencePattern.matcher(avatarUrl);
-        if (avatarMatcher.find()) {
+        if (UsersDataBase.getAvatar(userName) != null) {
             URL url = MainContactList.class.getResource(avatarUrl);
             imageResizer(new URL(url.toString().replaceAll("target/classes","src/main/resources")));
             ImageView imageView = new ImageView(new Image(url.toString().replaceAll("target/classes","src/main/resources")));
@@ -92,7 +91,6 @@ public class MainContactList {
     }
 
     private static void imageResizer(URL imageUrl) throws IOException {
-        System.out.println("Url: "+imageUrl);
         BufferedImage originalImage = ImageIO.read(imageUrl);
 
         int originalWidth = originalImage.getWidth();
@@ -129,11 +127,4 @@ public class MainContactList {
 
     }
 
-    private static String removeExtension(String fileName) {
-        int lastDotIndex = fileName.lastIndexOf('.');
-        if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
-            return fileName.substring(0, lastDotIndex);
-        }
-        return fileName;
-    }
 }
