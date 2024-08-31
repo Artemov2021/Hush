@@ -119,7 +119,6 @@ public class SingUpController {
             Log.writeNewActionLog("Status: error ( extra error )\n");
         }
 
-
     }
 
     public void openLogIn() throws IOException {

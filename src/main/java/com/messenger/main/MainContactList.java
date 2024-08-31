@@ -34,14 +34,12 @@ public class MainContactList {
         userPane.setPrefWidth(box.getWidth());
         userPane.setMinHeight(55);
 
-        //TODO
         Label avatar = new Label();
         avatar.setPrefWidth(38);
         avatar.setPrefHeight(38);
         String avatarUrl = "/avatars/" + UsersDataBase.getAvatar(userName);
         if (UsersDataBase.getAvatar(userName) != null) {
             URL url = MainContactList.class.getResource(avatarUrl);
-            imageResizer(new URL(url.toString().replaceAll("target/classes","src/main/resources")));
             ImageView imageView = new ImageView(new Image(url.toString().replaceAll("target/classes","src/main/resources")));
             imageView.setFitHeight(38);
             imageView.setFitWidth(38);

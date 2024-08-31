@@ -2,6 +2,7 @@ package com.messenger.database;
 
 import com.messenger.Log;
 
+import javax.swing.plaf.nimbus.State;
 import java.io.IOException;
 import java.sql.*;
 import java.util.regex.Matcher;
@@ -41,6 +42,33 @@ public class UsersDataBase {
         return false;
     }
 
+    public static void changeName(String oldName,String newName) throws IOException, SQLException {
+        String UsersDBLink = "jdbc:sqlite:auth.db";
+        try (Connection connection3 = DriverManager.getConnection(UsersDBLink);
+             PreparedStatement stmt3 = connection3.prepareStatement("UPDATE users SET name = ? WHERE name = ?")) {
+            stmt3.setString(1,newName);
+            stmt3.setString(2,oldName);
+            stmt3.executeUpdate();
+        } catch (SQLException e) {
+            Log.writeNewExceptionLog(e);
+            throw e;
+        }
+    }
+
+    public static void changeEmail(String name,String newEmail) throws IOException, SQLException {
+        String UsersDBLink = "jdbc:sqlite:auth.db";
+        newEmail = newEmail.isEmpty() ? null : newEmail;
+        try (Connection connection3 = DriverManager.getConnection(UsersDBLink);
+             PreparedStatement stmt3 = connection3.prepareStatement("UPDATE users SET email = ? WHERE name = ?")) {
+            stmt3.setString(1,newEmail);
+            stmt3.setString(2,name);
+            stmt3.executeUpdate();
+        } catch (SQLException e) {
+            Log.writeNewExceptionLog(e);
+            throw e;
+        }
+    }
+
     private static String isEmailOrName(String identifier) {
         String emailPattern = "@\\S*\\.[a-z]{2,}$";
         Pattern pattern = Pattern.compile(emailPattern);
@@ -77,17 +105,30 @@ public class UsersDataBase {
                 return result.getString("name");
             }
         }
-        return "";
+        return null;
+    }
+
+    public static String getNameWithId(int id) throws SQLException {
+        String statement = "SELECT name FROM users WHERE id = ?";
+        try (var conn = DriverManager.getConnection(url)) {
+            var stmt = conn.prepareStatement(statement);
+            stmt.setInt(1,id);
+            ResultSet result = stmt.executeQuery();
+            if (result.next()) {
+                return result.getString("name");
+            }
+        }
+        return null;
     }
 
     public static String getEmailWithName( String name ) throws SQLException {
-        String statement = "SELECT name FROM users WHERE email = ?";
+        String statement = "SELECT email FROM users WHERE name = ?";
         try (var conn = DriverManager.getConnection(url)) {
             var stmt = conn.prepareStatement(statement);
             stmt.setString(1, name);
             ResultSet result = stmt.executeQuery();
             if (result.next()) {
-                return result.getString("name");
+                return result.getString("email");
             }
         }
         return "";
@@ -142,7 +183,17 @@ public class UsersDataBase {
                 return result.getString(1);
             }
         }
-        return "";
+        return null;
+    }
+
+    public static void setAvatar(String name,String avatar) throws SQLException {
+        String statement = "UPDATE users SET avatar = ? WHERE name = ?";
+        try (Connection connection = DriverManager.getConnection(url)) {
+            PreparedStatement stmt = connection.prepareStatement(statement);
+            stmt.setString(1,avatar);
+            stmt.setString(2,name);
+            stmt.executeUpdate();
+        }
     }
 
     private static String getIdentifierType(String identifier) {

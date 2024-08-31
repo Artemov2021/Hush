@@ -206,7 +206,6 @@
 }
 .user-pane-avatar-default {
     -fx-background-image: url("elements/avatarDefaultContacts.png");
-
 }
 .user-pane-name {
     -fx-font-size: 12;
@@ -284,6 +283,38 @@
 .settings-cancel-button:pressed {
     -fx-background-image: url("elements/cancelButtonFocused.png");
 }
+.settings-error-label {
+    -fx-font-size: 11;
+    -fx-text-fill: #F04343;
+}
 .settings-avatar-buttons-background {
     -fx-background-color: #1D1C20;
+    -fx-background-radius: 4;
+}
+.settings-avatar-button {
+    -fx-background-color: #1D1C20;
+    -fx-background-radius: 3;
+}
+.settings-avatar-button:hover {
+    -fx-background-color: #242326;
+}
+.settings-avatar-button:pressed {
+    -fx-background-color: #323036;
+}
+
+.settings-avatar-button-change-symbol {
+    -fx-background-image: url("elements/settingsChange.png");
+    -fx-background-repeat: no-repeat;
+}
+.settings-avatar-button-change-text {
+    -fx-font-size: 9;
+    -fx-text-fill: white;
+}
+.settings-avatar-button-delete-symbol {
+    -fx-background-image: url("elements/settingsDelete.png");
+    -fx-background-repeat: no-repeat;
+}
+.settings-avatar-button-delete-text {
+    -fx-font-size: 9;
+    -fx-text-fill: white;
 }

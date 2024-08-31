@@ -12,20 +12,26 @@ import javafx.scene.control.Label;
 import com.messenger.design.MainStyling;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
 import java.io.IOException;
+import java.net.URL;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class MainWindowController {
     @FXML
     private AnchorPane anchorPane;
+    @FXML
+    private Label avatarLabel;
     @FXML
     private Label nameLabel;
     @FXML
@@ -38,8 +44,6 @@ public class MainWindowController {
     private TextField searchField;
     @FXML
     private Label searchLupeLabel;
-    @FXML
-    private Button addContactButton;
     @FXML
     private Label addContactLabel;
     @FXML
@@ -68,10 +72,29 @@ public class MainWindowController {
         nameLabel.setText(name);
         emailLabel.setText(email);
 
+        DetailedDataBase.createUserDataBase(name);
+
+        if (UsersDataBase.getAvatar(name) != null) {
+            String avatarUrl = "/avatars/" + UsersDataBase.getAvatar(name);
+            URL url = MainContactList.class.getResource(avatarUrl);
+            ImageView imageView = new ImageView(new Image(url.toString().replaceAll("target/classes","src/main/resources")));
+            imageView.setFitHeight(34);
+            imageView.setFitWidth(34);
+            imageView.setSmooth(true);
+            avatarLabel.setGraphic(imageView);
+            Circle clip = new Circle();
+            clip.setLayoutX(17);
+            clip.setLayoutY(17);
+            clip.setRadius(17);
+            avatarLabel.setClip(clip);
+        } else {
+            avatarLabel.getStyleClass().clear();
+            avatarLabel.getStyleClass().add("avatar-button-default");
+        }
+
         // If there is no email, email label will become invisible and name label will be moved down
         if (email == null) {
-            emailLabel.getStyleClass().clear();
-            emailLabel.getStyleClass().add("email-label-invisible");
+            emailLabel.setVisible(false);
             nameLabel.setLayoutY(30);
         }
 
@@ -109,17 +132,18 @@ public class MainWindowController {
     }
 
     public void addContactWindow () {
-        NewContactWindow newContactWindow = new NewContactWindow(anchorPane,name);
+        NewContactWindow newContactWindow = new NewContactWindow(anchorPane,nameLabel.getText());
         newContactWindow.openWindow();
     }
 
     public void settings() throws SQLException, IOException {
-        SettingsWindow settingsWindow = new SettingsWindow(name,anchorPane);
+        SettingsWindow settingsWindow = new SettingsWindow(nameLabel.getText(),anchorPane);
         settingsWindow.openWindow();
     }
 
     public void initialize() throws SQLException, IOException {
-        name = "Max";
+        name = UsersDataBase.getNameWithId(1);
+        email = UsersDataBase.getEmailWithName(name);
         initializeWithValue();
     }
 }

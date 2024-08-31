@@ -21,7 +21,6 @@ public class DetailedDataBase {
             Log.writeNewExceptionLog(e);
             throw e;
         }
-
     }
 
     public static void addContact(String mainUser,String info) throws SQLException, IOException, InterruptedException {
@@ -49,19 +48,7 @@ public class DetailedDataBase {
             throw e;
         }
 
-        // Changing contacts amount of the user
-        String UsersDBLink = "jdbc:sqlite:auth.db";
-        int contactsAmount = UsersDataBase.getContactsAmount(mainUser);
-        try (Connection connection3 = DriverManager.getConnection(UsersDBLink);
-             PreparedStatement stmt3 = connection3.prepareStatement("UPDATE users SET contacts_amount = ? WHERE name = ?")) {
-            stmt3.setInt(1, contactsAmount + 1);
-            stmt3.setString(2, mainUser);
-            Thread.sleep(1000);
-            stmt3.executeUpdate();
-        } catch (SQLException e) {
-            Log.writeNewExceptionLog(e);
-            throw e;
-        }
+        UsersDataBase.addContactsAmount(mainUser);
     }
 
     public static boolean checkUserPresence(String mainUser,String contactName) throws SQLException, IOException {

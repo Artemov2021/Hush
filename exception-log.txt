@@ -1,3 +1,2 @@
-27-08 19:49 Email or name is already taken
-       | class: com.messenger.auth.SingUpController | method: checkInformationValidity | line: 165 |
-       | class: com.messenger.auth.SingUpController | method:                   singUp | line:  87 |
+31-08 12:33 Cannot invoke "String.equals(Object)" because "this.email" is null
+       | class: com.messenger.main.smallWindows.SettingsWindow | method: lambda$setContactWindowComponents$5 | line: 221 |
