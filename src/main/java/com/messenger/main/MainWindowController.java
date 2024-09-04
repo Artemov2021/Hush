@@ -7,6 +7,9 @@ import com.messenger.main.smallWindows.NewContactWindow;
 import com.messenger.main.smallWindows.SettingsWindow;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import com.messenger.design.MainStyling;
@@ -20,6 +23,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -56,22 +62,18 @@ public class MainWindowController {
     private VBox contactsVBox;
 
 
+    private int id;
     private String name;
     private String email;
 
     public void initializeWithValue () throws SQLException, IOException {
-        Log.writeNewActionLog("Status: singed up/logged in successfully!\n");
-        Log.writeNewActionLog(String.format("\n%0" + 65 + "d" + "\n",0).replace("0","-"));
-        Log.writeNewActionLog(String.format("%35s\n","Main Window"));
-        Log.writeNewActionLog(String.format("User: %s\n",name));
-        Log.writeNewActionLog(String.format("Email: %s\n",email==null?"-":email));
-
         settingsLabel.setMouseTransparent(true);
         addContactLabel.setMouseTransparent(true);
 
         nameLabel.setText(name);
         emailLabel.setText(email);
 
+        // It creates a detailed database of user, if for some reason there is no
         DetailedDataBase.createUserDataBase(name);
 
         if (UsersDataBase.getAvatar(name) != null) {
@@ -123,11 +125,13 @@ public class MainWindowController {
     public void setEmail (String email) throws SQLException, IOException {
         this.email = email;
         name = UsersDataBase.getNameWithEmail(email);
+        this.id = UsersDataBase.getIdWithName(name);
         initializeWithValue();
     }
 
     public void setName (String name) throws SQLException, IOException {
         this.name = name;
+        this.id = UsersDataBase.getIdWithName(name);
         initializeWithValue();
     }
 
@@ -136,14 +140,32 @@ public class MainWindowController {
         newContactWindow.openWindow();
     }
 
-    public void settings() throws SQLException, IOException {
-        SettingsWindow settingsWindow = new SettingsWindow(nameLabel.getText(),anchorPane);
-        settingsWindow.openWindow();
+    @FXML
+    private void openSettingsWindow() {
+        try {
+            // Load FXML settings window ( pane )
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/SettingsWindow.fxml"));
+            Parent root = loader.load();
+
+            // Pass the anchor pane of main window to settings controller file
+            SettingsWindow settingsController = loader.getController();
+            settingsController.setMainAnchorPane(anchorPane);
+            settingsController.setName(UsersDataBase.getNameWithId(id));
+            settingsController.initializeWithValue();
+
+            anchorPane.getChildren().add(root);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void initialize() throws SQLException, IOException {
         name = UsersDataBase.getNameWithId(1);
         email = UsersDataBase.getEmailWithName(name);
+        this.id = 1;
         initializeWithValue();
     }
 }

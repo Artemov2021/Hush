@@ -1,2 +1,3 @@
-31-08 12:33 Cannot invoke "String.equals(Object)" because "this.email" is null
-       | class: com.messenger.main.smallWindows.SettingsWindow | method: lambda$setContactWindowComponents$5 | line: 221 |
+04-09 20:02      File was not created
+       | class: com.messenger.main.smallWindows.SettingsWindow | method:           changeDataBaseInfo | line: 369 |
+       | class: com.messenger.main.smallWindows.SettingsWindow | method: lambda$initializeWithValue$2 | line: 152 |

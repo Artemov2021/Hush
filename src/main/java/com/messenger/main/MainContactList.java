@@ -1,6 +1,6 @@
 package com.messenger.main;
 
-import com.messenger.Log;
+
 import com.messenger.database.DetailedDataBase;
 import com.messenger.database.UsersDataBase;
 import javafx.scene.control.Label;
@@ -11,16 +11,10 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.SimpleTimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class MainContactList {
@@ -87,42 +81,4 @@ public class MainContactList {
             addContactToList(scrollPane,box,mainUser,contact);
         }
     }
-
-    private static void imageResizer(URL imageUrl) throws IOException {
-        BufferedImage originalImage = ImageIO.read(imageUrl);
-
-        int originalWidth = originalImage.getWidth();
-        int originalHeight = originalImage.getHeight();
-
-        int cropLeft = 0;
-        int cropRight = 0;
-        int cropUp = 0;
-        int cropDown = 0;
-
-        if (originalWidth > originalHeight) {
-            cropLeft = (originalWidth - originalHeight) / 2;
-            cropRight = (originalWidth - originalHeight) / 2;
-        } else if (originalHeight > originalWidth) {
-            cropUp = (originalHeight - originalWidth) / 2;
-            cropDown = (originalHeight - originalWidth) / 2;
-        }
-
-        int newWidth = originalWidth - cropLeft - cropRight;
-        int newHeight = originalHeight - cropDown - cropUp;
-
-        // Crop the image
-        BufferedImage croppedImage = (originalWidth > originalHeight) ? originalImage.getSubimage(cropLeft, 0, newWidth, newHeight) : originalImage.getSubimage(0,cropUp,newWidth,newHeight);
-
-        // Convert URL to a File and extract the path
-        File inputFile = new File(imageUrl.getPath());
-
-        // Create a new file name for the cropped image
-        String newFileName = inputFile.getParent() + File.separator + inputFile.getName();
-        File outputfile = new File(newFileName);
-
-        // Save the cropped image
-        ImageIO.write(croppedImage, "png", outputfile);
-
-    }
-
 }

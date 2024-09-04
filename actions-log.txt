@@ -488,3 +488,476 @@ Status: singed up/logged in successfully!
 User: Max23
 Email: max2024@gmail.uk.com
 All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max23
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max
+Email: max2024@gmail.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corporation.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corporation.uk.co
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corporation.uk.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+
+-----------------------------------------------------------------
+Window: Log In
+Identifier: Tymur Artemov (length: 13)
+Identifier type: name
+Password: 777 (length: 3)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+
+-----------------------------------------------------------------
+Window: Log In
+Identifier: Tymur Artemov (length: 13)
+Identifier type: name
+Password: 777 (length: 3)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+
+-----------------------------------------------------------------
+Window: Log In
+Identifier: Tymur Artemov (length: 13)
+Identifier type: name
+Password: 777 (length: 3)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+
+-----------------------------------------------------------------
+Window: Log In
+Identifier: Tymur Artemov (length: 13)
+Identifier type: name
+Password: 777 (length: 3)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
++ New contact added: Max12345
+All contacts were displayed (1)
+
+-----------------------------------------------------------------
+Window: Log In
+Identifier: Tymur Artemov (length: 13)
+Identifier type: name
+Password: 777 (length: 3)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Tymur Artemov
+Email: -
+All contacts were displayed (1)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+Status: singed up/logged in successfully!
+
+-----------------------------------------------------------------
+                        Main Window
+User: Max12345
+Email: max2024@gmail.corpor.com
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)
+All contacts were displayed (2)

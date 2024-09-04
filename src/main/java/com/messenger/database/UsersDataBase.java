@@ -26,7 +26,7 @@ public class UsersDataBase {
     }
 
 
-    public static boolean checkUserPresence(String identifier) throws SQLException, IOException {
+    public static boolean checkUserPresence(String identifier) throws SQLException {
         // works only with a name or an email
         String identifierType = isEmailOrName(identifier);
         String statement = "SELECT " + identifierType + " FROM users WHERE " + identifierType + " = ?";
@@ -121,6 +121,19 @@ public class UsersDataBase {
         return null;
     }
 
+    public static int getIdWithName(String name) throws SQLException {
+        String statement = "SELECT id FROM users WHERE name = ?";
+        try (var conn = DriverManager.getConnection(url)) {
+            var stmt = conn.prepareStatement(statement);
+            stmt.setString(1,name);
+            ResultSet result = stmt.executeQuery();
+            if (result.next()) {
+                return result.getInt("id");
+            }
+        }
+        return -1;
+    }
+
     public static String getEmailWithName( String name ) throws SQLException {
         String statement = "SELECT email FROM users WHERE name = ?";
         try (var conn = DriverManager.getConnection(url)) {
@@ -152,10 +165,11 @@ public class UsersDataBase {
 
     public static void addContactsAmount(String name) throws SQLException {
         int contactAmount = getContactsAmount(name);
-        String statement = "INSERT INTO users (contact) VALUES (?) WHERE name = ";
+        String statement = "UPDATE users SET contacts_amount = ? WHERE name = ?";
         try (var conn = DriverManager.getConnection(url)) {
             var stmt = conn.prepareStatement(statement);
             stmt.setInt(1,contactAmount+1);
+            stmt.setString(2,name);
             stmt.executeUpdate();
         }
     }

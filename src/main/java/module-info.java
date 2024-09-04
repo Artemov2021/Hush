@@ -10,4 +10,7 @@ module com.main.messenger {
 
     opens com.messenger.main to javafx.fxml;
     exports com.messenger.main;
+
+    opens com.messenger.main.smallWindows to javafx.fxml;
+    exports com.messenger.main.smallWindows;
 }
