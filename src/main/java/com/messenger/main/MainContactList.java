@@ -1,12 +1,14 @@
 package com.messenger.main;
 
-
 import com.messenger.database.DetailedDataBase;
 import com.messenger.database.UsersDataBase;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
@@ -15,25 +17,41 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class MainContactList {
-    public static void addContactToList(ScrollPane scrollPane, VBox box,String mainUser, String userName) throws SQLException, IOException {
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        box.setSpacing(5);
+    private final AnchorPane mainAnchorPane;
+    private final VBox contactsVBox;
+    private final int mainUserId;
+
+    public MainContactList(AnchorPane mainAnchorPane,ScrollPane contactsScrollPane,VBox contactsVBox,int mainUserId) {
+        this.mainAnchorPane = mainAnchorPane;
+        this.contactsVBox = contactsVBox;
+        this.mainUserId = mainUserId;
+
+        contactsScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        contactsScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        contactsVBox.setSpacing(5);
+    }
+
+    public void addContactToList(int contactId) throws SQLException {
+        String userName = UsersDataBase.getNameWithId(contactId);
 
         Pane userPane = new Pane();
         userPane.getStyleClass().add("user-pane");
-        userPane.setPrefWidth(box.getWidth());
+        userPane.setPrefWidth(contactsVBox.getWidth());
         userPane.setMinHeight(55);
 
         Label avatar = new Label();
         avatar.setPrefWidth(38);
         avatar.setPrefHeight(38);
-        String avatarUrl = "/avatars/" + UsersDataBase.getAvatar(userName);
-        if (UsersDataBase.getAvatar(userName) != null) {
+        String avatarUrl = "/avatars/" + UsersDataBase.getAvatarWithId(contactId);
+        if (UsersDataBase.getAvatarWithId(contactId) != null) {
             URL url = MainContactList.class.getResource(avatarUrl);
+            assert url != null;
             ImageView imageView = new ImageView(new Image(url.toString().replaceAll("target/classes","src/main/resources")));
             imageView.setFitHeight(38);
             imageView.setFitWidth(38);
@@ -55,12 +73,14 @@ public class MainContactList {
         name.setLayoutX(58);
         name.setLayoutY(11);
 
-        Label message = new Label(DetailedDataBase.getLastMessage(mainUser,userName));
+        Label message = new Label(DetailedDataBase.getLastMessage(mainUserId, contactId));
+        message.setPrefWidth(180);
         message.getStyleClass().add("user-pane-message");
         message.setLayoutX(58);
-        message.setLayoutY(28);
+        message.setLayoutY(31);
 
-        String timeText = message.getText().isEmpty() ? "" : DetailedDataBase.getMessageTime(mainUser,userName,DetailedDataBase.getLastMessageId(mainUser,userName));
+        String messageTime = message.getText() == null ? "" : DetailedDataBase.getMessageTime(mainUserId,contactId,DetailedDataBase.getLastMessageId(mainUserId,contactId));
+        String timeText = convertTimeToHours(messageTime);
         Label time = new Label(timeText);
         time.getStyleClass().add("user-pane-time");
         time.setLayoutX(240);
@@ -72,13 +92,56 @@ public class MainContactList {
                 message,
                 time
         );
-        box.getChildren().add(0,userPane);
+        contactsVBox.getChildren().add(0,userPane);
+
+        // opens dialog pane
+        userPane.setOnMouseClicked(mouseEvent -> {
+            try {
+                System.out.println(UsersDataBase.getNameWithId(contactId));
+
+                // Load FXML new contact window ( pane )
+                FXMLLoader loader = new FXMLLoader(MainContactList.class.getResource("/main/Dialog.fxml"));
+                Parent dialogRoot = loader.load();
+
+                // Pass the anchor pane of main window to settings controller file
+                DialogController dialog = loader.getController();
+                dialog.setContactId(contactId);
+                dialog.setMainUserId(mainUserId);
+                dialog.setMainAnchorPane(mainAnchorPane);
+                dialog.initializeWithValue();
+
+                mainAnchorPane.getChildren().removeIf(child -> Objects.equals(child.getId(), "dialogBackgroundPane"));
+                mainAnchorPane.getChildren().add(0,dialogRoot);
+
+
+            } catch (SQLException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
-    public static void addContactsToList(ScrollPane scrollPane, VBox box,String mainUser) throws SQLException, IOException {
-        ArrayList<String> contacts = DetailedDataBase.getContacts(mainUser);
-        for (String contact: contacts) {
-            addContactToList(scrollPane,box,mainUser,contact);
+    private String convertTimeToHours(String time) {
+        String hoursPattern = "(\\d+):(\\d+)";
+        Pattern compliedPattern = Pattern.compile(hoursPattern);
+        Matcher matcher = compliedPattern.matcher(time);
+        if (matcher.find()) {
+            return String.format("%s:%s",matcher.group(1),matcher.group(2));
+        }
+        return null;
+    }
+
+    public void addUserContactsToList() throws SQLException {
+        // List of users id's
+        ArrayList<Integer> contacts = DetailedDataBase.getContactsIds(mainUserId);
+        for (int contactId: contacts) {
+            addContactToList(contactId);
         }
     }
+    public void addCustomContactsToList(ArrayList<Integer> contactsIds) throws SQLException {
+        for (int contactId: contactsIds) {
+            addContactToList(contactId);
+        }
+    }
+
+
 }

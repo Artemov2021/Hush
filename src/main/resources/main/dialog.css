@@ -1,0 +1,53 @@
+.root {
+    -fx-background-color: #161518;
+}
+.message-text-field {
+    -fx-background-color: #1D1C20;
+    -fx-border-color: #1D1C20;
+    -fx-font-size: 13;
+    -fx-prompt-text-fill: #5A5959;
+    -fx-text-fill: white;
+    -fx-padding: 0 30 0 50;
+}
+
+.add-photo-label {
+    -fx-background-image: url("elements/paperClipDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.add-photo-label:hover {
+    -fx-background-image: url("elements/paperClipFocused.png");
+
+}
+.send-label {
+    -fx-background-image: url("elements/sendDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.send-label:hover {
+    -fx-background-image: url("elements/sendFocused.png");
+}
+.upper-background {
+    -fx-background-color: #1D1C20;
+}
+.search-lupe-label {
+    -fx-background-image: url("elements/searchingLupeMessageDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.search-lupe-label:hover {
+    -fx-background-image: url("elements/searchingLupeMessageFocused.png");
+}
+.avatar-label {
+    -fx-background-image: url("elements/avatarDialogDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.name-label {
+    -fx-font-size: 14;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+.time-dialog-border-label {
+    -fx-background-color: #2F2C39;
+    -fx-background-radius: 7;
+    -fx-text-fill: white;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+}

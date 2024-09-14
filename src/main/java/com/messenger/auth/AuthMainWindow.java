@@ -21,12 +21,12 @@ public class AuthMainWindow {
 
         // Retrieve the controller and set the email
         MainWindowController mainWindowController = loader.getController();
-        if (isEmailOrName(info).equals("email")) {
-            mainWindowController.setEmail(info);
-            DetailedDataBase.createUserDataBase(UsersDataBase.getNameWithEmail(info));
+        if (getIdentifierType(info).equals("email")) {
+            mainWindowController.setId(UsersDataBase.getIdWithEmail(info));
+            DetailedDataBase.createUserDataBase(UsersDataBase.getIdWithEmail(info));
         } else {
-            mainWindowController.setName(info);
-            DetailedDataBase.createUserDataBase(info);
+            mainWindowController.setId(UsersDataBase.getIdWithName(info));
+            DetailedDataBase.createUserDataBase(UsersDataBase.getIdWithName(info));
         }
 
         // Set up the new stage
@@ -39,13 +39,21 @@ public class AuthMainWindow {
 
     }
 
-    private static String isEmailOrName(String identifier) {
-        String emailPattern = "@\\S*\\.[a-z]{2,}$";
-        Pattern pattern = Pattern.compile(emailPattern);
-        Matcher emailMatcher = pattern.matcher(identifier);
+    private static String getIdentifierType(String identifier) {
+        String emailPattern = "^.+@\\S*\\.[a-z]{2,}$";
+        Pattern emailPatternCompile = Pattern.compile(emailPattern);
+        Matcher emailMatcher = emailPatternCompile.matcher(identifier);
+
+        String namePattern = "^[a-zA-Z][a-zA-Z0-9 ]+$";
+        Pattern namePatternCompile = Pattern.compile(namePattern);
+        Matcher nameMatcher = namePatternCompile.matcher(identifier);
+
         if (emailMatcher.find()) {
             return "email";
+        } else if (nameMatcher.find()) {
+            return "name";
+        } else {
+            return "-";
         }
-        return "name";
     }
 }

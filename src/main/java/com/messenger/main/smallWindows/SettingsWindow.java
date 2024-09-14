@@ -2,14 +2,12 @@ package com.messenger.main.smallWindows;
 
 import com.messenger.Log;
 import com.messenger.database.UsersDataBase;
-import com.messenger.exceptions.*;
+import com.messenger.design.ShakeAnimation;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
-import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -21,7 +19,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
-import org.w3c.dom.Text;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -29,16 +26,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.Array;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 public class SettingsWindow {
+    private int mainUserId;
     private String name;
     private String email;
     private String avatar;
@@ -83,8 +78,6 @@ public class SettingsWindow {
 
 
     public void initializeWithValue() throws SQLException, MalformedURLException {
-        email = UsersDataBase.getEmailWithName(name);
-        avatar = UsersDataBase.getAvatar(name);
 
         // Opening effect ( fade in and movement to the left side )
         showOpeningEffect();
@@ -92,9 +85,9 @@ public class SettingsWindow {
         settingsPane.setPickOnBounds(false);
 
         // If user has avatar, it is going to be set
-        boolean avatarPresence = UsersDataBase.getAvatar(name) != null;
+        boolean avatarPresence = UsersDataBase.getAvatarWithId(mainUserId) != null;
         if (avatarPresence) {
-            URL avatarURL = new File("src/main/resources/avatars" + File.separator + UsersDataBase.getAvatar(name)).toURL();
+            URL avatarURL = new File("src/main/resources/avatars" + File.separator + UsersDataBase.getAvatarWithId(mainUserId)).toURL();
             setAvatarPicture(avatarLabel,avatarURL,90);
         }
 
@@ -148,11 +141,14 @@ public class SettingsWindow {
                 if ((nameEquality || (nameValidity && !nameDataBasePresence)) && (emailEquality || (emailValidity && !emailDataBasePresence))) {
                     setDefaultFields();
                     hideErrorLabels();
+
                     changeDataBaseInfo(newName,newEmail);
+                    changeDetailedDataBase(newName);
+                    changeAvatarsInFolder(newName);
+                    changeAvatarInUsersDB(newName);
                     changeMainLabels(newName,newEmail);
-                    if (avatarIsChanged) {
-                        changeAvatar(newName);
-                    }
+                    changeMainAvatar(34);
+
                     hideSettingsWindow();
                 } else {
                     handleNameField(newName);
@@ -163,22 +159,32 @@ public class SettingsWindow {
                 emailErrorLabel.setText(e.getMessage());
             }
 
-
         });
-
     }
 
-    private void hideErrorLabels() {
-        nameErrorLabel.setVisible(false);
-        emailErrorLabel.setVisible(false);
+    public void setId(int id) throws SQLException {
+        this.mainUserId = id;
+        setName(UsersDataBase.getNameWithId(id));
+        setEmail(UsersDataBase.getEmailWithId(id));
+        setAvatar(UsersDataBase.getAvatarWithId(id));
     }
-
+    public void setName(String name) {
+        this.name = name;
+    }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
     public void setMainAnchorPane(AnchorPane mainAnchorPane) {
         this.mainAnchorPane = mainAnchorPane;
     }
 
-    public void setName(String name) {
-        this.name = name;
+
+    private void hideErrorLabels() {
+        nameErrorLabel.setVisible(false);
+        emailErrorLabel.setVisible(false);
     }
 
     private void setDefaultFields() {
@@ -187,8 +193,6 @@ public class SettingsWindow {
         emailField.getStyleClass().clear();
         emailField.getStyleClass().add("settings-identifier-field");
     }
-
-
     private void showOpeningEffect() {
         // Appearing time
         FadeTransition FadeIn = new FadeTransition(Duration.millis(180), backgroundPane);
@@ -252,16 +256,15 @@ public class SettingsWindow {
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image Files","*.png","*.jpg"));
             File selectedFile = fileChooser.showOpenDialog(mainAnchorPane.getScene().getWindow());
             if (selectedFile != null) {
-
                 try {
 
                     setAvatarPicture(avatarLabel,selectedFile.toURL(),90);
                     avatarIsChanged = true;
                     pathToNewAvatar = selectedFile.getPath();
+
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-
             }
             buttonsBackgroundOverlay.setVisible(false);
             buttonsBackgroundPane.setVisible(false);
@@ -277,6 +280,14 @@ public class SettingsWindow {
             buttonsBackgroundOverlay.setVisible(false);
             buttonsBackgroundPane.setVisible(false);
         });
+    }
+
+    private void changeDetailedDataBase(String newName) {
+        File oldDataBaseFile = new File("details/"+name+".db");
+        File newDataBaseFile = new File("details/"+newName+".db");
+        if (!oldDataBaseFile.renameTo(newDataBaseFile)) {
+            emailErrorLabel.setText("data base was not renamed");
+        }
     }
 
     private boolean isNameValid(String name) {
@@ -327,6 +338,8 @@ public class SettingsWindow {
             nameErrorLabel.setVisible(true);
             nameErrorLabel.setText(exceptionMessage);
 
+            if (nameField.getText().isEmpty())
+                ShakeAnimation.applyShakeAnimation(nameField);
             nameField.getStyleClass().clear();
             nameField.getStyleClass().add("settings-identifier-field-error");
         }
@@ -362,17 +375,49 @@ public class SettingsWindow {
     public void changeDataBaseInfo(String newName,String newEmail) throws SQLException, IOException {
         UsersDataBase.changeName(name,newName);
         UsersDataBase.changeEmail(newName,newEmail);
-        File oldFile = new File("details/"+name+".db");
-        File newFile = new File("details/"+newName+".db");
-        if (!oldFile.renameTo(newFile)) {
-            Log.writeNewExceptionLog(new IOException("File was not created"));
-            throw new IOException("File was not created");
+    }
+
+    private void changeAvatarsInFolder(String newName) throws IOException {
+        File oldOriginalAvatar = new File("src/main/resources/avatars/"+name+"Original.png");
+        File oldCroppedAvatar = new File("src/main/resources/avatars/"+name+"Cropped.png");
+
+        // if user has already an avatar:
+        if (oldCroppedAvatar.exists() && oldCroppedAvatar.exists()) {
+            // if avatar was deleted:
+            if (avatarIsChanged && pathToNewAvatar == null) {
+                deleteAvatars();
+            // if avatar was changed:
+            } else if (avatarIsChanged && pathToNewAvatar != null) {
+                deleteAvatars();
+                imageResizer(new File(pathToNewAvatar),newName);
+            // if avatar was NOT changed:
+            } else {
+                File newOriginalAvatar = new File("src/main/resources/avatars/"+newName+"Original.png");
+                File newCroppedAvatar = new File("src/main/resources/avatars/"+newName+"Cropped.png");
+
+                if (!oldOriginalAvatar.renameTo(newOriginalAvatar)) {
+                    Log.writeNewExceptionLog(new IOException("File was not created"));
+                    throw new IOException("File was not created");
+                }
+                if (!oldCroppedAvatar.renameTo(newCroppedAvatar)) {
+                    Log.writeNewExceptionLog(new IOException("File was not created"));
+                    throw new IOException("File was not created");
+                }
+            }
+        // if user does not have an avatar:
+        } else if (!oldCroppedAvatar.exists() && !oldCroppedAvatar.exists()) {
+
+            if (avatarIsChanged && pathToNewAvatar != null) {
+                imageResizer(new File(pathToNewAvatar),newName);
+            }
+        } else {
+            emailErrorLabel.setText("Some of avatars misses");
         }
     }
 
     public void changeMainLabels(String newName,String newEmail) {
-        Label nameLabel = (Label) mainAnchorPane.getScene().lookup("#nameLabel");
-        Label emailLabel = (Label) mainAnchorPane.getScene().lookup("#emailLabel");
+        Label nameLabel = (Label) mainAnchorPane.getScene().lookup("#mainNameLabel");
+        Label emailLabel = (Label) mainAnchorPane.getScene().lookup("#mainEmailLabel");
         nameLabel.setText(newName);
         if (newEmail.isEmpty()) {
             emailLabel.setText("");
@@ -385,34 +430,47 @@ public class SettingsWindow {
         }
     }
 
-    private void changeAvatar(String newName) throws IOException, SQLException {
-        if (pathToNewAvatar != null && !pathToNewAvatar.isEmpty()) {
-            imageResizer(new File(pathToNewAvatar),newName);
-            UsersDataBase.setAvatar(newName,newName+"Cropped.png");
-            Label mainWindowAvatarLabel = (Label) mainAnchorPane.getScene().lookup("#avatarLabel");
-            URL newAvatarURL = new File(pathToNewAvatar).toURL();
-            setAvatarPicture(mainWindowAvatarLabel,newAvatarURL,34);
-        } else if (pathToNewAvatar == null) {
-            deleteAvatars(newName);
+    private void changeAvatarInUsersDB(String newName) throws SQLException {
+        if (pathToNewAvatar == null) {
             UsersDataBase.setAvatar(newName,null);
-            Label mainWindowAvatarLabel = (Label) mainAnchorPane.getScene().lookup("#avatarLabel");
-            mainWindowAvatarLabel.setGraphic(null);
-            mainWindowAvatarLabel.getStyleClass().clear();
-            mainWindowAvatarLabel.getStyleClass().add("avatar-button-default");
+        } else if (pathToNewAvatar.length() > 0){
+            UsersDataBase.setAvatar(newName,newName+"Cropped.png");
+        } else {
+            if (UsersDataBase.getAvatarWithId(mainUserId) != null) {
+                UsersDataBase.setAvatar(newName,newName+"Cropped.png");
+            }
         }
     }
 
-    private void deleteAvatars(String newName) {
+    private void changeMainAvatar(int size) throws MalformedURLException {
+        Label mainAvatarLabel = (Label) mainAnchorPane.getScene().lookup("#mainAvatarLabel");
+        if (pathToNewAvatar == null) {
+            mainAvatarLabel.setGraphic(null);
+            mainAvatarLabel.getStyleClass().clear();
+            mainAvatarLabel.getStyleClass().add("avatar-button-default");
+        } else if (pathToNewAvatar.length() > 0) {
+            setAvatarPicture(mainAvatarLabel,new File(pathToNewAvatar).toURL(),size);
+        }
+    }
+
+    private void deleteAvatars() {
         String avatarsFolderPath = "src/main/resources/avatars";
-        File avatarOriginal = new File(avatarsFolderPath + File.separator + newName + "Original.png");
-        File avatarCropped = new File(avatarsFolderPath + File.separator + newName + "Cropped.png");
-        if ( avatarOriginal.delete() || avatarCropped.delete()) {
+        File avatarOriginal = new File(avatarsFolderPath + File.separator + name + "Original.png");
+        File avatarCropped = new File(avatarsFolderPath + File.separator + name + "Cropped.png");
+        if (avatarOriginal.delete()) {
+            emailErrorLabel.setText("Avatars were not deleted");
+        }
+        if (avatarCropped.delete()) {
             emailErrorLabel.setText("Avatars were not deleted");
         }
     }
 
     private void imageResizer(File image,String newName) throws IOException {
         BufferedImage originalImage = ImageIO.read(image);
+        /* ----------------- Deleting Old Avatars ------------------ */
+
+        // deleting old avatars, that has old name
+        deleteAvatars();
 
         /* ----------------- Saving Original Avatar Picture ------------------ */
 
@@ -451,7 +509,6 @@ public class SettingsWindow {
 
         /* ------------------------------------------------------------------- */
     }
-
 
 }
 

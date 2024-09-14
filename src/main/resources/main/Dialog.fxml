@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.Pane?>
+
+<Pane fx:id="dialogBackgroundPane" prefHeight="658.0" prefWidth="846.0" styleClass="root" stylesheets="@dialog.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.DialogController">
+   <children>
+      <TextField layoutX="-1.0" layoutY="610.0" prefHeight="47.0" prefWidth="846.0" promptText="Write a message...." styleClass="message-text-field" />
+      <Label layoutX="9.0" layoutY="619.0" prefHeight="31.0" prefWidth="38.0" styleClass="add-photo-label" />
+      <Label layoutX="798.0" layoutY="618.0" prefHeight="31.0" prefWidth="38.0" styleClass="send-label" />
+      <Label layoutX="-1.0" layoutY="-1.0" prefHeight="66.0" prefWidth="846.0" styleClass="upper-background" />
+      <Label layoutX="800.0" layoutY="20.0" prefHeight="31.0" prefWidth="38.0" styleClass="search-lupe-label" />
+      <Label fx:id="contactAvatarLabel" layoutX="17.0" layoutY="17.0" prefHeight="33.0" prefWidth="33.0" styleClass="avatar-label" />
+      <Label fx:id="contactNameLabel" layoutX="63.0" layoutY="21.0" prefHeight="23.0" prefWidth="208.0" styleClass="name-label" />
+      <Label fx:id="timeDialogBorderLabel" alignment="CENTER" layoutX="388.0" layoutY="568.0" prefHeight="20.0" prefWidth="92.0" styleClass="time-dialog-border-label" text="hello" textAlignment="CENTER" />
+   </children>
+</Pane>

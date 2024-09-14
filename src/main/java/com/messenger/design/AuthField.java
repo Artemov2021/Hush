@@ -96,6 +96,4 @@ public class AuthField {
         errorLabel.setVisible(false);
     }
 
-
-
 }

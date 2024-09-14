@@ -1,14 +1,16 @@
 package com.messenger.main.smallWindows;
 
-import com.messenger.Log;
 import com.messenger.database.DetailedDataBase;
 import com.messenger.database.UsersDataBase;
+import com.messenger.design.ShakeAnimation;
 import com.messenger.exceptions.AlreadyInDataBase;
 import com.messenger.exceptions.IncorrectIdentifierInformation;
 import com.messenger.exceptions.NotInDataBase;
 import com.messenger.main.MainContactList;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
+import javafx.event.Event;
+import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -21,140 +23,54 @@ import javafx.util.Duration;
 import java.io.IOException;
 
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 public class NewContactWindow {
-    private String name;
-    private AnchorPane anchorPane;
+    private int mainUserId;
+    private String mainUserName;
 
-    public NewContactWindow (AnchorPane anchorPane, String name) {
-        this.anchorPane = anchorPane;
-        this.name = name;
-    }
+    private int contactId = -1;
 
-    public void openWindow() {
-        Pane overlay = new Pane();
-        overlay.setPrefWidth(anchorPane.getPrefWidth());
-        overlay.setPrefHeight(anchorPane.getPrefHeight());
-        overlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5);");
+    private AnchorPane mainAnchorPane;
+    private VBox contactsVBox;
+    private ScrollPane contactsScrollPane;
 
-        Pane contactPane = new Pane();
-        contactPane.setPrefWidth(337);
-        contactPane.setPrefHeight(283);
-        contactPane.getStyleClass().add("add-contact-window");
-        contactPane.setLayoutX(475);
-        contactPane.setLayoutY(160);
+    @FXML
+    private Pane newContactBackgroundPane;
+    @FXML
+    private Pane newContactOverlayPane;
+    @FXML
+    private TextField contactInfoField;
+    @FXML
+    private Button contactAddButton;
+    @FXML
+    private Label contactErrorLabel;
 
-        FadeTransition FadeIn = new FadeTransition(Duration.millis(180),overlay);
-        FadeIn.setFromValue(0);
-        FadeIn.setToValue(1);
-        FadeIn.play();
+    public void initializeWithValue() {
+        showOpeningEffect();
 
-        TranslateTransition translateIn = new TranslateTransition(Duration.millis(180),contactPane);
-        translateIn.setFromX(0);
-        translateIn.setToX(-35);
-        translateIn.play();
-
-        setContactWindowComponents(overlay,contactPane);
-        anchorPane.getChildren().addAll(overlay,contactPane);
-
-        overlay.setOnMouseClicked(event -> {
-            hideWindow(overlay,contactPane);
-        });
-    }
-
-    private void hideWindow(Pane overlay, Pane contactPane) {
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(180), contactPane);
-        fadeOut.setFromValue(1);
-        fadeOut.setToValue(0);
-        fadeOut.setOnFinished(event -> {
-            anchorPane.getChildren().removeAll(overlay,contactPane);
-        });
-        fadeOut.play();
-    }
-
-    private void setContactWindowComponents(Pane overlay, Pane contactPane) {
-        Label addContactLabel = new Label("Add a contact");
-        addContactLabel.getStyleClass().add("add-contact-main-label");
-        addContactLabel.setLayoutX(25);
-        addContactLabel.setLayoutY(25);
-
-        Label secondaryContactLabel = new Label("Fill the following field to add a new contact");
-        secondaryContactLabel.getStyleClass().add("add-contact-secondary-label");
-        secondaryContactLabel.setLayoutX(25);
-        secondaryContactLabel.setLayoutY(52);
-
-        Button exitButton = new Button();
-        exitButton.setPrefWidth(30);
-        exitButton.getStyleClass().add("exit-button");
-        exitButton.setLayoutX(295);
-        exitButton.setLayoutY(15);
-
-        Label contactInfoLabel = new Label("Contact info");
-        contactInfoLabel.getStyleClass().add("add-contact-small-label");
-        contactInfoLabel.setLayoutX(25);
-        contactInfoLabel.setLayoutY(110);
-
-        TextField contactInfoField = new TextField();
-        contactInfoField.setPrefHeight(40);
-        contactInfoField.setPrefWidth(280);
-        contactInfoField.getStyleClass().add("add-contact-field");
-        contactInfoField.setLayoutX(25);
-        contactInfoField.setLayoutY(135);
-        contactInfoField.setPromptText("Name or email address");
-
-        Button contactAddButton = new Button();
-        contactAddButton.setPrefWidth(72);
-        contactAddButton.setPrefHeight(30);
-        contactAddButton.getStyleClass().add("add-contact-add-button");
-        contactAddButton.setLayoutX(235);
-        contactAddButton.setLayoutY(230);
-
-        Button contactCancelButton = new Button();
-        contactCancelButton.setPrefWidth(78);
-        contactCancelButton.setPrefHeight(29);
-        contactCancelButton.getStyleClass().add("add-contact-cancel-button");
-        contactCancelButton.setLayoutX(148);
-        contactCancelButton.setLayoutY(230);
-
-        Label contactErrorLabel = new Label();
-        contactErrorLabel.getStyleClass().add("add-contact-error-label");
-        contactErrorLabel.setLayoutX(25);
-        contactErrorLabel.setLayoutY(175);
-        contactErrorLabel.setText("Person was not found");
         contactErrorLabel.setVisible(false);
 
-        // Adds all components to the contact pane
-        contactPane.getChildren().addAll(
-                addContactLabel,
-                secondaryContactLabel,
-                exitButton,
-                contactInfoLabel,
-                contactInfoField,
-                contactAddButton,
-                contactCancelButton,
-                contactErrorLabel
-        );
+        newContactBackgroundPane.setOnMouseClicked(event -> hideWindow());
 
-        exitButton.setOnAction(actionEvent -> { hideWindow(overlay, contactPane); });
-        contactCancelButton.setOnAction(actionEvent -> { hideWindow(overlay, contactPane); });
+        newContactOverlayPane.setOnMouseClicked(Event::consume);
 
-        // Checking, whether new contact exists / is in database
+        // Checking, whether new is valid and is in database
         contactAddButton.setOnAction(actionEvent -> {
 
-            // checking, whether new contact user is in database, if true, addContact will be called automatically
             String identifier = contactInfoField.getText().trim();
 
             try {
-                if (checkValidity(name, identifier, contactInfoField, contactErrorLabel, overlay, contactPane)) {
-                    String infoType = getIdentifierType(identifier);
-                    String contactName = infoType.equals("email") ? UsersDataBase.getNameWithEmail(identifier) : identifier;
-                    MainContactList.addContactToList((ScrollPane) anchorPane.getScene().lookup("#contactsScrollPane"), (VBox) anchorPane.getScene().lookup("#contactsVBox"), name, contactName);
-                    Log.writeNewActionLog(String.format("All contacts were displayed (%d)\n",UsersDataBase.getContactsAmount(name)));
+                if (checkValidity(identifier)) {
+                    contactId = getIdentifierType(identifier).equals("email") ? UsersDataBase.getIdWithEmail(identifier) : UsersDataBase.getIdWithName(identifier);
+                    addContactToMainWindowList();
+                    addContactToDB();
+                    hideWindow();
                 }
-            } catch (SQLException | IOException e) {
+            } catch (SQLException | IOException |  InterruptedException e) {
                 contactErrorLabel.setText(e.getMessage());
             }
 
@@ -162,45 +78,78 @@ public class NewContactWindow {
 
     }
 
+    public void setMainUserId(int id) throws SQLException {
+        this.mainUserId = id;
+        setMainUserName(UsersDataBase.getNameWithId(id));
+    }
+    private void setMainUserName(String name) {
+        this.mainUserName = name;
+    }
+    public void setMainAnchorPane(AnchorPane anchorPane) {
+        this.mainAnchorPane = anchorPane;
+    }
+    public void setContactsVBox(VBox vBox) {
+        this.contactsVBox = vBox;
+    }
+    public void setContactsScrollPane(ScrollPane scrollPane) {
+        this.contactsScrollPane = scrollPane;
+    }
+    private void showOpeningEffect() {
+        FadeTransition FadeIn = new FadeTransition(Duration.millis(180),newContactBackgroundPane);
+        FadeIn.setFromValue(0);
+        FadeIn.setToValue(1);
+        FadeIn.play();
 
+        TranslateTransition translateIn = new TranslateTransition(Duration.millis(180),newContactOverlayPane);
+        translateIn.setFromX(0);
+        translateIn.setToX(-35);
+        translateIn.play();
+    }
 
-    private boolean checkValidity(String mainUser, String identifier, TextField field, Label errorLabel, Pane overlay, Pane contactPane) {
+    public void hideWindow() {
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(180),newContactOverlayPane);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+        fadeOut.setOnFinished(event -> mainAnchorPane.getChildren().removeAll(newContactBackgroundPane,newContactOverlayPane));
+        fadeOut.play();
+    }
+
+    private boolean checkValidity(String identifier) {
         try {
-            errorLabel.setVisible(false);
-            field.getStyleClass().clear();
-            field.getStyleClass().add("add-contact-field");
+            contactErrorLabel.setVisible(false);
+            contactInfoField.getStyleClass().clear();
+            contactInfoField.getStyleClass().add("add-contact-field");
+
+            String identifierType = getIdentifierType(identifier);
+            boolean presenceInDB = UsersDataBase.checkUserPresence(identifier);
 
             if (identifier.isEmpty()) {
                 throw new IncorrectIdentifierInformation("Incorrect information");
             }
-            if (getIdentifierType(identifier).equals("-")) {
+            if (identifierType.equals("-")) {
                 throw new IncorrectIdentifierInformation("Incorrect information");
             }
-            String identifierType = getIdentifierType(identifier);
-            boolean presenceInDB = UsersDataBase.checkUserPresence(identifier);
 
-            if (!presenceInDB || mainUser.equals(identifier)) {
+            if (!presenceInDB || Objects.equals(mainUserName,identifier)) {
                 throw new NotInDataBase("The person was not found");
             }
 
-            if (DetailedDataBase.checkUserPresence(name,identifierType.equals("email") ? UsersDataBase.getNameWithEmail(identifier) : identifier)) {
+            if (DetailedDataBase.checkUserPresence(mainUserId,identifierType.equals("email") ? UsersDataBase.getNameWithEmail(identifier) : identifier)) {
                 throw new AlreadyInDataBase("The contact is already added");
             }
 
-            addContact(identifier);
-            Log.writeNewActionLog(String.format("+ New contact added: %s\n",identifier));
-            hideWindow(overlay,contactPane);
             return true;
         } catch (Exception e) {
-
-            // applying error style on field and label
-            field.getStyleClass().clear();
-            field.getStyleClass().add("add-contact-field-error");
-            errorLabel.setText(e.getMessage());
-            errorLabel.setVisible(true);
+            if (identifier.isEmpty()) {
+                ShakeAnimation.applyShakeAnimation(contactInfoField);
+            }
+            contactInfoField.getStyleClass().clear();
+            contactInfoField.getStyleClass().add("add-contact-field-error");
+            contactErrorLabel.setText(e.getMessage());
+            contactErrorLabel.setVisible(true);
             return false;
-
         }
+
     }
 
     private static String getIdentifierType(String identifier) {
@@ -220,9 +169,17 @@ public class NewContactWindow {
             return "-";
         }
     }
+    private void addContactToMainWindowList() throws SQLException, IOException {
+        MainContactList mainContactList = new MainContactList(mainAnchorPane,contactsScrollPane,contactsVBox,mainUserId);
+        mainContactList.addContactToList(contactId);
+    }
 
-    private void addContact(String info) throws SQLException, IOException, InterruptedException {
-        DetailedDataBase.addContact(name,info);
+    private void addContactToDB() throws SQLException, IOException, InterruptedException {
+        if (contactId != -1) {
+            DetailedDataBase.addContactToContactList(mainUserId,contactId);
+            DetailedDataBase.createContactTable(mainUserId,contactId);
+            UsersDataBase.addContactsAmount(mainUserId);
+        }
     }
 
 }
