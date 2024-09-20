@@ -97,7 +97,6 @@ public class MainContactList {
         // opens dialog pane
         userPane.setOnMouseClicked(mouseEvent -> {
             try {
-                System.out.println(UsersDataBase.getNameWithId(contactId));
 
                 // Load FXML new contact window ( pane )
                 FXMLLoader loader = new FXMLLoader(MainContactList.class.getResource("/main/Dialog.fxml"));

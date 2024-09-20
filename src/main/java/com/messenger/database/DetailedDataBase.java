@@ -5,6 +5,7 @@ import com.messenger.Log;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,7 +24,21 @@ public class DetailedDataBase {
         }
     }
 
-
+    public static ArrayList<ArrayList<String>> getMessages(int mainUserId,int contactId) throws SQLException {
+        ArrayList<ArrayList<String>> messages = new ArrayList<>();
+        String detailedDBLink = sqlPath + UsersDataBase.getNameWithId(mainUserId) + ".db";
+        String statement = "SELECT id,message,message_time,photo FROM \""+contactId+"\"";
+        try (Connection connection = DriverManager.getConnection(detailedDBLink)) {
+            Statement stmt = connection.createStatement();
+            ResultSet result = stmt.executeQuery(statement);
+            while (result.next()) {
+                ArrayList<String> message = new ArrayList<>(Arrays.asList(result.getString("id"),result.getString("message"),
+                        result.getString("message_time"),result.getString("photo")));
+                messages.add(message);
+            }
+            return messages;
+        }
+    }
     public static void addContactToContactList(int mainUserId,int contactId) throws SQLException {
         // Adding a new contact to the contact list of the main user
         String detailedDBLink = sqlPath + UsersDataBase.getNameWithId(mainUserId) + ".db";
@@ -38,7 +53,7 @@ public class DetailedDataBase {
         // Creating new contact table in user database
         String detailedDBLink = sqlPath + UsersDataBase.getNameWithId(mainUserId) + ".db";
         try (Connection connection = DriverManager.getConnection(detailedDBLink)) {
-            String statement = String.format("CREATE TABLE IF NOT EXISTS %s (id integer PRIMARY KEY,message text,message_time text,photo text)","\""+contactId+"\"");
+            String statement = String.format("CREATE TABLE IF NOT EXISTS %s (id integer PRIMARY KEY,user_id integer ,message text,message_time text,photo text)","\""+contactId+"\"");
             Statement stmt = connection.createStatement();
             stmt.execute(statement);
         }

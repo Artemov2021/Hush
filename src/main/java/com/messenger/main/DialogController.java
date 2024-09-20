@@ -4,10 +4,12 @@ import com.messenger.database.DetailedDataBase;
 import com.messenger.database.UsersDataBase;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 
 import java.io.File;
@@ -16,7 +18,10 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DialogController {
     private int contactId;
@@ -28,6 +33,9 @@ public class DialogController {
     private Label contactAvatarLabel;
     @FXML
     private Label contactNameLabel;
+    @FXML
+    private VBox dialogVBox;
+
     @FXML
     private Label timeDialogBorderLabel;
 
@@ -57,7 +65,9 @@ public class DialogController {
 
         // set time label between message history
         if (DetailedDataBase.getLastMessage(mainUserId,contactId) == null) {
-            setTimeHistoryLabel();
+            setCurrentDateHistoryLabel(); // if the user has no messages in the dialog
+        } else {
+            loadMessageHistory(); // if the user HAS messages in the dialog
         }
 
     }
@@ -66,11 +76,9 @@ public class DialogController {
     public void setMainAnchorPane(AnchorPane anchorPane) {
         mainAnchorPane = anchorPane;
     }
-
     public void setContactId(int id) {
         this.contactId = id;
     }
-
     public void setMainUserId(int id) {
         this.mainUserId = id;
     }
@@ -87,10 +95,34 @@ public class DialogController {
         clip.setRadius((double) size / 2);
         avatar.setClip(clip);
     }
-    private void setTimeHistoryLabel() {
+    private void loadMessageHistory() throws SQLException {
+        ArrayList<ArrayList<String>> messages = DetailedDataBase.getMessages(mainUserId,contactId);
+        setDateHistoryLabel(getHours(messages.get(0).get(2)));
+        for (ArrayList<String> message : messages) {
+            //setDateHistoryLabel(getHours(message.get(2)));
+        }
+    }
+
+
+    private void setCurrentDateHistoryLabel() {
         LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);
         String formattedDate = today.format(formatter);
         timeDialogBorderLabel.setText(formattedDate);
+    }
+    private void setDateHistoryLabel(String date) {
+        LocalDate today = LocalDate.parse(date);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);
+        String formattedDate = today.format(formatter);
+        timeDialogBorderLabel.setText(formattedDate);
+    }
+    private String getHours(String fulldate) {
+        String datePattern = "^(\\d+)-(\\d+)-(\\d+)";
+        Pattern datePatternCompiled = Pattern.compile(datePattern);
+        Matcher matcher = datePatternCompiled.matcher(fulldate);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        return null;
     }
 }
