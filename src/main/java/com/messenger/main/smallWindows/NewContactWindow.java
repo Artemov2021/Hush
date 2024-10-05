@@ -35,6 +35,8 @@ public class NewContactWindow {
     private int contactId = -1;
 
     private AnchorPane mainAnchorPane;
+    private ScrollPane mainScrollPane;
+    private VBox mainContactVBox;
     private VBox contactsVBox;
     private ScrollPane contactsScrollPane;
 
@@ -67,6 +69,7 @@ public class NewContactWindow {
                 if (checkValidity(identifier)) {
                     contactId = getIdentifierType(identifier).equals("email") ? UsersDataBase.getIdWithEmail(identifier) : UsersDataBase.getIdWithName(identifier);
                     addContactToMainWindowList();
+                    System.out.println("Added to main window list");
                     addContactToDB();
                     hideWindow();
                 }
@@ -94,6 +97,14 @@ public class NewContactWindow {
     public void setContactsScrollPane(ScrollPane scrollPane) {
         this.contactsScrollPane = scrollPane;
     }
+    public void setMainScrollPane(ScrollPane scrollPane) {
+        this.mainScrollPane = scrollPane;
+    }
+    public void setMainContactVBox(VBox VBox) {
+        this.mainContactVBox = VBox;
+    }
+
+
     private void showOpeningEffect() {
         FadeTransition FadeIn = new FadeTransition(Duration.millis(180),newContactBackgroundPane);
         FadeIn.setFromValue(0);
@@ -170,7 +181,7 @@ public class NewContactWindow {
         }
     }
     private void addContactToMainWindowList() throws SQLException, IOException {
-        MainContactList mainContactList = new MainContactList(mainAnchorPane,contactsScrollPane,contactsVBox,mainUserId);
+        MainContactList mainContactList = new MainContactList(mainAnchorPane,mainScrollPane,mainContactVBox,mainUserId);
         mainContactList.addContactToList(contactId);
     }
 

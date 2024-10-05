@@ -143,6 +143,8 @@ public class MainWindowController {
             newContactWindow.setMainAnchorPane(anchorPane);
             newContactWindow.setContactsVBox(contactsVBox);
             newContactWindow.setContactsScrollPane(contactsScrollPane);
+            newContactWindow.setMainScrollPane(contactsScrollPane);
+            newContactWindow.setMainContactVBox(contactsVBox);
             newContactWindow.initializeWithValue();
 
             anchorPane.getChildren().add(newContactRoot);
@@ -174,8 +176,9 @@ public class MainWindowController {
             throw new RuntimeException(e);
         }
     }
-    public void setId(int id) {
+    public void setId(int id) throws SQLException, IOException {
         this.id = id;
+        initializeWithValue();
     }
 
     public void initialize() throws SQLException, IOException {

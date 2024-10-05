@@ -73,12 +73,14 @@ public class MainContactList {
         name.setLayoutX(58);
         name.setLayoutY(11);
 
+        System.out.println("before last message");
         Label message = new Label(DetailedDataBase.getLastMessage(mainUserId, contactId));
         message.setPrefWidth(180);
         message.getStyleClass().add("user-pane-message");
         message.setLayoutX(58);
         message.setLayoutY(31);
 
+        System.out.println("before time");
         String messageTime = message.getText() == null ? "" : DetailedDataBase.getMessageTime(mainUserId,contactId,DetailedDataBase.getLastMessageId(mainUserId,contactId));
         String timeText = convertTimeToHours(messageTime);
         Label time = new Label(timeText);
@@ -92,6 +94,8 @@ public class MainContactList {
                 message,
                 time
         );
+
+        System.out.println("successfull");
         contactsVBox.getChildren().add(0,userPane);
 
         // opens dialog pane

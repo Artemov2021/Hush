@@ -1,13 +1,9 @@
 package com.messenger.database;
 
-import com.messenger.Log;
-
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class DetailedDataBase {
     private final static String sqlPath = "jdbc:sqlite:details/";
@@ -19,7 +15,6 @@ public class DetailedDataBase {
             Statement stmt = connection.createStatement();
             stmt.execute(statement);
         } catch (Exception e) {
-            Log.writeNewExceptionLog(e);
             throw e;
         }
     }
@@ -71,7 +66,7 @@ public class DetailedDataBase {
             }
             return false;
         } catch (Exception e) {
-            Log.writeNewExceptionLog(e);
+
             throw e;
         }
     }
@@ -89,25 +84,8 @@ public class DetailedDataBase {
             connection.close();
         }
         connection.close();
+        System.out.println("last message: "+lastMessage);
         return lastMessage;
-    }
-
-    private static String getIdentifierType(String identifier) {
-        String emailPattern = "^.+@\\S*\\.[a-z]{2,}$";
-        Pattern emailPatternCompile = Pattern.compile(emailPattern);
-        Matcher emailMatcher = emailPatternCompile.matcher(identifier);
-
-        String namePattern = "^[a-zA-Z][a-zA-Z0-9 ]+$";
-        Pattern namePatternCompile = Pattern.compile(namePattern);
-        Matcher nameMatcher = namePatternCompile.matcher(identifier);
-
-        if (emailMatcher.find()) {
-            return "email";
-        } else if (nameMatcher.find()) {
-            return "name";
-        } else {
-            return "-";
-        }
     }
 
     public static ArrayList<Integer> getContactsIds(int mainUserId) throws SQLException {

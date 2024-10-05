@@ -1,6 +1,5 @@
 package com.messenger.auth;
 
-import com.messenger.Log;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.AuthField;
 import com.messenger.exceptions.*;
@@ -15,8 +14,7 @@ import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-public class SingUpController {
+public class AuthLogInController {
     @FXML
     private AnchorPane anchorPane;
     @FXML
@@ -42,14 +40,12 @@ public class SingUpController {
     private String password;
 
 
-    public void initialize() throws IOException {
-        // Setting email and password field's focus to false, setting account button underline style
+    public void initialize () throws IOException {
         emailField.setFocusTraversable(false);
         passwordField.setFocusTraversable(false);
-
         accountButton.setUnderline(true);
 
-        // Setting all error labels to default, invisible state
+        // setting all error labels to default, invisible state
         emailErrorLabel.setVisible(false);
         passwordErrorLabel.setVisible(false);
 
@@ -59,58 +55,53 @@ public class SingUpController {
 
         // makes label animation and solves unnecessary spaces
         fieldsApplyStyle();
-
     }
 
-    public void singUp() throws IOException {
+    public void logIn() throws IOException {
         identifier = emailField.getText().trim();
         password = passwordField.getText().trim();
 
         try {
+
             // settings all text fields to a normal state
-            AuthField.deleteErrorStyle(emailField, emailErrorLabel);
-            AuthField.deleteErrorStyle(passwordField, passwordErrorLabel);
+            AuthField.deleteErrorStyle(emailField,emailErrorLabel);
+            AuthField.deleteErrorStyle(passwordField,passwordErrorLabel);
             passwordGroup.setLayoutY(0);
 
-            if (checkInformationValidity(identifier, password)) {
-                UsersDataBase.addUser(identifier, password);
-                closeSingUpWindow();
-                openManinWindow();
+            if (checkInformationValidity(identifier,password)) {
+                openMainWindow();
+                closeLogInWindow();
             }
 
         } catch (IncorrectWholeInformation IncorrectWholeInformation) {
 
-            AuthField.setErrorStyle(emailField, emailErrorLabel, IncorrectWholeInformation.getMessage());
+            AuthField.setErrorStyle(emailField,emailErrorLabel,IncorrectWholeInformation.getMessage());
             passwordGroup.setLayoutY(16);
-            AuthField.setErrorStyle(passwordField, passwordErrorLabel, IncorrectWholeInformation.getMessage());
+            AuthField.setErrorStyle(passwordField,passwordErrorLabel,IncorrectWholeInformation.getMessage());
 
-        } catch (IncorrectIdentifierInformation | LengthException | TakenException identifierException) {
+        } catch (IncorrectIdentifierInformation | LengthException | TakenException | NotInDataBase identifierException ) {
 
-            AuthField.setErrorStyle(emailField, emailErrorLabel, identifierException.getMessage());
+            AuthField.setErrorStyle(emailField,emailErrorLabel,identifierException.getMessage());
             passwordGroup.setLayoutY(16);
 
-        } catch (IncorrectPasswordInformation passwordException) {
+        } catch (IncorrectPasswordInformation | InvalidPassword passwordException ) {
 
-            AuthField.setErrorStyle(passwordField, passwordErrorLabel, passwordException.getMessage());
+            AuthField.setErrorStyle(passwordField,passwordErrorLabel,passwordException.getMessage());
             passwordGroup.setLayoutY(0);
 
         } catch (Exception extraException) {
             // if there is issues with database, they will be displayed on extra label
             extraLabel.setText(extraException.getMessage());
+
         }
-
     }
 
-    public void openLogIn() throws IOException {
-        AuthLogInWindow.openLogInWindow((Stage) anchorPane.getScene().getWindow());
+    public void openSingUp() throws IOException {
+        AuthSingUpWindow.openSingUpWindow((Stage) anchorPane.getScene().getWindow());
     }
 
-    private void openManinWindow() throws IOException, SQLException {
+    private void openMainWindow() throws IOException, SQLException {
         AuthMainWindow.openMainWindow(identifier);
-    }
-
-    private void closeSingUpWindow() {
-        ((Stage) (anchorPane.getScene().getWindow())).close();
     }
 
     private void fieldsApplyStyle() {
@@ -125,12 +116,12 @@ public class SingUpController {
         passwordFieldStyled.setStyle();
     }
 
-    private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, IOException {
+    private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, InvalidPassword, IOException, NotInDataBase {
         if (identifier.isEmpty() && password.isEmpty()) {
             throw new IncorrectWholeInformation("Incorrect information");
         }
 
-        if (identifier.isEmpty()) {
+        if (identifier.isEmpty() ) {
             throw new IncorrectIdentifierInformation("Invalid information");
         }
         if (getIdentifierType(identifier).equals("-")) {
@@ -139,16 +130,22 @@ public class SingUpController {
         if (identifier.length() > 25) {
             throw new LengthException("Email or name is too long");
         }
-        if (UsersDataBase.checkUserPresence(identifier)) {
-            throw new TakenException("Email or name is already taken");
+        if (!UsersDataBase.checkUserPresence(identifier)) {
+            throw new NotInDataBase("The person was not found");
         }
-
 
         if (password.isEmpty()) {
             throw new IncorrectPasswordInformation("Incorrect information");
         }
+        if (!UsersDataBase.checkPasswordValidity(identifier,password)) {
+            throw new InvalidPassword("Incorrect password");
+        }
 
         return true;
+    }
+
+    private void closeLogInWindow() {
+        ((Stage) (anchorPane.getScene().getWindow())).close();
     }
 
     private static String getIdentifierType(String identifier) {
@@ -168,4 +165,5 @@ public class SingUpController {
             return "-";
         }
     }
+
 }

@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="anchorPane" prefHeight="526.0" prefWidth="853.0" stylesheets="@AuthWindow.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.auth.LogInController">
+<AnchorPane fx:id="anchorPane" prefHeight="526.0" prefWidth="853.0" stylesheets="@AuthWindow.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.auth.AuthLogInController">
    <children>
       <Label fx:id="lowerLabel" layoutX="333.0" layoutY="296.0" prefHeight="21.0" prefWidth="66.0" styleClass="input-field-label" text="Password" />
       <Label fx:id="upperLabel" layoutX="331.0" layoutY="233.0" prefHeight="25.0" prefWidth="151.0" styleClass="input-field-label" text="Email adress or name" textAlignment="CENTER">

@@ -1,7 +1,5 @@
 package com.messenger.database;
 
-import com.messenger.Log;
-
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
@@ -63,7 +61,6 @@ public class UsersDataBase {
             stmt3.setString(2,oldName);
             stmt3.executeUpdate();
         } catch (SQLException e) {
-            Log.writeNewExceptionLog(e);
             throw e;
         }
     }
@@ -76,7 +73,7 @@ public class UsersDataBase {
             stmt3.setString(2,name);
             stmt3.executeUpdate();
         } catch (SQLException e) {
-            Log.writeNewExceptionLog(e);
+
             throw e;
         }
     }

@@ -1,6 +1,5 @@
 package com.messenger.main.smallWindows;
 
-import com.messenger.Log;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ShakeAnimation;
 import javafx.animation.FadeTransition;
@@ -396,11 +395,9 @@ public class SettingsWindow {
                 File newCroppedAvatar = new File("src/main/resources/avatars/"+newName+"Cropped.png");
 
                 if (!oldOriginalAvatar.renameTo(newOriginalAvatar)) {
-                    Log.writeNewExceptionLog(new IOException("File was not created"));
                     throw new IOException("File was not created");
                 }
                 if (!oldCroppedAvatar.renameTo(newCroppedAvatar)) {
-                    Log.writeNewExceptionLog(new IOException("File was not created"));
                     throw new IOException("File was not created");
                 }
             }

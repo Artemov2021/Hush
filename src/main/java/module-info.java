@@ -13,4 +13,7 @@ module com.main.messenger {
 
     opens com.messenger.main.smallWindows to javafx.fxml;
     exports com.messenger.main.smallWindows;
+
+    opens com.messenger to javafx.graphics;
+
 }

@@ -1,6 +1,5 @@
 package com.messenger.auth;
 
-import com.messenger.Log;
 import com.messenger.database.DetailedDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.main.MainWindowController;
@@ -26,6 +25,7 @@ public class AuthMainWindow {
             DetailedDataBase.createUserDataBase(UsersDataBase.getIdWithEmail(info));
         } else {
             mainWindowController.setId(UsersDataBase.getIdWithName(info));
+            System.out.println(UsersDataBase.getIdWithName(info));
             DetailedDataBase.createUserDataBase(UsersDataBase.getIdWithName(info));
         }
 

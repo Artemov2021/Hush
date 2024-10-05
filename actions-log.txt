@@ -16,3 +16,33 @@ Window: Sing Up
 Identifier: me45 (length: 4)
 Identifier type: name
 Password: 123 (length: 3)
+
+-----------------------------------------------------------------
+Window: Log In
+Identifier: Tymur Artemov (length: 13)
+Identifier type: name
+Password: 04022007 (length: 8)
+
+-----------------------------------------------------------------
+Window: Log In
+Identifier: Tymur Artemov (length: 13)
+Identifier type: name
+Password: 04022007 (length: 8)
+
+-----------------------------------------------------------------
+Window: Log In
+Identifier: Tymur Artemov (length: 13)
+Identifier type: name
+Password: 04022007 (length: 8)
+
+-----------------------------------------------------------------
+Window: Log In
+Identifier: Tymur Artemov (length: 13)
+Identifier type: name
+Password: 04022007 (length: 8)
+
+-----------------------------------------------------------------
+Window: Log In
+Identifier: Tymur Artemov (length: 13)
+Identifier type: name
+Password: 04022007 (length: 8)

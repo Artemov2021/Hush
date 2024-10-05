@@ -1,6 +1,5 @@
 package com.messenger.auth;
 
-import com.messenger.Log;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.AuthField;
 import com.messenger.exceptions.*;
@@ -15,7 +14,8 @@ import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class LogInController {
+
+public class AuthSingUpController {
     @FXML
     private AnchorPane anchorPane;
     @FXML
@@ -41,12 +41,14 @@ public class LogInController {
     private String password;
 
 
-    public void initialize () throws IOException {
+    public void initialize() throws IOException {
+        // Setting email and password field's focus to false, setting account button underline style
         emailField.setFocusTraversable(false);
         passwordField.setFocusTraversable(false);
+
         accountButton.setUnderline(true);
 
-        // setting all error labels to default, invisible state
+        // Setting all error labels to default, invisible state
         emailErrorLabel.setVisible(false);
         passwordErrorLabel.setVisible(false);
 
@@ -56,67 +58,58 @@ public class LogInController {
 
         // makes label animation and solves unnecessary spaces
         fieldsApplyStyle();
+
     }
 
-    public void logIn() throws IOException {
+    public void singUp() throws IOException {
         identifier = emailField.getText().trim();
         password = passwordField.getText().trim();
 
-        // Logging the action
-        Log.writeNewActionLog(String.format("\n%0" + 65 + "d" + "\n",0).replace("0","-"));
-        Log.writeNewActionLog("Window: Log In\n");
-        Log.writeNewActionLog(String.format("Identifier: %s (length: %d)\n",identifier,identifier.length()));
-        Log.writeNewActionLog(String.format("Identifier type: %s\n",getIdentifierType(identifier)));
-        Log.writeNewActionLog(String.format("Password: %s (length: %d)\n",password,password.length()));
-
         try {
-
             // settings all text fields to a normal state
-            AuthField.deleteErrorStyle(emailField,emailErrorLabel);
-            AuthField.deleteErrorStyle(passwordField,passwordErrorLabel);
+            AuthField.deleteErrorStyle(emailField, emailErrorLabel);
+            AuthField.deleteErrorStyle(passwordField, passwordErrorLabel);
             passwordGroup.setLayoutY(0);
 
-            if (checkInformationValidity(identifier,password)) {
-                openMainWindow();
-                closeLogInWindow();
+            if (checkInformationValidity(identifier, password)) {
+                UsersDataBase.addUser(identifier, password);
+                closeSingUpWindow();
+                openManinWindow();
             }
 
         } catch (IncorrectWholeInformation IncorrectWholeInformation) {
 
-            AuthField.setErrorStyle(emailField,emailErrorLabel,IncorrectWholeInformation.getMessage());
+            AuthField.setErrorStyle(emailField, emailErrorLabel, IncorrectWholeInformation.getMessage());
             passwordGroup.setLayoutY(16);
-            AuthField.setErrorStyle(passwordField,passwordErrorLabel,IncorrectWholeInformation.getMessage());
-            Log.writeNewExceptionLog(IncorrectWholeInformation);
-            Log.writeNewActionLog("Status: error ( invalid whole information )\n");
+            AuthField.setErrorStyle(passwordField, passwordErrorLabel, IncorrectWholeInformation.getMessage());
 
-        } catch (IncorrectIdentifierInformation | LengthException | TakenException | NotInDataBase identifierException ) {
+        } catch (IncorrectIdentifierInformation | LengthException | TakenException identifierException) {
 
-            AuthField.setErrorStyle(emailField,emailErrorLabel,identifierException.getMessage());
+            AuthField.setErrorStyle(emailField, emailErrorLabel, identifierException.getMessage());
             passwordGroup.setLayoutY(16);
-            Log.writeNewExceptionLog(identifierException);
-            Log.writeNewActionLog("Status: error ( identifier error )\n");
 
-        } catch (IncorrectPasswordInformation | InvalidPassword passwordException ) {
+        } catch (IncorrectPasswordInformation passwordException) {
 
-            AuthField.setErrorStyle(passwordField,passwordErrorLabel,passwordException.getMessage());
+            AuthField.setErrorStyle(passwordField, passwordErrorLabel, passwordException.getMessage());
             passwordGroup.setLayoutY(0);
-            Log.writeNewExceptionLog(passwordException);
-            Log.writeNewActionLog("Status: error ( password error )\n");
 
         } catch (Exception extraException) {
             // if there is issues with database, they will be displayed on extra label
             extraLabel.setText(extraException.getMessage());
-            Log.writeNewExceptionLog(extraException);
-            Log.writeNewActionLog("Status: error ( extra error )");
         }
+
     }
 
-    public void openSingUp() throws IOException {
-        AuthSingUpWindow.openSingUpWindow((Stage) anchorPane.getScene().getWindow());
+    public void openLogIn() throws IOException {
+        AuthLogInWindow.openLogInWindow((Stage) anchorPane.getScene().getWindow());
     }
 
-    private void openMainWindow() throws IOException, SQLException {
+    private void openManinWindow() throws IOException, SQLException {
         AuthMainWindow.openMainWindow(identifier);
+    }
+
+    private void closeSingUpWindow() {
+        ((Stage) (anchorPane.getScene().getWindow())).close();
     }
 
     private void fieldsApplyStyle() {
@@ -131,12 +124,12 @@ public class LogInController {
         passwordFieldStyled.setStyle();
     }
 
-    private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, InvalidPassword, IOException, NotInDataBase {
+    private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, IOException {
         if (identifier.isEmpty() && password.isEmpty()) {
             throw new IncorrectWholeInformation("Incorrect information");
         }
 
-        if (identifier.isEmpty() ) {
+        if (identifier.isEmpty()) {
             throw new IncorrectIdentifierInformation("Invalid information");
         }
         if (getIdentifierType(identifier).equals("-")) {
@@ -145,22 +138,16 @@ public class LogInController {
         if (identifier.length() > 25) {
             throw new LengthException("Email or name is too long");
         }
-        if (!UsersDataBase.checkUserPresence(identifier)) {
-            throw new NotInDataBase("The person was not found");
+        if (UsersDataBase.checkUserPresence(identifier)) {
+            throw new TakenException("Email or name is already taken");
         }
+
 
         if (password.isEmpty()) {
             throw new IncorrectPasswordInformation("Incorrect information");
         }
-        if (!UsersDataBase.checkPasswordValidity(identifier,password)) {
-            throw new InvalidPassword("Incorrect password");
-        }
 
         return true;
-    }
-
-    private void closeLogInWindow() {
-        ((Stage) (anchorPane.getScene().getWindow())).close();
     }
 
     private static String getIdentifierType(String identifier) {
@@ -180,5 +167,4 @@ public class LogInController {
             return "-";
         }
     }
-
 }

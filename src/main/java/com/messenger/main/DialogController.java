@@ -70,6 +70,7 @@ public class DialogController {
             loadMessageHistory(); // if the user HAS messages in the dialog
         }
 
+
     }
 
 
