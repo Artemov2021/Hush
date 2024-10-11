@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.Pane?>
+
+
+<Pane fx:id="mainContactPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="55.0" prefWidth="279.0" stylesheets="@MainContact.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainContact">
+   <children>
+      <Label fx:id="mainContactAvatarLabel" layoutX="10.0" layoutY="10.0" prefHeight="38.0" prefWidth="38.0" styleClass="contact-avatar-label" />
+      <Label fx:id="mainContactNameLabel" layoutX="58.0" layoutY="11.0" prefHeight="17.0" prefWidth="195.0" styleClass="contact-name-label" text="Simple Text" />
+      <Label fx:id="mainContactMessageLabel" layoutX="58.0" layoutY="31.0" prefWidth="180.0" styleClass="contact-last-message-label" text="here is last message from that user to you" />
+      <Label fx:id="mainContactTimeLabel" layoutX="240.0" layoutY="11.0" styleClass="contact-time-label" text="18:40" />
+   </children>
+</Pane>

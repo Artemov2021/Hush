@@ -2,15 +2,16 @@ package com.messenger.auth;
 
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.AuthField;
-import com.messenger.exceptions.*;
+import com.messenger.main.MainWindowController;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,11 +19,11 @@ public class AuthLogInController {
     @FXML
     private AnchorPane anchorPane;
     @FXML
-    private TextField emailField;
+    private TextField identifierField;
     @FXML
-    private Label upperLabel;
+    private Label identifierLabel;
     @FXML
-    private Label emailErrorLabel;
+    private Label identifierErrorLabel;
     @FXML
     private PasswordField passwordField;
     @FXML
@@ -36,17 +37,14 @@ public class AuthLogInController {
 
     private Group passwordGroup;
 
-    private String identifier;
-    private String password;
 
-
-    public void initialize () throws IOException {
-        emailField.setFocusTraversable(false);
+    public void initialize () {
+        identifierField.setFocusTraversable(false);
         passwordField.setFocusTraversable(false);
         accountButton.setUnderline(true);
 
         // setting all error labels to default, invisible state
-        emailErrorLabel.setVisible(false);
+        identifierErrorLabel.setVisible(false);
         passwordErrorLabel.setVisible(false);
 
         // group of all password field elements ( will be moved down, if email is invalid )
@@ -56,56 +54,76 @@ public class AuthLogInController {
         // makes label animation and solves unnecessary spaces
         fieldsApplyStyle();
     }
-
-    public void logIn() throws IOException {
-        identifier = emailField.getText().trim();
-        password = passwordField.getText().trim();
-
+    public void checkInformation() {
         try {
+            String identifier = identifierField.getText().trim();
+            String password = passwordField.getText().trim();
+            byte occuredExceptions = 0;
 
-            // settings all text fields to a normal state
-            AuthField.deleteErrorStyle(emailField,emailErrorLabel);
-            AuthField.deleteErrorStyle(passwordField,passwordErrorLabel);
+            AuthField.deleteErrorStyle(identifierField,identifierErrorLabel);
+            AuthField.deleteErrorStyle(passwordField, passwordErrorLabel);
             passwordGroup.setLayoutY(0);
 
-            if (checkInformationValidity(identifier,password)) {
-                openMainWindow();
-                closeLogInWindow();
+            String identifierType = getIdentifierType(identifier);
+
+            if (identifierType.equals("-") || !UsersDataBase.getUserPresence(identifier)) {  // if identifier is invalid
+                String exceptionsReason = identifierType.equals("-") ? "Invalid information" : "Incorrect information";
+                AuthField.setErrorStyle(identifierField,identifierErrorLabel,exceptionsReason);
+                passwordGroup.setLayoutY(16);
+                occuredExceptions++;
             }
 
-        } catch (IncorrectWholeInformation IncorrectWholeInformation) {
+            if (password.isEmpty() || !UsersDataBase.getPasswordValidity(identifier,password)) {
+                String exceptionsReason = password.isEmpty() ? "Invalid password" : "Incorrect password";
+                AuthField.setErrorStyle(passwordField,passwordErrorLabel,exceptionsReason);
+                occuredExceptions++;
+            }
 
-            AuthField.setErrorStyle(emailField,emailErrorLabel,IncorrectWholeInformation.getMessage());
-            passwordGroup.setLayoutY(16);
-            AuthField.setErrorStyle(passwordField,passwordErrorLabel,IncorrectWholeInformation.getMessage());
-
-        } catch (IncorrectIdentifierInformation | LengthException | TakenException | NotInDataBase identifierException ) {
-
-            AuthField.setErrorStyle(emailField,emailErrorLabel,identifierException.getMessage());
-            passwordGroup.setLayoutY(16);
-
-        } catch (IncorrectPasswordInformation | InvalidPassword passwordException ) {
-
-            AuthField.setErrorStyle(passwordField,passwordErrorLabel,passwordException.getMessage());
-            passwordGroup.setLayoutY(0);
-
-        } catch (Exception extraException) {
-            // if there is issues with database, they will be displayed on extra label
-            extraLabel.setText(extraException.getMessage());
-
+            if (occuredExceptions == 0) {
+                openMainWindow(identifier,identifierType);
+                ((Stage) (anchorPane.getScene().getWindow())).close();  // close current window
+            }
+        } catch (Exception e) {
+            extraLabel.setText(e.getMessage());
+        }
+    }
+    public void openSingUp() {
+        try {
+            Stage stage = new Stage();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/auth/AuthSingUp.fxml"));
+            Scene scene = new Scene(loader.load());
+            stage.setResizable(false);
+            stage.setScene(scene);
+            stage.setTitle("Sing Up");
+            stage.show();
+            ((Stage) (anchorPane.getScene().getWindow())).close();  // close current window
+        } catch (Exception e) {
+            extraLabel.setText(e.getMessage());
         }
     }
 
-    public void openSingUp() throws IOException {
-        AuthSingUpWindow.openSingUpWindow((Stage) anchorPane.getScene().getWindow());
-    }
 
-    private void openMainWindow() throws IOException, SQLException {
-        AuthMainWindow.openMainWindow(identifier);
-    }
 
+    private void openMainWindow(String identifier,String identifierType){
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/MainWindow.fxml"));
+            Parent root = loader.load();
+
+            MainWindowController mainWindowController = loader.getController();
+            mainWindowController.setId(identifierType.equals("email") ? UsersDataBase.getIdWithEmail(identifier) : UsersDataBase.getIdWithName(identifier));
+
+            Scene scene = new Scene(root);
+            Stage newStage = new Stage();
+            newStage.setResizable(false);
+            newStage.setScene(scene);
+            newStage.setTitle("Main");
+            newStage.show();
+        } catch (Exception e) {
+            extraLabel.setText(e.getMessage());
+        }
+    }
     private void fieldsApplyStyle() {
-        var emailFieldStyled = new AuthField(emailField, upperLabel);
+        var emailFieldStyled = new AuthField(identifierField,identifierLabel);
         emailFieldStyled.setLabelChanges(-26, -2);
         emailFieldStyled.setLabelMovePath(-5, -24);
         emailFieldStyled.setStyle();
@@ -115,40 +133,7 @@ public class AuthLogInController {
         passwordFieldStyled.setLabelMovePath(-5, -24);
         passwordFieldStyled.setStyle();
     }
-
-    private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, InvalidPassword, IOException, NotInDataBase {
-        if (identifier.isEmpty() && password.isEmpty()) {
-            throw new IncorrectWholeInformation("Incorrect information");
-        }
-
-        if (identifier.isEmpty() ) {
-            throw new IncorrectIdentifierInformation("Invalid information");
-        }
-        if (getIdentifierType(identifier).equals("-")) {
-            throw new IncorrectIdentifierInformation("Invalid information");
-        }
-        if (identifier.length() > 25) {
-            throw new LengthException("Email or name is too long");
-        }
-        if (!UsersDataBase.checkUserPresence(identifier)) {
-            throw new NotInDataBase("The person was not found");
-        }
-
-        if (password.isEmpty()) {
-            throw new IncorrectPasswordInformation("Incorrect information");
-        }
-        if (!UsersDataBase.checkPasswordValidity(identifier,password)) {
-            throw new InvalidPassword("Incorrect password");
-        }
-
-        return true;
-    }
-
-    private void closeLogInWindow() {
-        ((Stage) (anchorPane.getScene().getWindow())).close();
-    }
-
-    private static String getIdentifierType(String identifier) {
+    private String getIdentifierType(String identifier) {
         String emailPattern = "^.+@\\S*\\.[a-z]{2,}$";
         Pattern emailPatternCompile = Pattern.compile(emailPattern);
         Matcher emailMatcher = emailPatternCompile.matcher(identifier);

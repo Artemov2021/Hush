@@ -11,20 +11,20 @@
    <children>
       <Label layoutX="-1.0" layoutY="-1.0" prefHeight="658.0" prefWidth="310.0" styleClass="left-background" />
       <Label fx:id="mainTitle" layoutX="659.0" layoutY="224.0" prefHeight="50.0" prefWidth="202.0" styleClass="main-title" text="Getting started" />
-      <Label fx:id="smallTitle" layoutX="594.0" layoutY="261.0" prefHeight="70.0" prefWidth="337.0" styleClass="small-title" text="To start a conversation choose a contact or create a new one" textAlignment="CENTER" wrapText="true" />
+      <Label fx:id="mainSmallTitle" layoutX="594.0" layoutY="261.0" prefHeight="70.0" prefWidth="337.0" styleClass="small-title" text="To start a conversation choose a contact or create a new one" textAlignment="CENTER" wrapText="true" />
       <Label fx:id="mainAvatarLabel" layoutX="22.0" layoutY="24.0" prefHeight="34.0" prefWidth="34.0" styleClass="avatar-button-default" />
       <Label fx:id="mainNameLabel" layoutX="68.0" layoutY="22.0" prefHeight="22.0" prefWidth="187.0" styleClass="name-label" text="Tymur Artemov" />
       <Label fx:id="mainEmailLabel" layoutX="70.0" layoutY="44.0" prefHeight="17.0" prefWidth="187.0" styleClass="email-label-default" text="timurt005@gmail.com" />
-      <Button fx:id="settingsButton" layoutX="257.0" layoutY="30.0" mnemonicParsing="false" onAction="#openSettingsWindow" prefHeight="28.0" prefWidth="34.0" styleClass="settings-button" />
-      <Label fx:id="settingsLabel" layoutX="266.0" layoutY="35.0" prefHeight="17.0" prefWidth="23.0" styleClass="settings-label-default" />
+      <Button fx:id="mainSettingsButton" layoutX="257.0" layoutY="30.0" mnemonicParsing="false" onAction="#openSettingsWindow" prefHeight="28.0" prefWidth="34.0" styleClass="settings-button" />
+      <Label fx:id="mainSettingsLabel" layoutX="266.0" layoutY="35.0" prefHeight="17.0" prefWidth="23.0" styleClass="settings-label-default" />
       <Label layoutX="24.0" layoutY="74.0" prefHeight="28.0" prefWidth="44.0" styleClass="chats-title-label" text="Chats" />
-      <TextField fx:id="searchField" layoutX="24.0" layoutY="105.0" prefHeight="28.0" prefWidth="218.0" promptText="Search for a contact" styleClass="search-field" />
-      <Button fx:id="addContactButton" layoutX="250.0" layoutY="105.0" mnemonicParsing="false" onAction="#addContactWindow" prefHeight="28.0" prefWidth="43.0" styleClass="add-contact-button" />
+      <TextField fx:id="mainSearchField" layoutX="24.0" layoutY="105.0" prefHeight="28.0" prefWidth="218.0" promptText="Search for a contact" styleClass="search-field" />
+      <Button fx:id="mainAddContactButton" layoutX="250.0" layoutY="105.0" mnemonicParsing="false" onAction="#addContactWindow" prefHeight="28.0" prefWidth="43.0" styleClass="add-contact-button" />
       <Label fx:id="searchLupeLabel" layoutX="223.0" layoutY="114.0" maxHeight="70.0" maxWidth="23.0" prefHeight="17.0" prefWidth="12.0" styleClass="search-field-lupe-default" />
-      <Label fx:id="addContactLabel" layoutX="264.0" layoutY="101.0" prefHeight="2.0" prefWidth="23.0" styleClass="add-contact-label" text="+" />
-      <ScrollPane fx:id="contactsScrollPane" layoutX="15.0" layoutY="149.0" prefHeight="508.0" prefWidth="292.0" styleClass="scroll-pane-contacts">
+      <Label fx:id="mainAddContactLabel" layoutX="264.0" layoutY="101.0" prefHeight="2.0" prefWidth="23.0" styleClass="add-contact-label" text="+" />
+      <ScrollPane fx:id="mainContactsScrollPane" layoutX="15.0" layoutY="149.0" prefHeight="508.0" prefWidth="292.0" styleClass="scroll-pane-contacts">
          <content>
-            <VBox fx:id="contactsVBox" prefHeight="504.0" prefWidth="279.0" />
+            <VBox fx:id="mainContactsVBox" prefHeight="504.0" prefWidth="279.0" />
          </content>
       </ScrollPane>
    </children>

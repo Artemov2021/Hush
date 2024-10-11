@@ -2,15 +2,16 @@ package com.messenger.auth;
 
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.AuthField;
-import com.messenger.exceptions.*;
+import com.messenger.main.MainWindowController;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,143 +20,138 @@ public class AuthSingUpController {
     @FXML
     private AnchorPane anchorPane;
     @FXML
-    private TextField emailField;
+    private TextField identifierField;
     @FXML
-    private Label upperLabel;
+    private Label identifierLabel;
     @FXML
-    private Label emailErrorLabel;
+    private Label identifierErrorLabel;
     @FXML
     private PasswordField passwordField;
     @FXML
-    private Label lowerLabel;
+    private Label passwordLabel;
     @FXML
     private Label passwordErrorLabel;
     @FXML
     private Button accountButton;
     @FXML
     private Label extraLabel;
+    @FXML
+    private ProgressBar progressBar;
 
     private Group passwordGroup;
 
-    private String identifier;
-    private String password;
-
-
-    public void initialize() throws IOException {
-        // Setting email and password field's focus to false, setting account button underline style
-        emailField.setFocusTraversable(false);
+    public void initialize() {
+        // Setting email and password field's unfocused, setting account button underline style
+        identifierField.setFocusTraversable(false);
         passwordField.setFocusTraversable(false);
-
         accountButton.setUnderline(true);
 
         // Setting all error labels to default, invisible state
-        emailErrorLabel.setVisible(false);
+        identifierErrorLabel.setVisible(false);
         passwordErrorLabel.setVisible(false);
 
         // group of all password field elements ( will be moved down, if email is invalid )
-        passwordGroup = new Group(lowerLabel, passwordField, passwordErrorLabel);
+        passwordGroup = new Group(passwordLabel, passwordField, passwordErrorLabel);
         anchorPane.getChildren().add(passwordGroup);
 
         // makes label animation and solves unnecessary spaces
         fieldsApplyStyle();
-
     }
-
-    public void singUp() throws IOException {
-        identifier = emailField.getText().trim();
-        password = passwordField.getText().trim();
-
+    public void checkInformation() {
+        progressBar.setProgress(0.2);
         try {
-            // settings all text fields to a normal state
-            AuthField.deleteErrorStyle(emailField, emailErrorLabel);
+            String identifier = identifierField.getText().trim();
+            String password = passwordField.getText().trim();
+            byte occuredExceptions = 0;
+
+            AuthField.deleteErrorStyle(identifierField,identifierErrorLabel);
             AuthField.deleteErrorStyle(passwordField, passwordErrorLabel);
             passwordGroup.setLayoutY(0);
 
-            if (checkInformationValidity(identifier, password)) {
-                UsersDataBase.addUser(identifier, password);
-                closeSingUpWindow();
-                openManinWindow();
+            String identifierType = getIdentifierType(identifier);
+
+            if (identifierType.equals("-") || UsersDataBase.getUserPresence(identifier)) {  // if identifier is invalid
+                String exceptionsReason = identifierType.equals("-") ? "Invalid information" :
+                        (identifierType.substring(0,1).toUpperCase() + identifierType.substring(1)) + " is already taken";
+                AuthField.setErrorStyle(identifierField,identifierErrorLabel,exceptionsReason);
+                passwordGroup.setLayoutY(16);
+                occuredExceptions++;
             }
 
-        } catch (IncorrectWholeInformation IncorrectWholeInformation) {
+            if (password.isEmpty() || password.length() > 25) {
+                String exceptionsReason = password.isEmpty() ? "Invalid password" : "Password is too long";
+                AuthField.setErrorStyle(passwordField,passwordErrorLabel,exceptionsReason);
+                occuredExceptions++;
+            }
 
-            AuthField.setErrorStyle(emailField, emailErrorLabel, IncorrectWholeInformation.getMessage());
-            passwordGroup.setLayoutY(16);
-            AuthField.setErrorStyle(passwordField, passwordErrorLabel, IncorrectWholeInformation.getMessage());
-
-        } catch (IncorrectIdentifierInformation | LengthException | TakenException identifierException) {
-
-            AuthField.setErrorStyle(emailField, emailErrorLabel, identifierException.getMessage());
-            passwordGroup.setLayoutY(16);
-
-        } catch (IncorrectPasswordInformation passwordException) {
-
-            AuthField.setErrorStyle(passwordField, passwordErrorLabel, passwordException.getMessage());
-            passwordGroup.setLayoutY(0);
-
-        } catch (Exception extraException) {
-            // if there is issues with database, they will be displayed on extra label
-            extraLabel.setText(extraException.getMessage());
+            if (occuredExceptions == 0) {
+                UsersDataBase.addUser(identifier,password);
+                progressBar.setProgress(0.7);
+                openManinWindow(identifier,identifierType);
+            }
+        } catch (Exception e) {
+            extraLabel.setText(e.getMessage());
         }
 
     }
-
-    public void openLogIn() throws IOException {
-        AuthLogInWindow.openLogInWindow((Stage) anchorPane.getScene().getWindow());
+    public void openLogInWindow() {
+        try {
+            Stage stage = new Stage();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/auth/AuthLogIn.fxml"));
+            Scene scene = new Scene(loader.load());
+            stage.setResizable(false);
+            stage.setScene(scene);
+            stage.setTitle("Log In");
+            stage.show();
+            ((Stage) (anchorPane.getScene().getWindow())).close();  // close current window
+        } catch (Exception e) {
+            extraLabel.setText(e.getMessage());
+        }
     }
 
-    private void openManinWindow() throws IOException, SQLException {
-        AuthMainWindow.openMainWindow(identifier);
-    }
 
+
+    private void openManinWindow(String identifier,String identifierType) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/MainWindow.fxml"));
+            Parent root = loader.load();
+
+            MainWindowController mainWindowController = loader.getController();
+            mainWindowController.setId(identifierType.equals("email") ? UsersDataBase.getIdWithEmail(identifier) : UsersDataBase.getIdWithName(identifier));
+
+            Scene scene = new Scene(root);
+            Stage newStage = new Stage();
+            newStage.setResizable(false);
+            newStage.setScene(scene);
+            newStage.setTitle("Main");
+            progressBar.setProgress(1);
+            closeSingUpWindow();  // close current window
+            newStage.show();
+        } catch (Exception e) {
+            //extraLabel.setText(e.getMessage());
+            e.printStackTrace();
+        }
+    }
     private void closeSingUpWindow() {
         ((Stage) (anchorPane.getScene().getWindow())).close();
     }
-
     private void fieldsApplyStyle() {
-        var emailFieldStyled = new AuthField(emailField, upperLabel);
+        var emailFieldStyled = new AuthField(identifierField,identifierLabel);
         emailFieldStyled.setLabelChanges(-26, -2);
         emailFieldStyled.setLabelMovePath(-5, -24);
         emailFieldStyled.setStyle();
 
-        var passwordFieldStyled = new AuthField(passwordField, lowerLabel);
+        var passwordFieldStyled = new AuthField(passwordField, passwordLabel);
         passwordFieldStyled.setLabelChanges(-11, -2);
         passwordFieldStyled.setLabelMovePath(-5, -24);
         passwordFieldStyled.setStyle();
     }
-
-    private boolean checkInformationValidity(String identifier, String password) throws SQLException, IncorrectIdentifierInformation, LengthException, TakenException, IncorrectWholeInformation, IncorrectPasswordInformation, IOException {
-        if (identifier.isEmpty() && password.isEmpty()) {
-            throw new IncorrectWholeInformation("Incorrect information");
-        }
-
-        if (identifier.isEmpty()) {
-            throw new IncorrectIdentifierInformation("Invalid information");
-        }
-        if (getIdentifierType(identifier).equals("-")) {
-            throw new IncorrectIdentifierInformation("Invalid information");
-        }
-        if (identifier.length() > 25) {
-            throw new LengthException("Email or name is too long");
-        }
-        if (UsersDataBase.checkUserPresence(identifier)) {
-            throw new TakenException("Email or name is already taken");
-        }
-
-
-        if (password.isEmpty()) {
-            throw new IncorrectPasswordInformation("Incorrect information");
-        }
-
-        return true;
-    }
-
-    private static String getIdentifierType(String identifier) {
-        String emailPattern = "^.+@\\S*\\.[a-z]{2,}$";
+    private String getIdentifierType(String identifier) {
+        String emailPattern = "^[a-zA-Z].+@\\S*\\.[a-z]{2,}$";
         Pattern emailPatternCompile = Pattern.compile(emailPattern);
         Matcher emailMatcher = emailPatternCompile.matcher(identifier);
 
-        String namePattern = "^[a-zA-Z][a-zA-Z0-9 ]+$";
+        String namePattern = "^[a-zA-Z][a-zA-Z0-9_ ]+$";
         Pattern namePatternCompile = Pattern.compile(namePattern);
         Matcher nameMatcher = namePatternCompile.matcher(identifier);
 

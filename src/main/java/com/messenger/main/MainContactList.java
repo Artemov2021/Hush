@@ -27,6 +27,7 @@ public class MainContactList {
     private final VBox contactsVBox;
     private final int mainUserId;
 
+
     public MainContactList(AnchorPane mainAnchorPane,ScrollPane contactsScrollPane,VBox contactsVBox,int mainUserId) {
         this.mainAnchorPane = mainAnchorPane;
         this.contactsVBox = contactsVBox;

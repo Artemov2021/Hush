@@ -132,7 +132,7 @@ public class NewContactWindow {
             contactInfoField.getStyleClass().add("add-contact-field");
 
             String identifierType = getIdentifierType(identifier);
-            boolean presenceInDB = UsersDataBase.checkUserPresence(identifier);
+            boolean presenceInDB = UsersDataBase.getUserPresence(identifier);
 
             if (identifier.isEmpty()) {
                 throw new IncorrectIdentifierInformation("Incorrect information");

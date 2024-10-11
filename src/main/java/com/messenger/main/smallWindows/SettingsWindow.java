@@ -131,10 +131,10 @@ public class SettingsWindow {
 
                 boolean nameEquality = Objects.equals(name, newName);   // if new name equals old name: name is valid
                 boolean nameValidity = isNameValid(newName) && newName.length() <= 25;  // if the name is valid and is not longer than 25 character: name is valid
-                boolean nameDataBasePresence = UsersDataBase.checkUserPresence(newName);
+                boolean nameDataBasePresence = UsersDataBase.getUserPresence(newName);
                 boolean emailEquality = Objects.equals(email, newEmail);  // if new email equals old email: email is valid
                 boolean emailValidity = newEmail.isEmpty() || (isEmailValid(newEmail) && newEmail.length() <= 25);  // empty or valid and not longer than 25: email is valid
-                boolean emailDataBasePresence = UsersDataBase.checkUserPresence(newEmail);
+                boolean emailDataBasePresence = UsersDataBase.getUserPresence(newEmail);
 
 
                 if ((nameEquality || (nameValidity && !nameDataBasePresence)) && (emailEquality || (emailValidity && !emailDataBasePresence))) {
@@ -165,7 +165,7 @@ public class SettingsWindow {
         this.mainUserId = id;
         setName(UsersDataBase.getNameWithId(id));
         setEmail(UsersDataBase.getEmailWithId(id));
-        setAvatar(UsersDataBase.getAvatarWithId(id));
+        //setAvatar(UsersDataBase.getAvatarWithId(id));
     }
     public void setName(String name) {
         this.name = name;
@@ -325,7 +325,7 @@ public class SettingsWindow {
         if (!isNameValid(newName)) {
             hasException = true;
             exceptionMessage = "invalid name";
-        } else if (!Objects.equals(name, newName) && UsersDataBase.checkUserPresence(newName)) {
+        } else if (!Objects.equals(name, newName) && UsersDataBase.getUserPresence(newName)) {
             hasException = true;
             exceptionMessage = "Name is already taken";
         } else if (newName.length() > 25) {
@@ -354,7 +354,7 @@ public class SettingsWindow {
         if (!isEmailValid(newEmail)) {
             hasException = true;
             exceptionMessage = "invalid email";
-        } else if (!Objects.equals(email, newEmail) && UsersDataBase.checkUserPresence(newEmail)) {
+        } else if (!Objects.equals(email, newEmail) && UsersDataBase.getUserPresence(newEmail)) {
             hasException = true;
             exceptionMessage = "Email is already taken";
         } else if (newEmail.length() > 25) {
