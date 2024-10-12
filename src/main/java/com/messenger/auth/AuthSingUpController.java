@@ -113,7 +113,7 @@ public class AuthSingUpController {
 
     private void openManinWindow(String identifier,String identifierType) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/MainWindow.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/fxml/MainWindow.fxml"));
             Parent root = loader.load();
 
             MainWindowController mainWindowController = loader.getController();

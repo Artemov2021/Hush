@@ -7,6 +7,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class UserDataBaseTest {
     @Test
     void test() {
-
+        assertEquals(true,"artur".startsWith("a"));
     }
 }

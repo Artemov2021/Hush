@@ -15,7 +15,7 @@ public class MainWindow extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/MainWindow.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/fxml/MainWindow.fxml"));
         Scene scene = new Scene(loader.load());
         stage.setResizable(false);
         stage.setScene(scene);

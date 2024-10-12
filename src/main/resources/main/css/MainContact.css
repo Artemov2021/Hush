@@ -1,18 +1,19 @@
 /*-----------------------------------------------------------------------------*/
 /* background */
-.root {
+.contact-background-pane {
     -fx-background-color: #1D1C20;
+    -fx-background-radius: 6;
 }
-.root:hover {
+.contact-background-pane:hover {
     -fx-background-color: #262529;
 }
-.root:pressed {
+.contact-background-pane:pressed {
     -fx-background-color: #3A3941;
 }
 /*-----------------------------------------------------------------------------*/
 /* avatar */
 .contact-avatar-label {
-    -fx-background-image: url("elements/avatarDefaultContacts.png");
+    -fx-background-image: url("../elements/avatarDefaultContacts.png");
 }
 /*-----------------------------------------------------------------------------*/
 /* name */

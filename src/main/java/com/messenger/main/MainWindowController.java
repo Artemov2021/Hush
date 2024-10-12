@@ -1,9 +1,9 @@
 package com.messenger.main;
 
-import com.messenger.Main;
+import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
+//import com.messenger.main.smallWindows.NewContactWindow;
 import com.messenger.main.smallWindows.NewContactWindow;
-import com.messenger.main.smallWindows.SettingsWindow;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -21,7 +21,7 @@ import javafx.scene.shape.Circle;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainWindowController {
     @FXML
@@ -61,12 +61,8 @@ public class MainWindowController {
         setAppropriateAvatar();
         applyHoverStyles();
 
-        loadContacts();
-        //addSearchFieldListener();
-
-
-
-
+        MainContactList.loadContacts(id,mainContactsVBox);
+        addSearchFieldListener();
     }
     private void setMainTitle() throws SQLException {
         /* set main title on the right side. If the person has no contacts,
@@ -80,13 +76,10 @@ public class MainWindowController {
             title.setLayoutX(610);
             title.setLayoutY(300);
             title.getStyleClass().add("login-title");
-            title.setId("loginTitle");
+            title.setId("mainLoginTitle");
             title.setPrefWidth(300);
             title.setPrefHeight(51);
             anchorPane.getChildren().add(title);
-
-            MainContactList mainContactList = new MainContactList(anchorPane,mainContactsScrollPane,mainContactsVBox,id);
-            mainContactList.addUserContactsToList();
         }
     }
     private void setButtonsLabelTransparency() {
@@ -134,88 +127,67 @@ public class MainWindowController {
     }
 
 
-    private void loadContacts() throws SQLException, IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/MainContact.fxml"));
-        Parent root = fxmlLoader.load();
-        MainContact contact = fxmlLoader.getController();
-        contact.setName("Ахмат");
-        mainContactsVBox.getChildren().add(0,root);
-        System.out.println(mainContactsVBox.getChildren());
+
+    private void addSearchFieldListener() {
+        mainSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                if (newValue.trim().length() > 0) {
+                    mainContactsVBox.getChildren().clear();
+                    int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(id,newValue.trim());
+                    MainContactList.loadCustomContacts(id,foundedUsersId,mainContactsVBox);
+                } else {
+                    mainContactsVBox.getChildren().clear();
+                    MainContactList.loadContacts(id,mainContactsVBox);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException();
+            }
+        });
     }
-//    private void addSearchFieldListener() {
-//        mainSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
-//            try {
-//                MainContactList mainContactList = new MainContactList(anchorPane,mainContactsScrollPane,mainContactsVBox,id);
-//                if (newValue.length() > 0) {
-//                    mainContactsVBox.getChildren().clear();
-//                    ArrayList<Integer> foundedUsersIds = UsersDataBase.getMatchedUsersIds(UsersDataBase.getNameWithId(id),newValue);
-//                    mainContactList.addCustomContactsToList(foundedUsersIds);
-//                } else {
-//                    mainContactsVBox.getChildren().clear();
-//                    mainContactList.addUserContactsToList();
-//                }
-//            } catch (Exception e) {
-//                throw new RuntimeException();
-//            }
-//        });
-//    }
 
 
     @FXML
-    public void addContactWindow () {
+    public void addContactWindow () throws IOException, SQLException {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainNewContactWindow.fxml"));
+        Parent newContactRoot = fxmlLoader.load();
+
+        NewContactWindow newContactWindow = fxmlLoader.getController();
+        newContactWindow.setMainUserId(id);
+        newContactWindow.setMainAnchorPane(anchorPane);
+        newContactWindow.setMainContactsScrollPane(mainContactsScrollPane);
+        newContactWindow.setMainContactsVBox(mainContactsVBox);
+        newContactWindow.initializeWithValue();
+
+        anchorPane.getChildren().add(newContactRoot);
+    }
+
+//    @FXML
+//    private void openSettingsWindow() {
 //        try {
-//            // Load FXML new contact window ( pane )
-//            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/NewContactWindow.fxml"));
-//            Parent newContactRoot = loader.load();
+//            // Load FXML settings window ( pane )
+//            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/MainSettingsWindow.fxml"));
+//            Parent settingsRoot = loader.load();
 //
 //            // Pass the anchor pane of main window to settings controller file
-////            NewContactWindow newContactWindow = loader.getController();
-////            newContactWindow.setMainAnchorPane(anchorPane);
-////            newContactWindow.setMainUserId(id);
-////            newContactWindow.setMainAnchorPane(anchorPane);
-////            newContactWindow.setContactsVBox(contactsVBox);
-////            newContactWindow.setContactsScrollPane(contactsScrollPane);
-////            newContactWindow.setMainScrollPane(contactsScrollPane);
-////            newContactWindow.setMainContactVBox(contactsVBox);
-////            newContactWindow.initializeWithValue();
-////
-////            anchorPane.getChildren().add(newContactRoot);
-////
-////        } catch (IOException e) {
-////            e.printStackTrace();
-////        } catch (SQLException e) {
-////            throw new RuntimeException(e);
-////        }
-    }
-
-    @FXML
-    private void openSettingsWindow() {
-        try {
-            // Load FXML settings window ( pane )
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/SettingsWindow.fxml"));
-            Parent settingsRoot = loader.load();
-
-            // Pass the anchor pane of main window to settings controller file
-            SettingsWindow settingsController = loader.getController();
-            settingsController.setId(id);
-            settingsController.setMainAnchorPane(anchorPane);
-            settingsController.initializeWithValue();
-
-            anchorPane.getChildren().add(settingsRoot);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//            SettingsWindow settingsController = loader.getController();
+//            settingsController.setId(id);
+//            settingsController.setMainAnchorPane(anchorPane);
+//            settingsController.initializeWithValue();
+//
+//            anchorPane.getChildren().add(settingsRoot);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
     public void setId(int id) throws SQLException, IOException {
         this.id = id;
         initializeWithValue();
     }
 
-//    public void initialize() throws SQLException, IOException {
-//        this.id = 1;
-//        initializeWithValue();
-//        elementsAreInitialized = true;
-//    }
+    public void initialize() throws SQLException, IOException {
+        this.id = 1;
+        initializeWithValue();
+    }
 }

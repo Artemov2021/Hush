@@ -44,20 +44,6 @@ public class UsersDataBase {
         return false;
     }
 
-    public static ArrayList<Integer> getMatchedUsersIds(String mainUser, String nameBeginning) throws SQLException {
-        String pattern = "^"+nameBeginning;
-        Pattern patternCompiled = Pattern.compile(pattern);
-        ArrayList<String> contacts = DetailedDataBase.getContactsNames(mainUser);
-        ArrayList<Integer> matchedUsersIds = new ArrayList<>();
-        for (String user: contacts) {
-            Matcher matcher = patternCompiled.matcher(user);
-            if (matcher.find()) {
-                matchedUsersIds.add(getIdWithName(user));
-            }
-        }
-        return matchedUsersIds;
-    }
-
     public static void changeName(String oldName,String newName) throws IOException, SQLException {
         try (Connection connection3 = DriverManager.getConnection(url,user,password);
              PreparedStatement stmt3 = connection3.prepareStatement("UPDATE users SET name = ? WHERE name = ?")) {

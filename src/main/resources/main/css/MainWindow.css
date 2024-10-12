@@ -15,11 +15,11 @@
     -fx-alignment: center;
 }
 .login-title {
-    -fx-background-image: url("elements/title.png");
+    -fx-background-image: url("../elements/title.png");
     -fx-background-repeat: no-repeat;
 }
 .avatar-button-default {
-    -fx-background-image: url("elements/avatarDefault.png");
+    -fx-background-image: url("../elements/avatarDefault.png");
     -fx-background-radius: 35;
 }
 .name-label {
@@ -47,10 +47,10 @@
 }
 
 .settings-label-default {
-    -fx-background-image: url("elements/settingsDefault.png");
+    -fx-background-image: url("../elements/settingsDefault.png");
 }
 .settings-label-hovered {
-    -fx-background-image: url("elements/settingsFocused.png");
+    -fx-background-image: url("../elements/settingsFocused.png");
 }
 
 .chats-title-label {
@@ -76,11 +76,11 @@
 }
 
 .search-field-lupe-default {
-    -fx-background-image: url("elements/searchingLupeDefault.png");
+    -fx-background-image: url("../elements/searchingLupeDefault.png");
     -fx-background-repeat: no-repeat;
 }
 .search-field-lupe-focused {
-    -fx-background-image: url("elements/searchingLupeFocused.png");
+    -fx-background-image: url("../elements/searchingLupeFocused.png");
     -fx-background-repeat: no-repeat;
 }
 
@@ -97,80 +97,6 @@
 .add-contact-label {
     -fx-font-size: 23;
     -fx-text-fill: white;
-}
-.exit-button {
-    -fx-background-image: url(elements/exitDefault.png);
-    -fx-background-color: transparent;
-}
-.exit-button:hover {
-    -fx-background-image: url(elements/exitFocused.png);
-}
-/*-----------------------------------------------------------------------------------------------*/
-/* New contact window style */
-.add-contact-window {
-    -fx-background-color: #161518;
-    -fx-background-radius: 14;
-}
-.add-contact-main-label {
-    -fx-font-size: 18;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-}
-.add-contact-secondary-label {
-    -fx-font-size: 12;
-    -fx-text-fill: #69686D;
-}
-.add-contact-small-label {
-    -fx-font-size: 13;
-    -fx-text-fill: white;
-}
-.add-contact-field {
-    -fx-font-size: 13;
-    -fx-background-color: #1D1C1F;
-    -fx-background-radius: 8;
-    -fx-border-color: #2C2A2F;
-    -fx-border-radius: 8;
-    -fx-text-fill: white;
-    -fx-prompt-text-fill: #595664;
-    -fx-padding: 0 0 0 13;
-}
-.add-contact-field:focused {
-    -fx-border-color: #672DF0;
-}
-.add-contact-field-error {
-    -fx-border-color: #F04343;
-    -fx-font-size: 13;
-    -fx-background-color: #1D1C1F;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-text-fill: white;
-    -fx-prompt-text-fill: #595664;
-    -fx-padding: 0 0 0 13;
-}
-.add-contact-add-button {
-    -fx-background-image: url("elements/addButtonDefault.png");
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-border-color: transparent;
-    -fx-background-repeat: no-repeat;
-    -fx-background-color: transparent;
-}
-.add-contact-add-button:pressed {
-    -fx-background-image: url("elements/addButtonFocused.png");
-}
-.add-contact-cancel-button {
-    -fx-background-image: url("elements/cancelButtonDefault.png");
-    -fx-background-color: transparent;
-}
-.add-contact-cancel-button:hover {
-    -fx-background-image: url("elements/cancelButtonHovered.png");
-}
-.add-contact-cancel-button:pressed {
-    -fx-background-image: url("elements/cancelButtonFocused.png");
-}
-.add-contact-error-label {
-    -fx-font-size: 12;
-    -fx-text-fill: #F04343;
 }
 /*-----------------------------------------------------------------------------*/
 /* Scroll pane style of contacts list */
@@ -193,34 +119,6 @@
     -fx-opacity: 0;
 }
 /*-----------------------------------------------------------------------------*/
-/* User in the contact list */
-.user-pane {
-    -fx-background-color: transparent;
-    -fx-background-radius: 7;
-}
-.user-pane:hover {
-    -fx-background-color: #262529;
-}
-.user-pane:pressed {
-    -fx-background-color: #3A3941;
-}
-.user-pane-avatar-default {
-    -fx-background-image: url("elements/avatarDefaultContacts.png");
-}
-.user-pane-name {
-    -fx-font-size: 12;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-}
-.user-pane-message {
-    -fx-font-size: 11;
-    -fx-text-fill: #8A8A8A;
-}
-.user-pane-time {
-    -fx-font-size: 10;
-    -fx-text-fill: #8A8A8A;
-}
-/*-----------------------------------------------------------------------------*/
 /* Settings window */
 .settings-window {
     -fx-background-color: #161518;
@@ -232,7 +130,7 @@
     -fx-font-weight: bold;
 }
 .settings-avatar-default {
-    -fx-background-image: url("elements/avatarDefaultSettings.png");
+    -fx-background-image: url("../elements/avatarDefaultSettings.png");
     -fx-background-color: transparent;
 }
 .settings-identifier-label {
@@ -263,7 +161,7 @@
     -fx-prompt-text-fill: #6E687A;
 }
 .settings-save-button {
-    -fx-background-image: url("elements/saveButtonDefault.png");
+    -fx-background-image: url("../elements/saveButtonDefault.png");
     -fx-background-radius: 8;
     -fx-border-radius: 8;
     -fx-border-color: transparent;
@@ -271,17 +169,17 @@
     -fx-background-color: transparent;
 }
 .settings-save-button:pressed {
-    -fx-background-image: url("elements/saveButtonFocused.png");
+    -fx-background-image: url("../elements/saveButtonFocused.png");
 }
 .settings-cancel-button {
-    -fx-background-image: url("elements/cancelButtonDefault.png");
+    -fx-background-image: url("../elements/cancelButtonDefault.png");
     -fx-background-color: transparent;
 }
 .settings-cancel-button:hover {
-    -fx-background-image: url("elements/cancelButtonHovered.png");
+    -fx-background-image: url("../elements/cancelButtonHovered.png");
 }
 .settings-cancel-button:pressed {
-    -fx-background-image: url("elements/cancelButtonFocused.png");
+    -fx-background-image: url("../elements/cancelButtonFocused.png");
 }
 .settings-error-label {
     -fx-font-size: 11;
@@ -303,7 +201,7 @@
 }
 
 .settings-avatar-button-change-symbol {
-    -fx-background-image: url("elements/settingsChange.png");
+    -fx-background-image: url("../elements/settingsChange.png");
     -fx-background-repeat: no-repeat;
 }
 .settings-avatar-button-change-text {
