@@ -47,7 +47,6 @@ public class NewContactWindow {
 
     private int mainUserId;
     private AnchorPane mainAnchorPane;
-    private ScrollPane mainContactsScrollPane;
     private VBox mainContactsVBox;
 
     public void initializeWithValue() {
@@ -59,12 +58,6 @@ public class NewContactWindow {
 
         // close window by clicking away ( on the transparent background pane )
         newContactBackgroundPane.setOnMouseClicked(event -> hideWindow());
-
-        // close window by clicking on cancel button
-        newContactCancelButton.setOnMouseClicked(event -> hideWindow());
-
-        // close window by clicking on exit button
-        newContactExitButton.setOnMouseClicked(event -> hideWindow());
 
         // debugging closing window by clicking on the new contact window pane
         newContactOverlayPane.setOnMouseClicked(Event::consume);
@@ -93,8 +86,10 @@ public class NewContactWindow {
         try {
             String identifier = newContactInfoField.getText().trim();
             if (identifierIsValid(identifier)) {
-                System.out.println("Contact is valid!");
-                // TODO
+                int contactId = getIdentifierType(identifier).equals("name") ? UsersDataBase.getIdWithName(identifier) : UsersDataBase.getIdWithEmail(identifier);
+                ContactsDataBase.addContact(mainUserId,contactId);
+                MainContactList.addContactToList(mainUserId,contactId,mainContactsVBox);
+                hideWindow();
             }
         } catch (Exception e) {
             throw new RuntimeException();
@@ -107,9 +102,6 @@ public class NewContactWindow {
     }
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
-    }
-    public void setMainContactsScrollPane(ScrollPane mainScrollPane) {
-        this.mainContactsScrollPane = mainScrollPane;
     }
     public void setMainContactsVBox(VBox VBox) {
         this.mainContactsVBox = VBox;
@@ -139,6 +131,7 @@ public class NewContactWindow {
 
         return true;
     }
+    @FXML
     private void hideWindow() {
         FadeTransition fadeOut = new FadeTransition(Duration.millis(180),newContactOverlayPane);
         fadeOut.setFromValue(1);
@@ -181,22 +174,5 @@ public class NewContactWindow {
         return Arrays.stream(ContactsDataBase.getContactsIdList(mainUserId)).anyMatch(id -> id == identifierId);
     }
 
-
-
-
-
-
-//    private void addContactToMainWindowList() throws SQLException, IOException {
-//        MainContactList mainContactList = new MainContactList(mainAnchorPane,mainScrollPane,mainContactVBox,mainUserId);
-//        mainContactList.addContactToList(contactId);
-//    }
-//
-//    private void addContactToDB() throws SQLException, IOException, InterruptedException {
-//        if (contactId != -1) {
-//            DetailedDataBase.addContactToContactList(mainUserId,contactId);
-//            DetailedDataBase.createContactTable(mainUserId,contactId);
-//            UsersDataBase.addContactsAmount(mainUserId);
-//        }
-//    }
 
 }

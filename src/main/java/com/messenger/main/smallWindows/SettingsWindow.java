@@ -77,9 +77,15 @@ public class SettingsWindow {
 
 
     public void initializeWithValue() throws SQLException, MalformedURLException {
-
-        // Opening effect ( fade in and movement to the left side )
+        // window opens with an effect
         showOpeningEffect();
+
+
+
+
+
+
+
 
         settingsPane.setPickOnBounds(false);
 
@@ -161,24 +167,27 @@ public class SettingsWindow {
         });
     }
 
-    public void setId(int id) throws SQLException {
+    public void setmainUserId(int id) throws SQLException {
         this.mainUserId = id;
-        setName(UsersDataBase.getNameWithId(id));
-        setEmail(UsersDataBase.getEmailWithId(id));
-        //setAvatar(UsersDataBase.getAvatarWithId(id));
-    }
-    public void setName(String name) {
-        this.name = name;
-    }
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
     }
     public void setMainAnchorPane(AnchorPane mainAnchorPane) {
         this.mainAnchorPane = mainAnchorPane;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     private void hideErrorLabels() {
@@ -207,7 +216,7 @@ public class SettingsWindow {
     }
 
     @FXML
-    private void hideSettingsWindow() {
+    private void hideWindow() {
         FadeTransition fadeOut = new FadeTransition(Duration.millis(180), settingsPane);
         fadeOut.setFromValue(1);
         fadeOut.setToValue(0);

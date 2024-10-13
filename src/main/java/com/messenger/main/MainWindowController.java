@@ -4,6 +4,7 @@ import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
 //import com.messenger.main.smallWindows.NewContactWindow;
 import com.messenger.main.smallWindows.NewContactWindow;
+import com.messenger.main.smallWindows.SettingsWindow;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -147,40 +148,33 @@ public class MainWindowController {
 
 
     @FXML
-    public void addContactWindow () throws IOException, SQLException {
+    public void addContactWindow () throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainNewContactWindow.fxml"));
         Parent newContactRoot = fxmlLoader.load();
 
         NewContactWindow newContactWindow = fxmlLoader.getController();
         newContactWindow.setMainUserId(id);
         newContactWindow.setMainAnchorPane(anchorPane);
-        newContactWindow.setMainContactsScrollPane(mainContactsScrollPane);
         newContactWindow.setMainContactsVBox(mainContactsVBox);
         newContactWindow.initializeWithValue();
 
         anchorPane.getChildren().add(newContactRoot);
     }
+    @FXML
+    public void settingsWindow() throws IOException, SQLException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/fxml/MainSettingsWindow.fxml"));
+        Parent settingsWindowRoot = loader.load();
 
-//    @FXML
-//    private void openSettingsWindow() {
-//        try {
-//            // Load FXML settings window ( pane )
-//            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/MainSettingsWindow.fxml"));
-//            Parent settingsRoot = loader.load();
-//
-//            // Pass the anchor pane of main window to settings controller file
-//            SettingsWindow settingsController = loader.getController();
-//            settingsController.setId(id);
-//            settingsController.setMainAnchorPane(anchorPane);
-//            settingsController.initializeWithValue();
-//
-//            anchorPane.getChildren().add(settingsRoot);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } catch (SQLException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
+        SettingsWindow settingsWindow = loader.getController();
+        settingsWindow.setmainUserId(id);
+        settingsWindow.setMainAnchorPane(anchorPane);
+
+        // TODO
+
+        anchorPane.getChildren().add(settingsWindowRoot);
+    }
+
+
     public void setId(int id) throws SQLException, IOException {
         this.id = id;
         initializeWithValue();

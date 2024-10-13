@@ -27,27 +27,22 @@ public class ContactsDataBase {
         }
         return contactsIdList.stream().mapToInt(Integer::intValue).toArray();
     }
-    public static String[] getContactsNameList(int mainUserId) throws SQLException {
-        List<String> contactsNameList = new ArrayList<>();
-        String statement = "SELECT contact_id FROM contacts WHERE user_id = ?";
-
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
-            PreparedStatement preparedStatement = connection.prepareStatement(statement);
-            preparedStatement.setInt(1,mainUserId);
-            ResultSet result = preparedStatement.executeQuery();
-            while (result.next()) {
-                int contactId = result.getInt("contact_id");
-                contactsNameList.add(UsersDataBase.getNameWithId(contactId));
-            }
-        }
-        return contactsNameList.toArray(new String[0]);
-    }
     public static int[] getMatchedUsersId(int mainUserId,String userNamePiece) throws SQLException {
         /* For example: user enters "Ar" and that method gives all users id, which name
            beginns with "Ar" ( e.g. Artur,Ariana )  */
         int[] contactsId = getContactsIdList(mainUserId);
         return Arrays.stream(contactsId)
                 .filter(contactId -> getNameMatchingWithId(contactId,userNamePiece.toLowerCase())).toArray();
+    }
+    public static void addContact(int mainUserId,int contactId) throws SQLException {
+        String statement = "INSERT INTO contacts (user_id,contact_id) VALUES (?,?)";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.executeUpdate();
+        }
     }
 
 
