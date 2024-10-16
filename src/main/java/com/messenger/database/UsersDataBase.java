@@ -78,33 +78,20 @@ public class UsersDataBase {
         return "name";
     }
 
-    public static boolean getPasswordValidity(String identifier, String password) throws SQLException {
+    public static boolean getPasswordValidity(String identifier, String givenPassword) throws SQLException {
         // works only with a name or an email
         String identifierType = isEmailOrName(identifier);
-        String statement = "SELECT password FROM users WHERE "+identifierType+" = ?";
+        String statement = "SELECT password FROM users WHERE " + identifierType + " = ?";
 
-        try (Connection connection = DriverManager.getConnection(url)) {
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt = connection.prepareStatement(statement);
-            stmt.setString(1,identifier);
+            stmt.setString(1, identifier);
             ResultSet result = stmt.executeQuery();
-            if (result.next() && result.getString("password").equals(password)) {
+            if (result.next() && result.getString("password").equals(givenPassword)) {
                 return true;
             }
         }
         return false;
-    }
-
-    public static String getNameWithEmail( String email ) throws SQLException {
-        String statement = "SELECT name FROM users WHERE email = ?";
-        try (var conn = DriverManager.getConnection(url)) {
-            var stmt = conn.prepareStatement(statement);
-            stmt.setString(1,email);
-            ResultSet result = stmt.executeQuery();
-            if (result.next()) {
-                return result.getString("name");
-            }
-        }
-        return null;
     }
 
     public static String getNameWithId(int id) throws SQLException {
@@ -117,7 +104,7 @@ public class UsersDataBase {
                 return result.getString("name");
             }
         }
-        return null;
+        return "";
     }
 
     public static String getEmailWithId(int id) throws SQLException {
@@ -130,7 +117,7 @@ public class UsersDataBase {
                 return result.getString("email");
             }
         }
-        return null;
+        return "";
     }
 
     public static int getIdWithName(String name) throws SQLException {

@@ -2,7 +2,11 @@ package com.messenger.auth;
 
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.AuthField;
+import com.messenger.design.LoadingDots;
 import com.messenger.main.MainWindowController;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
@@ -11,7 +15,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,9 +37,13 @@ public class AuthLogInController {
     @FXML
     private Label passwordErrorLabel;
     @FXML
+    private Button singUpButton;
+    @FXML
     private Button accountButton;
     @FXML
     private Label extraLabel;
+    @FXML
+    private ProgressBar progressBar;
 
     private Group passwordGroup;
 
@@ -55,6 +65,12 @@ public class AuthLogInController {
         fieldsApplyStyle();
     }
     public void checkInformation() {
+        if (anchorPane.lookup("#dotsContainer") == null) {
+            setDefaultFieldsStyle();
+            setLoadingButton();
+            setLoadingProgress(0.2);
+            passwordGroup.setLayoutY(0);
+        }
         try {
             String identifier = identifierField.getText().trim();
             String password = passwordField.getText().trim();
@@ -80,11 +96,22 @@ public class AuthLogInController {
             }
 
             if (occuredExceptions == 0) {
-                openMainWindow(identifier,identifierType);
-                ((Stage) (anchorPane.getScene().getWindow())).close();  // close current window
+                UsersDataBase.addUser(identifier,password);
+                setLoadingProgress(0.7);
+                Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(3), e -> {
+                    openMainWindow(identifier,identifierType);
+                    ((Stage) (anchorPane.getScene().getWindow())).close();  // close current window
+                }));
+                timeline.setCycleCount(1);
+                timeline.play();
+            }
+            if (occuredExceptions > 0) {
+                resetProgress();
+                setNormalButton();
             }
         } catch (Exception e) {
             extraLabel.setText(e.getMessage());
+            e.printStackTrace();
         }
     }
     public void openSingUp() {
@@ -150,5 +177,34 @@ public class AuthLogInController {
             return "-";
         }
     }
+    private void setDefaultFieldsStyle() {
+        AuthField.deleteErrorStyle(identifierField,identifierErrorLabel);
+        AuthField.deleteErrorStyle(passwordField, passwordErrorLabel);
+    }
+    private void setLoadingProgress(double progress) {
+        Platform.runLater(()->{
+            progressBar.setProgress(progress);
+        });
+    }
+    private void resetProgress() {
+        Platform.runLater(()-> {
+            progressBar.setProgress(0);
+        });
+    }
+    private void setLoadingButton() {
+        Platform.runLater(()-> {
+            singUpButton.getStyleClass().clear();
+            singUpButton.getStyleClass().add("main-button-loading");
+            LoadingDots.startAnimation(anchorPane);
+        });
+    }
+    private void setNormalButton() {
+        Platform.runLater(()->{
+            singUpButton.getStyleClass().clear();
+            singUpButton.getStyleClass().add("main-button");
+            anchorPane.getChildren().remove(anchorPane.lookup("#dotsContainer"));
+        });
+    }
+
 
 }

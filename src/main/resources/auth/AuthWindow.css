@@ -57,7 +57,21 @@
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-font-size: 13;
+    -fx-alignment: center;
 }
+.main-button-loading {
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-background-color: linear-gradient(from 0% 100% to 100% 0%, #572ECF 4.25%, #7D1AAC 96.08%);
+    -fx-text-fill: transparent;
+    -fx-font-weight: bold;
+    -fx-font-size: 13;
+    -fx-alignment: center;
+}
+
+
+
+
 .main-button:pressed {
     -fx-text-fill: #B7B7B7;
 }

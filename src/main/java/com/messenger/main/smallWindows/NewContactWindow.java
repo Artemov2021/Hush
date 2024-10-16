@@ -2,10 +2,6 @@ package com.messenger.main.smallWindows;
 
 import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
-import com.messenger.design.ShakeAnimation;
-import com.messenger.exceptions.AlreadyInDataBase;
-import com.messenger.exceptions.IncorrectIdentifierInformation;
-import com.messenger.exceptions.NotInDataBase;
 import com.messenger.main.MainContactList;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
@@ -13,18 +9,14 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-import java.io.IOException;
-
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

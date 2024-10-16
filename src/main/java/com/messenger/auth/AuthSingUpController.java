@@ -2,16 +2,24 @@ package com.messenger.auth;
 
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.AuthField;
+import com.messenger.design.LoadingDots;
 import com.messenger.main.MainWindowController;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
+import java.util.Timer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +39,8 @@ public class AuthSingUpController {
     private Label passwordLabel;
     @FXML
     private Label passwordErrorLabel;
+    @FXML
+    private Button singUpButton;
     @FXML
     private Button accountButton;
     @FXML
@@ -58,17 +68,19 @@ public class AuthSingUpController {
         fieldsApplyStyle();
     }
     public void checkInformation() {
-        progressBar.setProgress(0.2);
+        if (anchorPane.lookup("#dotsContainer") == null) {
+            setDefaultFieldsStyle();
+            setLoadingButton();
+            setLoadingProgress(0.2);
+            passwordGroup.setLayoutY(0);
+        }
+
         try {
+
             String identifier = identifierField.getText().trim();
             String password = passwordField.getText().trim();
-            byte occuredExceptions = 0;
-
-            AuthField.deleteErrorStyle(identifierField,identifierErrorLabel);
-            AuthField.deleteErrorStyle(passwordField, passwordErrorLabel);
-            passwordGroup.setLayoutY(0);
-
             String identifierType = getIdentifierType(identifier);
+            byte occuredExceptions = 0;
 
             if (identifierType.equals("-") || UsersDataBase.getUserPresence(identifier)) {  // if identifier is invalid
                 String exceptionsReason = identifierType.equals("-") ? "Invalid information" :
@@ -86,13 +98,21 @@ public class AuthSingUpController {
 
             if (occuredExceptions == 0) {
                 UsersDataBase.addUser(identifier,password);
-                progressBar.setProgress(0.7);
-                openManinWindow(identifier,identifierType);
+                setLoadingProgress(0.7);
+                Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(3), e -> {
+                    openManinWindow(identifier,identifierType);
+                    setLoadingProgress(1);
+                }));
+                timeline.setCycleCount(1);
+                timeline.play();
+            }
+            if (occuredExceptions > 0) {
+                resetProgress();
+                setNormalButton();
             }
         } catch (Exception e) {
             extraLabel.setText(e.getMessage());
         }
-
     }
     public void openLogInWindow() {
         try {
@@ -108,8 +128,6 @@ public class AuthSingUpController {
             extraLabel.setText(e.getMessage());
         }
     }
-
-
 
     private void openManinWindow(String identifier,String identifierType) {
         try {
@@ -146,6 +164,9 @@ public class AuthSingUpController {
         passwordFieldStyled.setLabelMovePath(-5, -24);
         passwordFieldStyled.setStyle();
     }
+
+
+
     private String getIdentifierType(String identifier) {
         String emailPattern = "^[a-zA-Z].+@\\S*\\.[a-z]{2,}$";
         Pattern emailPatternCompile = Pattern.compile(emailPattern);
@@ -163,4 +184,35 @@ public class AuthSingUpController {
             return "-";
         }
     }
+    private void setDefaultFieldsStyle() {
+        AuthField.deleteErrorStyle(identifierField,identifierErrorLabel);
+        AuthField.deleteErrorStyle(passwordField, passwordErrorLabel);
+    }
+    private void setLoadingProgress(double progress) {
+        Platform.runLater(()->{
+            progressBar.setProgress(progress);
+        });
+    }
+    private void resetProgress() {
+        Platform.runLater(()-> {
+            progressBar.setProgress(0);
+        });
+    }
+    private void setLoadingButton() {
+        Platform.runLater(()-> {
+            singUpButton.getStyleClass().clear();
+            singUpButton.getStyleClass().add("main-button-loading");
+            LoadingDots.startAnimation(anchorPane);
+        });
+    }
+    private void setNormalButton() {
+        Platform.runLater(()->{
+            singUpButton.getStyleClass().clear();
+            singUpButton.getStyleClass().add("main-button");
+            anchorPane.getChildren().remove(anchorPane.lookup("#dotsContainer"));
+        });
+    }
+
+
+
 }

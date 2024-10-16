@@ -166,9 +166,9 @@ public class MainWindowController {
         Parent settingsWindowRoot = loader.load();
 
         SettingsWindow settingsWindow = loader.getController();
-        settingsWindow.setmainUserId(id);
+        settingsWindow.setMainUserId(id);
         settingsWindow.setMainAnchorPane(anchorPane);
-
+        settingsWindow.initializeWithValue();
         // TODO
 
         anchorPane.getChildren().add(settingsWindowRoot);
