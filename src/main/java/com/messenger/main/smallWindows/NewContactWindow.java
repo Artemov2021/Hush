@@ -80,7 +80,7 @@ public class NewContactWindow {
             if (identifierIsValid(identifier)) {
                 int contactId = getIdentifierType(identifier).equals("name") ? UsersDataBase.getIdWithName(identifier) : UsersDataBase.getIdWithEmail(identifier);
                 ContactsDataBase.addContact(mainUserId,contactId);
-                MainContactList.addContactToList(mainUserId,contactId,mainContactsVBox);
+                MainContactList.addContactToList(mainUserId,contactId,mainContactsVBox,mainAnchorPane);
                 hideWindow();
             }
         } catch (Exception e) {

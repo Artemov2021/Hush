@@ -2,11 +2,11 @@ package com.messenger.main;
 
 import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
-//import com.messenger.main.smallWindows.NewContactWindow;
 import com.messenger.main.smallWindows.NewContactWindow;
 import com.messenger.main.smallWindows.SettingsWindow;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -22,7 +22,6 @@ import javafx.scene.shape.Circle;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 public class MainWindowController {
     @FXML
@@ -62,8 +61,9 @@ public class MainWindowController {
         setAppropriateAvatar();
         applyHoverStyles();
 
-        MainContactList.loadContacts(id,mainContactsVBox);
+        MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
         addSearchFieldListener();
+        //mainContactsVBox.getChildren().forEach(node -> System.out.println(node));
     }
     private void setMainTitle() throws SQLException {
         /* set main title on the right side. If the person has no contacts,
@@ -135,17 +135,16 @@ public class MainWindowController {
                 if (newValue.trim().length() > 0) {
                     mainContactsVBox.getChildren().clear();
                     int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(id,newValue.trim());
-                    MainContactList.loadCustomContacts(id,foundedUsersId,mainContactsVBox);
+                    MainContactList.loadCustomContacts(id,foundedUsersId,mainContactsVBox,anchorPane);
                 } else {
                     mainContactsVBox.getChildren().clear();
-                    MainContactList.loadContacts(id,mainContactsVBox);
+                    MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
                 }
             } catch (Exception e) {
                 throw new RuntimeException();
             }
         });
     }
-
 
     @FXML
     public void addContactWindow () throws IOException {

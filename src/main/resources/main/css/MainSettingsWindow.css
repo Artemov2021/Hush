@@ -9,7 +9,7 @@
 }
 .settings-avatar-default {
     -fx-background-image: url("../elements/avatarDefaultSettings.png");
-    -fx-background-color: transparent;
+    -fx-backgroung-repeat: no-repeat;
 }
 .settings-identifier-label {
     -fx-font-size: 12;

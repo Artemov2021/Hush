@@ -1,7 +1,6 @@
 package com.messenger.database;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -172,17 +171,6 @@ public class UsersDataBase {
         return -1;
     }
 
-    public static void addContactsAmount(int mainUserId) throws SQLException {
-        int contactAmount = getContactsAmount(mainUserId);
-        String statement = "UPDATE users SET contacts_amount = ? WHERE id = ?";
-        try (var conn = DriverManager.getConnection(url,user,password)) {
-            var stmt = conn.prepareStatement(statement);
-            stmt.setInt(1,contactAmount+1);
-            stmt.setInt(2,mainUserId);
-            stmt.executeUpdate();
-        }
-    }
-
     public static int getLength() throws SQLException {
         String statement = "SELECT MAX(id) AS last_id FROM users";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
@@ -208,13 +196,42 @@ public class UsersDataBase {
         return null;
     }
 
-    public static void setAvatar(String name,String avatar) throws SQLException {
-        String statement = "UPDATE users SET avatar = ? WHERE name = ?";
+    public static void deleteAvatar(int id) throws SQLException {
+        String statement = "UPDATE users SET avatar_picture = NULL WHERE id = ?";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt = connection.prepareStatement(statement);
-            stmt.setString(1,avatar);
-            stmt.setString(2,name);
+            stmt.setInt(1,id);
             stmt.executeUpdate();
+        }
+    }
+    public static void setAvatar(int id,String path) throws SQLException, FileNotFoundException {
+        String statement = "UPDATE users SET avatar_picture = ? WHERE id = ?";
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement stmt = connection.prepareStatement(statement);
+            InputStream inputStream = new FileInputStream(path);
+            stmt.setBlob(1,inputStream);
+            stmt.setInt(2,id);
+            stmt.executeUpdate();
+        }
+    }
+    public static void setName(int id,String name) throws SQLException {
+        name = name.isEmpty() ? null : name;
+        String statement = "UPDATE users SET name = ? WHERE id = ?";
+        try (Connection connection3 = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement stmt3 = connection3.prepareStatement(statement);
+            stmt3.setString(1,name);
+            stmt3.setInt(2,id);
+            stmt3.executeUpdate();
+        }
+    }
+    public static void setEmail(int id,String email) throws SQLException {
+        email = email.isEmpty() ? null : email;
+        String statement = "UPDATE users SET email = ? WHERE id = ?";
+        try (Connection connection3 = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement stmt3 = connection3.prepareStatement(statement);
+            stmt3.setString(1,email);
+            stmt3.setInt(2,id);
+            stmt3.executeUpdate();
         }
     }
 

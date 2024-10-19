@@ -1,0 +1,84 @@
+.root {
+    -fx-background-color: #161518;
+}
+.chat-message-text-field {
+    -fx-background-color: #1D1C20;
+    -fx-border-color: #1D1C20;
+    -fx-font-size: 13;
+    -fx-prompt-text-fill: #5A5959;
+    -fx-text-fill: white;
+    -fx-padding: 0 55 6 53;
+}
+
+.chat-add-photo-label {
+    -fx-background-image: url("../elements/paperClipDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-add-photo-label:hover {
+    -fx-background-image: url("../elements/paperClipFocused.png");
+
+}
+.chat-send-label {
+    -fx-background-image: url("../elements/sendDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-send-label:hover {
+    -fx-background-image: url("../elements/sendFocused.png");
+}
+.chat-upper-background {
+    -fx-background-color: #1D1C20;
+}
+.chat-search-lupe-label {
+    -fx-background-image: url("../elements/searchingLupeMessageDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-search-lupe-label:hover {
+    -fx-background-image: url("../elements/searchingLupeMessageFocused.png");
+}
+.chat-avatar-label {
+    -fx-background-image: url("../elements/avatarDialogDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-name-label {
+    -fx-font-size: 14;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+.chat-time-dialog-border-label {
+    -fx-background-color: #2F2C39;
+    -fx-background-radius: 7;
+    -fx-text-fill: white;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+}
+
+.chat-dialog-vbox {
+    -fx-background-color: #161518;
+    -fx-padding: 50 20 20 20;
+}
+.chat-dialog-scroll-pane {
+    -fx-background-color: #161518;
+}
+.chat-dialog-scroll-pane .viewport{
+    -fx-background-color: transparent;
+}
+
+.chat-add-picture-label {
+    -fx-background-image: url("../elements/chatAddPictureDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-add-picture-label:hover {
+    -fx-background-image: url("../elements/chatAddPictureFocused.png");
+    -fx-background-repeat: no-repeat;
+}
+
+.chat-send-label {
+    -fx-background-image: url("../elements/chatSendDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-send-label:hover {
+    -fx-background-image: url("../elements/chatSendFocused.png");
+    -fx-background-repeat: no-repeat;
+}
+
+
