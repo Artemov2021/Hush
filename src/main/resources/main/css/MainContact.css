@@ -10,6 +10,10 @@
 .contact-background-pane:pressed {
     -fx-background-color: #3A3941;
 }
+.contact-background-pane-focused {
+    -fx-background-color: #3A3941;
+    -fx-background-radius: 6;
+}
 /*-----------------------------------------------------------------------------*/
 /* avatar */
 .contact-avatar-label {

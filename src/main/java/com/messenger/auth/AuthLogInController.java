@@ -96,7 +96,6 @@ public class AuthLogInController {
             }
 
             if (occuredExceptions == 0) {
-                UsersDataBase.addUser(identifier,password);
                 setLoadingProgress(0.7);
                 Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(3), e -> {
                     openMainWindow(identifier,identifierType);

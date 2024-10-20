@@ -11,11 +11,11 @@
    <children>
       <Pane fx:id="chatBackgroundPane" prefHeight="658.0" prefWidth="846.0" styleClass="chat-upper-background" stylesheets="@../css/MainChat.css">
          <children>
-            <ScrollPane fx:id="chatScrollPane" layoutX="1.0" layoutY="64.0" prefHeight="542.0" prefWidth="846.0" styleClass="chat-dialog-scroll-pane">
+            <ScrollPane fx:id="chatScrollPane" layoutX="1.0" layoutY="64.0" prefHeight="545.0" prefWidth="846.0" styleClass="chat-scroll-pane">
                <content>
-                  <VBox fx:id="chatVBox" alignment="BOTTOM_CENTER" prefHeight="537.0" prefWidth="839.0">
+                  <VBox fx:id="chatVBox" alignment="BOTTOM_CENTER" prefHeight="534.0" prefWidth="839.0">
                      <children>
-                        <Label fx:id="chatDateLabel" text="Label" />
+                        <Label fx:id="chatDateLabel" prefHeight="20.0" prefWidth="79.0" styleClass="chat-date-label" text="20 October" />
                      </children>
                   </VBox>
                </content>
@@ -24,7 +24,8 @@
             <Label fx:id="chatMainAvatarLabel" layoutX="27.0" layoutY="18.0" prefHeight="36.0" prefWidth="36.0" styleClass="chat-avatar-label" />
             <Label fx:id="chatMainNameLabel" layoutX="71.0" layoutY="23.0" prefHeight="20.0" prefWidth="253.0" styleClass="chat-name-label" text="Name label" />
             <Label fx:id="chatAddPictureLabel" layoutX="10.0" layoutY="619.0" prefHeight="26.0" prefWidth="42.0" styleClass="chat-add-picture-label" />
-            <Label fx:id="chatSendLabel" layoutX="799.0" layoutY="618.0" prefHeight="26.0" prefWidth="42.0" styleClass="chat-send-label" />
+            <Label fx:id="chatSendLabel" layoutX="799.0" layoutY="618.0" onMouseClicked="#sendMessage" prefHeight="26.0" prefWidth="42.0" styleClass="chat-send-label" />
+            <Label layoutX="800.0" layoutY="19.0" prefHeight="26.0" prefWidth="36.0" styleClass="chat-message-lupe" />
          </children>
       </Pane>
    </children>

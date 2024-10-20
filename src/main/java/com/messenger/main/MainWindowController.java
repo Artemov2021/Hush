@@ -2,22 +2,22 @@ package com.messenger.main;
 
 import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
+import com.messenger.design.ScrollPaneEffect;
 import com.messenger.main.smallWindows.NewContactWindow;
 import com.messenger.main.smallWindows.SettingsWindow;
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import com.messenger.design.MainStyling;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -60,6 +60,7 @@ public class MainWindowController {
         setProfileInfo();
         setAppropriateAvatar();
         applyHoverStyles();
+        ScrollPaneEffect.addScrollBarEffect(mainContactsScrollPane);
 
         MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
         addSearchFieldListener();
@@ -145,6 +146,8 @@ public class MainWindowController {
             }
         });
     }
+
+
 
     @FXML
     public void addContactWindow () throws IOException {

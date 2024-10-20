@@ -42,6 +42,7 @@ public class MainContactList {
         String lastMessage = ChatsDataBase.getLastMessage(mainUserId,contactId);
         String lastMessageTime = ChatsDataBase.getLastMessageTime(mainUserId,contactId);
 
+        contactPane.setMainUserId(mainUserId);
         contactPane.setName(contactName);
         contactPane.setAvatar(contactId);
         contactPane.setMessage(lastMessage);

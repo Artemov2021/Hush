@@ -7,7 +7,7 @@
     -fx-font-size: 13;
     -fx-prompt-text-fill: #5A5959;
     -fx-text-fill: white;
-    -fx-padding: 0 55 6 53;
+    -fx-padding: 0 55 5 53;
 }
 
 .chat-add-photo-label {
@@ -28,13 +28,6 @@
 .chat-upper-background {
     -fx-background-color: #1D1C20;
 }
-.chat-search-lupe-label {
-    -fx-background-image: url("../elements/searchingLupeMessageDefault.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-search-lupe-label:hover {
-    -fx-background-image: url("../elements/searchingLupeMessageFocused.png");
-}
 .chat-avatar-label {
     -fx-background-image: url("../elements/avatarDialogDefault.png");
     -fx-background-repeat: no-repeat;
@@ -44,23 +37,18 @@
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
-.chat-time-dialog-border-label {
+.chat-date-label {
     -fx-background-color: #2F2C39;
     -fx-background-radius: 7;
     -fx-text-fill: white;
     -fx-font-size: 11;
     -fx-font-weight: bold;
+    -fx-alignment: center;
 }
 
 .chat-dialog-vbox {
     -fx-background-color: #161518;
     -fx-padding: 50 20 20 20;
-}
-.chat-dialog-scroll-pane {
-    -fx-background-color: #161518;
-}
-.chat-dialog-scroll-pane .viewport{
-    -fx-background-color: transparent;
 }
 
 .chat-add-picture-label {
@@ -81,4 +69,40 @@
     -fx-background-repeat: no-repeat;
 }
 
+.chat-message-lupe {
+    -fx-background-image: url("../elements/chatSearchLupeDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-message-lupe:hover {
+    -fx-background-image: url("../elements/chatSearchLupeFocused.png");
+    -fx-background-repeat: no-repeat;
+}
+/*-----------------------------------------------------------------------------*/
+/* Scroll pane style of contacts list */
+.chat-scroll-pane {
+    -fx-background-color: #161518;
+}
+.chat-scroll-pane .viewport{
+    -fx-background-color: transparent;
+}
+.chat-scroll-pane .scroll-bar {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+.chat-scroll-pane .scroll-bar .thumb {
+    -fx-background-color: #3E3C44;
+}
+.chat-scroll-pane .scroll-bar .increment-button,
+.chat-scroll-pane .scroll-bar .decrement-button {
+    -fx-opacity: 0;
+}
+/*-----------------------------------------------------------------------------*/
+/* Message */
+.chat-message {
+    -fx-background-color: #2C2B30;
+    -fx-text-fill: white;
+    -fx-background-radius: 5;
+    -fx-padding: 8 35 5 10;
+    -fx-wrap-text: true;
+}
 

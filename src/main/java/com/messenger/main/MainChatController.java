@@ -1,14 +1,23 @@
 package com.messenger.main;
 
+import com.messenger.database.UsersDataBase;
+import com.messenger.design.ScrollPaneEffect;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 
+import java.io.ByteArrayInputStream;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,21 +41,31 @@ public class MainChatController {
     private int contactId;
     private int mainUserId;
 
-    public void initializeWithValue() {
+    public void initializeWithValue() throws SQLException {
+        setChatPosition();
         removeTitle();
-
-        chatBackgroundPane.setLayoutX(310);
-        chatBackgroundPane.setLayoutY(0);
-
+        setProfilePicture();
+        setName();
+        setDateLabelSpacing();
+        setMessageSpacing(25.0);
+        removeHorizontalScrollBar();
+        ScrollPaneEffect.addScrollBarEffect(chatScrollPane);
     }
 
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
     }
-    public void setName(String name) {
-        chatMainNameLabel.setText(name);
+    public void setMainUserId(int id) {
+        this.mainUserId = id;
+    }
+    public void setContactId(int id) {
+        this.contactId = id;
     }
 
+
+    private void setChatPosition() {
+        chatBackgroundPane.setLayoutX(310);
+    }
     private void removeTitle() {
         Set<String> titlesToRemove = new HashSet<>(Arrays.asList("mainTitle", "mainSmallTitle", "mainLoginTitle"));
 
@@ -56,7 +75,46 @@ public class MainChatController {
                 .collect(Collectors.toList()); // Collect into List<Label>
         mainAnchorPane.getChildren().removeAll(titles);
     }
+    private void setProfilePicture() throws SQLException {
+        if (UsersDataBase.getAvatarWithId(contactId) != null) {
+            byte[] blobBytes = UsersDataBase.getAvatarWithId(contactId);
+            assert blobBytes != null;
+            ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
+            ImageView imageView = new ImageView(new Image(byteStream));
+            imageView.setFitHeight(33);
+            imageView.setFitWidth(33);
+            imageView.setSmooth(true);
+            chatMainAvatarLabel.setGraphic(imageView);
+            Circle clip = new Circle();
+            clip.setLayoutX(16.5F);
+            clip.setLayoutY(16.5F);
+            clip.setRadius(16.5F);
+            chatMainAvatarLabel.setClip(clip);
+        }
+    }
+    private void setName() throws SQLException {
+        chatMainNameLabel.setText(UsersDataBase.getNameWithId(contactId));
+    }
+    private void setDateLabelSpacing() {
+        VBox.setMargin(chatDateLabel,new Insets(10,0,10,0));
+    }
+    private void setMessageSpacing(double space) {
+        chatVBox.setSpacing(space);
+    }
+    private void removeHorizontalScrollBar() {
+        chatScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+    }
 
+
+    @FXML
+    public void sendMessage() throws SQLException {
+        Label message = new Label("Be expressive and don't hold back! Create Be expressive and don't hold back! Create ");
+        message.getStyleClass().add("chat-message");
+        message.setPrefWidth(200);
+        message.setPrefHeight((message.getText().length()/42)*40);
+        System.out.println((message.getText().length()/42)*40);
+        chatVBox.getChildren().add(message);
+    }
 
 
 

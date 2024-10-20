@@ -3,9 +3,11 @@ package com.messenger.main;
 import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.main.smallWindows.NewContactWindow;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -13,12 +15,16 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class MainContact {
     @FXML
@@ -33,7 +39,11 @@ public class MainContact {
     private Label mainContactTimeLabel;
 
     private AnchorPane mainAnchorPane;
+    private int mainUserId;
 
+    public void setMainUserId(int id) {
+        this.mainUserId = id;
+    }
     public void setName(String name) {
         mainContactNameLabel.setText(name);
     }
@@ -67,26 +77,46 @@ public class MainContact {
         this.mainAnchorPane = anchorPane;
     }
     @FXML
-    public void showChat() throws SQLException, IOException {
+    public void showChat() throws IOException, SQLException {
         int currentUserId = Integer.parseInt(mainContactPane.getId().split("mainContactPane")[1]);
 
-        System.out.println(mainContactPane.getLayoutY());
-        // Getting the Y coordinate
-        System.out.println("Layout Y: " + mainContactPane.getLayoutY());
-        System.out.println("Y in Scene: " + mainContactPane.localToScene(0, 0).getY());
-
+        setPanesNormalStyle();
+        setCurrentPaneFocusedStyle();
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainChat.fxml"));
         Parent chatRoot = fxmlLoader.load();
 
         MainChatController mainChatController = fxmlLoader.getController();
         mainChatController.setMainAnchorPane(mainAnchorPane);
-        mainChatController.setName(UsersDataBase.getNameWithId(currentUserId));
+        mainChatController.setMainUserId(mainUserId);
+        mainChatController.setContactId(currentUserId);
         mainChatController.initializeWithValue();
 
         mainAnchorPane.getChildren().removeIf(child -> Objects.equals(child.getId(), "chatAnchorPane"));
         mainAnchorPane.getChildren().add(0,chatRoot);
     }
+
+
+    private void setPanesNormalStyle() {
+        VBox mainVBox = (VBox) mainAnchorPane.lookup("#mainContactsVBox");
+
+        mainVBox.getChildren().stream()
+                .filter(node -> node instanceof AnchorPane)
+                .map(node -> (AnchorPane) node)
+                .flatMap(anchorPane -> anchorPane.getChildren().stream())
+                .filter(child -> child instanceof Pane)
+                .map(child -> (Pane) child)
+                .forEach(pane -> {
+                    pane.getStyleClass().setAll("contact-background-pane");
+                });
+    }
+    private void setCurrentPaneFocusedStyle() {
+        mainContactPane.getStyleClass().add("contact-background-pane-focused");
+    }
+
+
+
+
 
 
 }
