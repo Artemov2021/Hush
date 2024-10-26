@@ -98,11 +98,16 @@
 }
 /*-----------------------------------------------------------------------------*/
 /* Message */
-.chat-message {
+.chat-message-pane {
     -fx-background-color: #2C2B30;
-    -fx-text-fill: white;
     -fx-background-radius: 5;
-    -fx-padding: 8 35 5 10;
-    -fx-wrap-text: true;
 }
+.chat-message-label {
+    -fx-background-color: red;
+    -fx-font-size: 12;
+    -fx-text-fill: white;
+    -fx-padding: 6 30 6 10;
+}
+
+
 

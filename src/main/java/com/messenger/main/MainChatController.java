@@ -4,21 +4,29 @@ import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.util.Duration;
 
+import javax.swing.text.Position;
+import java.awt.*;
+import java.awt.Button;
 import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class MainChatController {
@@ -41,16 +49,19 @@ public class MainChatController {
     private int contactId;
     private int mainUserId;
 
+    private final int messageLabelWidthMax = 230;
+
     public void initializeWithValue() throws SQLException {
         setChatPosition();
         removeTitle();
         setProfilePicture();
         setName();
         setDateLabelSpacing();
-        setMessageSpacing(25.0);
+        setMessageSpacing(2);
         removeHorizontalScrollBar();
         ScrollPaneEffect.addScrollBarEffect(chatScrollPane);
     }
+
 
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
@@ -105,16 +116,53 @@ public class MainChatController {
         chatScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
     }
 
-
     @FXML
     public void sendMessage() throws SQLException {
-        Label message = new Label("Be expressive and don't hold back! Create Be expressive and don't hold back! Create ");
-        message.getStyleClass().add("chat-message");
-        message.setPrefWidth(200);
-        message.setPrefHeight((message.getText().length()/42)*40);
-        System.out.println((message.getText().length()/42)*40);
-        chatVBox.getChildren().add(message);
+        String messageText = chatTextField.getText().trim();
+
+
+
+        Label messageLabel = new Label(messageText);
+        messageLabel.setWrapText(true);
+        messageLabel.getStyleClass().add("chat-message-label");
+        messageLabel.setMaxWidth(272);
+
+
+        HBox messageHBox = new HBox();
+        messageHBox.setAlignment(Pos.TOP_RIGHT);
+        messageHBox.setStyle("-fx-background-color: blue;");
+
+
+
+
+
+        HBox.setMargin(messageLabel, new Insets(0, 40, 0, 0));
+        messageHBox.getChildren().add(messageLabel);
+        chatVBox.getChildren().add(messageHBox);
+
+
+        messageLabel.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
+            double labelHeight = messageLabel.getHeight();
+            messageLabel.setMinHeight(labelHeight);
+            System.out.println("Label Height: "+labelHeight);
+        });
+
+        messageHBox.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
+            double hboxHeight = messageHBox.getHeight();
+            messageHBox.setMinHeight(hboxHeight);
+            System.out.println("HBox Height: "+hboxHeight);
+        });
+
+
+
+        chatVBox.heightProperty().addListener((obs, oldHeight, newHeight) -> {
+            chatScrollPane.setVvalue(1.0); // прокрутка в самый низ
+        });
+
     }
+
+
+
 
 
 
