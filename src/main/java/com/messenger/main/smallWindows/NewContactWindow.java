@@ -31,11 +31,7 @@ public class NewContactWindow {
     @FXML
     private Button newContactAddButton;
     @FXML
-    private Button newContactCancelButton;
-    @FXML
     private Label newContactExceptionLabel;
-    @FXML
-    private Button newContactExitButton;
 
     private int mainUserId;
     private AnchorPane mainAnchorPane;
@@ -54,11 +50,6 @@ public class NewContactWindow {
         // debugging closing window by clicking on the new contact window pane
         newContactOverlayPane.setOnMouseClicked(Event::consume);
 
-        // Checking, whether new contact is valid
-        newContactAddButton.setOnAction(actionEvent -> {
-            checkInformation();
-        });
-
     }
     private void showOpeningEffect() {
         FadeTransition FadeIn = new FadeTransition(Duration.millis(180),newContactBackgroundPane);
@@ -74,7 +65,8 @@ public class NewContactWindow {
     private void hideExceptionsLabel() {
         newContactExceptionLabel.setVisible(false);
     }
-    private void checkInformation() {
+    @FXML
+    public void checkInformation() {
         try {
             String identifier = newContactInfoField.getText().trim();
             if (identifierIsValid(identifier)) {

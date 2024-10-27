@@ -11,6 +11,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -57,10 +58,11 @@ public class MainChatController {
         setProfilePicture();
         setName();
         setDateLabelSpacing();
-        setMessageSpacing(2);
-        removeHorizontalScrollBar();
+        setMessageSpacing(3);
         ScrollPaneEffect.addScrollBarEffect(chatScrollPane);
+        setTextFieldFocus();
     }
+
 
 
     public void setMainAnchorPane(AnchorPane anchorPane) {
@@ -112,54 +114,63 @@ public class MainChatController {
     private void setMessageSpacing(double space) {
         chatVBox.setSpacing(space);
     }
-    private void removeHorizontalScrollBar() {
-        chatScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+    private void setTextFieldFocus() {
+        Platform.runLater(() -> {
+            if (chatTextField.isVisible() && !chatTextField.isDisabled()) {
+                chatTextField.requestFocus();
+            }
+        });
     }
 
+
+
     @FXML
-    public void sendMessage() throws SQLException {
+    public void sendMessage() {
+        if (chatTextField.getText().trim().isEmpty()) {
+            return;
+        }
+
         String messageText = chatTextField.getText().trim();
+        chatTextField.setText("");
 
+        HBox messageHBox = new HBox();
+        messageHBox.setAlignment(Pos.TOP_RIGHT);
 
+        Pane messagePane = new Pane();
+        messagePane.getStyleClass().add("chat-message-pane");
 
         Label messageLabel = new Label(messageText);
         messageLabel.setWrapText(true);
         messageLabel.getStyleClass().add("chat-message-label");
-        messageLabel.setMaxWidth(272);
+        messageLabel.setMaxWidth(292);
 
+        Label timeLabel = new Label("12:34");
+        timeLabel.getStyleClass().add("chat-time-label");
+        timeLabel.layoutXProperty().bind(messagePane.widthProperty().subtract(timeLabel.widthProperty()).subtract(8)); // 10px padding from the right edge
+        timeLabel.layoutYProperty().bind(messagePane.heightProperty().subtract(timeLabel.heightProperty()).subtract(3)); // 10px padding from the bottom edge
 
-        HBox messageHBox = new HBox();
-        messageHBox.setAlignment(Pos.TOP_RIGHT);
-        messageHBox.setStyle("-fx-background-color: blue;");
-
-
-
-
-
-        HBox.setMargin(messageLabel, new Insets(0, 40, 0, 0));
-        messageHBox.getChildren().add(messageLabel);
+        HBox.setMargin(messagePane, new Insets(0, 55, 0, 0));
+        messagePane.getChildren().addAll(messageLabel,timeLabel);
+        messageHBox.getChildren().add(messagePane);
         chatVBox.getChildren().add(messageHBox);
+        chatScrollPane.setVvalue(1.0); // scroll down after adding a message
 
+
+        // set minimum size for Hbox and Message Label ( prevents shrinking )
+        messageHBox.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
+            double hboxHeight = messageHBox.getHeight();
+            messageHBox.setMinHeight(hboxHeight);
+        });
 
         messageLabel.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
             double labelHeight = messageLabel.getHeight();
             messageLabel.setMinHeight(labelHeight);
-            System.out.println("Label Height: "+labelHeight);
         });
 
-        messageHBox.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
-            double hboxHeight = messageHBox.getHeight();
-            messageHBox.setMinHeight(hboxHeight);
-            System.out.println("HBox Height: "+hboxHeight);
-        });
-
-
-
-        chatVBox.heightProperty().addListener((obs, oldHeight, newHeight) -> {
-            chatScrollPane.setVvalue(1.0); // прокрутка в самый низ
-        });
 
     }
+
+
 
 
 

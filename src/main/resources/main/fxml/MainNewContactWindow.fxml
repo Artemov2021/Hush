@@ -13,8 +13,8 @@
             <Label layoutX="25.0" layoutY="44.0" prefHeight="24.0" prefWidth="241.0" styleClass="add-contact-secondary-label" text="Fill the following field to add a new contact" />
             <Button fx:id="newContactExitButton" layoutX="287.0" layoutY="18.0" mnemonicParsing="false" onAction="#hideWindow" prefHeight="34.0" prefWidth="34.0" styleClass="exit-button" />
             <Label layoutX="26.0" layoutY="110.0" prefHeight="15.0" prefWidth="119.0" styleClass="add-contact-small-label" text="Contact info" />
-            <TextField fx:id="newContactInfoField" layoutX="25.0" layoutY="135.0" prefHeight="40.0" prefWidth="289.0" promptText="Name or email address" styleClass="add-contact-field" />
-            <Button fx:id="newContactAddButton" layoutX="235.0" layoutY="230.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="72.0" styleClass="add-contact-add-button" />
+            <TextField fx:id="newContactInfoField" layoutX="25.0" layoutY="135.0" onAction="#checkInformation" prefHeight="40.0" prefWidth="289.0" promptText="Name or email address" styleClass="add-contact-field" />
+            <Button fx:id="newContactAddButton" layoutX="235.0" layoutY="230.0" mnemonicParsing="false" onAction="#checkInformation" prefHeight="30.0" prefWidth="72.0" styleClass="add-contact-add-button" />
             <Button fx:id="newContactCancelButton" layoutX="148.0" layoutY="230.0" mnemonicParsing="false" onAction="#hideWindow" prefHeight="29.0" prefWidth="78.0" styleClass="add-contact-cancel-button" />
             <Label fx:id="newContactExceptionLabel" layoutX="26.0" layoutY="179.0" prefHeight="17.0" prefWidth="289.0" styleClass="add-contact-error-label" text="Exception Label" />
          </children>

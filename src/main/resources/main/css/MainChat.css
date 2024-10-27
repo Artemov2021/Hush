@@ -100,13 +100,16 @@
 /* Message */
 .chat-message-pane {
     -fx-background-color: #2C2B30;
-    -fx-background-radius: 5;
+    -fx-background-radius: 6;
 }
 .chat-message-label {
-    -fx-background-color: red;
     -fx-font-size: 12;
     -fx-text-fill: white;
-    -fx-padding: 6 30 6 10;
+    -fx-padding: 6 50 6 10;
+}
+.chat-time-label {
+    -fx-font-size: 9;
+    -fx-text-fill: #85818F;
 }
 
 
