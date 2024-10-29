@@ -29,8 +29,6 @@ public class NewContactWindow {
     @FXML
     private TextField newContactInfoField;
     @FXML
-    private Button newContactAddButton;
-    @FXML
     private Label newContactExceptionLabel;
 
     private int mainUserId;

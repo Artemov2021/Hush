@@ -1,34 +1,32 @@
 package com.messenger.main;
 
+import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
-import javafx.animation.FadeTransition;
-import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.util.Duration;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
-import javax.swing.text.Position;
-import java.awt.*;
-import java.awt.Button;
 import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 public class MainChatController {
     @FXML
@@ -50,7 +48,6 @@ public class MainChatController {
     private int contactId;
     private int mainUserId;
 
-    private final int messageLabelWidthMax = 230;
 
     public void initializeWithValue() throws SQLException {
         setChatPosition();
@@ -61,6 +58,14 @@ public class MainChatController {
         setMessageSpacing(3);
         ScrollPaneEffect.addScrollBarEffect(chatScrollPane);
         setTextFieldFocus();
+
+        boolean chatIsEmpty = ChatsDataBase.getLastMessage(mainUserId,contactId).isEmpty();
+        if (chatIsEmpty) {
+            setChatDateLabel();
+        }
+
+
+
     }
 
 
@@ -109,7 +114,7 @@ public class MainChatController {
         chatMainNameLabel.setText(UsersDataBase.getNameWithId(contactId));
     }
     private void setDateLabelSpacing() {
-        VBox.setMargin(chatDateLabel,new Insets(10,0,10,0));
+        VBox.setMargin(chatDateLabel,new Insets(10,0,15,0));
     }
     private void setMessageSpacing(double space) {
         chatVBox.setSpacing(space);
@@ -121,37 +126,90 @@ public class MainChatController {
             }
         });
     }
-
-
+    private void setChatDateLabel() {
+        LocalDate today = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);
+        String formattedDate = today.format(formatter);
+        chatDateLabel.setText(formattedDate);
+    }
+    private String getCurrentTime() {
+        LocalTime currentTime = LocalTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        return currentTime.format(formatter);
+    }
+    private void sendAvatar(Label avatar) throws SQLException {
+        byte[] blobBytes = UsersDataBase.getAvatarWithId(mainUserId);
+        assert blobBytes != null;
+        ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
+        ImageView imageView = new ImageView(new Image(byteStream));
+        imageView.setFitHeight(34);
+        imageView.setFitWidth(34);
+        imageView.setSmooth(true);
+        avatar.setGraphic(imageView);
+        Circle clip = new Circle();
+        clip.setLayoutX(17);
+        clip.setLayoutY(17);
+        clip.setRadius(17);
+        avatar.setClip(clip);
+    }
+    private boolean requiresAvatarDisplay() throws SQLException {
+        return ChatsDataBase.getLastMessage(mainUserId,contactId).isEmpty();
+        // TODO
+    }
+    private void showScrollDownButton() {
+        Label scrollDownBackground = new Label();
+        scrollDownBackground.setPrefWidth(34);
+        scrollDownBackground.setPrefHeight(36);
+        scrollDownBackground.getStyleClass().add("chat-scroll-down-background");
+        scrollDownBackground.setLayoutX(800);
+        scrollDownBackground.setLayoutY(500);
+        chatBackgroundPane.getChildren().add(scrollDownBackground);
+    }
+    private int addMessageToDB(String message,byte[] picture,int replyMessageId,String time) throws SQLException {
+        return ChatsDataBase.addMessage(mainUserId,contactId,message,picture,replyMessageId,time);
+    }
 
     @FXML
-    public void sendMessage() {
-        if (chatTextField.getText().trim().isEmpty()) {
+    public void sendMessage() throws SQLException {
+        String messageText = chatTextField.getText().trim();
+        String currentTime = getCurrentTime();
+
+        if (messageText.isEmpty()) {
             return;
         }
 
-        String messageText = chatTextField.getText().trim();
         chatTextField.setText("");
 
         HBox messageHBox = new HBox();
-        messageHBox.setAlignment(Pos.TOP_RIGHT);
+        messageHBox.setAlignment(Pos.BOTTOM_RIGHT);
 
         Pane messagePane = new Pane();
         messagePane.getStyleClass().add("chat-message-pane");
 
         Label messageLabel = new Label(messageText);
         messageLabel.setWrapText(true);
+        messageLabel.setFocusTraversable(false);
         messageLabel.getStyleClass().add("chat-message-label");
         messageLabel.setMaxWidth(292);
 
-        Label timeLabel = new Label("12:34");
+        Label timeLabel = new Label(currentTime);
         timeLabel.getStyleClass().add("chat-time-label");
-        timeLabel.layoutXProperty().bind(messagePane.widthProperty().subtract(timeLabel.widthProperty()).subtract(8)); // 10px padding from the right edge
-        timeLabel.layoutYProperty().bind(messagePane.heightProperty().subtract(timeLabel.heightProperty()).subtract(3)); // 10px padding from the bottom edge
+        timeLabel.layoutXProperty().bind(messagePane.widthProperty().subtract(timeLabel.widthProperty()).subtract(9)); // 10px padding from the right edge
+        timeLabel.layoutYProperty().bind(messagePane.heightProperty().subtract(timeLabel.heightProperty()).subtract(4)); // 10px padding from the bottom edge
 
-        HBox.setMargin(messagePane, new Insets(0, 55, 0, 0));
+        if (requiresAvatarDisplay()) {
+            Label avatarLabel = new Label();
+            sendAvatar(avatarLabel);
+            messageHBox.getChildren().add(avatarLabel);
+            HBox.setMargin(avatarLabel, new Insets(0, 25, 0, 0));
+            HBox.setMargin(messagePane, new Insets(0, 8, 0, 0));
+        } else {
+            HBox.setMargin(messagePane, new Insets(0, 68, 0, 0));
+        }
+
         messagePane.getChildren().addAll(messageLabel,timeLabel);
-        messageHBox.getChildren().add(messagePane);
+        messageHBox.getChildren().add(0,messagePane);
+        System.out.println(messageHBox.getChildren());
         chatVBox.getChildren().add(messageHBox);
         chatScrollPane.setVvalue(1.0); // scroll down after adding a message
 
@@ -167,45 +225,58 @@ public class MainChatController {
             messageLabel.setMinHeight(labelHeight);
         });
 
+        chatScrollPane.vvalueProperty().addListener((obs, oldValue, newValue) -> {
+            showScrollDownButton();
+        });
 
+        System.out.println(ChatsDataBase.getLastMessageTime(mainUserId,contactId)+" new: "+currentTime);
+
+
+//        String time1 = ChatsDataBase.getLastMessageTime(mainUserId,contactId); // First time
+//        String time2 = "23:53"; // Second time
+//
+//        if (isDifferenceGreaterThanOneHour(time1, time2)) {
+//            System.out.println("The difference is greater than one hour.");
+//        } else {
+//            System.out.println("The difference is NOT greater than one hour.");
+//        }
+
+
+
+        // saving message to the database
+        int messageId = addMessageToDB(messageText,new byte[0],-1,currentTime);
+        messagePane.setId("messagePane"+messageId);
+
+        messagePane.setOnMouseClicked(mouseEvent -> {
+            System.out.println(messagePane.getId());
+        });
+
+
+    }
+
+
+    public static boolean isDifferenceGreaterThanOneHour(String time1, String time2) {
+        LocalTime t1 = LocalTime.parse(time1);
+        LocalTime t2 = LocalTime.parse(time2);
+
+        // Convert both times to total minutes since midnight
+        int totalMinutesT1 = t1.getHour() * 60 + t1.getMinute();
+        int totalMinutesT2 = t2.getHour() * 60 + t2.getMinute();
+
+        // Calculate the difference in minutes
+        int difference = totalMinutesT2 - totalMinutesT1;
+
+        // If difference is negative, adjust by adding 1440 minutes (24 hours)
+        if (difference < 0) {
+            difference += 24 * 60; // 24 hours in minutes
+        }
+
+        return difference > 60; // Check if the difference is greater than 60 minutes
     }
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-//    public void setMainAnchorPane(AnchorPane anchorPane) {
-//        mainAnchorPane = anchorPane;
-//    }
-//    public void setContactId(int id) {
-//        this.contactId = id;
-//    }
-//    public void setMainUserId(int id) {
-//        this.mainUserId = id;
-//    }
-//
-//    private void setAvatarPicture(Label avatar, URL imageURL, int size) {
-//        ImageView imageView = new ImageView(new Image(imageURL.toString()));
-//        imageView.setFitHeight(size);
-//        imageView.setFitWidth(size);
-//        imageView.setSmooth(true);
-//        avatar.setGraphic(imageView);
-//        Circle clip = new Circle();
-//        clip.setLayoutX((double) size / 2);
-//        clip.setLayoutY((double) size / 2);
-//        clip.setRadius((double) size / 2);
-//        avatar.setClip(clip);
-//    }
 //    private void loadMessageHistory() throws SQLException {
 //        ArrayList<ArrayList<String>> messages = DetailedDataBase.getMessages(mainUserId,contactId);
 //        setDateHistoryLabel(getHours(messages.get(0).get(2)));
@@ -215,12 +286,7 @@ public class MainChatController {
 //    }
 //
 //
-//    private void setCurrentDateHistoryLabel() {
-//        LocalDate today = LocalDate.now();
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);
-//        String formattedDate = today.format(formatter);
-//        timeDialogBorderLabel.setText(formattedDate);
-//    }
+
 //    private void setDateHistoryLabel(String date) {
 //        LocalDate today = LocalDate.parse(date);
 //        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);

@@ -43,30 +43,6 @@ public class UsersDataBase {
         return false;
     }
 
-    public static void changeName(String oldName,String newName) throws IOException, SQLException {
-        try (Connection connection3 = DriverManager.getConnection(url,user,password);
-             PreparedStatement stmt3 = connection3.prepareStatement("UPDATE users SET name = ? WHERE name = ?")) {
-            stmt3.setString(1,newName);
-            stmt3.setString(2,oldName);
-            stmt3.executeUpdate();
-        } catch (SQLException e) {
-            throw e;
-        }
-    }
-
-    public static void changeEmail(String name,String newEmail) throws IOException, SQLException {
-        newEmail = newEmail.isEmpty() ? null : newEmail;
-        try (Connection connection3 = DriverManager.getConnection(url,user,password);
-             PreparedStatement stmt3 = connection3.prepareStatement("UPDATE users SET email = ? WHERE name = ?")) {
-            stmt3.setString(1,newEmail);
-            stmt3.setString(2,name);
-            stmt3.executeUpdate();
-        } catch (SQLException e) {
-
-            throw e;
-        }
-    }
-
     private static String isEmailOrName(String identifier) {
         String emailPattern = "@\\S*\\.[a-z]{2,}$";
         Pattern pattern = Pattern.compile(emailPattern);

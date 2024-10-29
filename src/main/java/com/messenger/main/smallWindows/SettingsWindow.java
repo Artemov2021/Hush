@@ -66,13 +66,13 @@ public class SettingsWindow {
 
 
     public void initializeWithValue() throws SQLException {
-        showOpeningEffect();
         setDataBaseAvatarPicture();
         setNameInField();
         setEmailInField();
-
         hideErrorLabels();
         hideAvatarButtonsElements();
+
+        showOpeningEffect();
 
         // Consume the event to prevent it from affecting backgroundPane
         settingsPane.setOnMouseClicked(Event::consume);

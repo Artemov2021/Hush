@@ -1,5 +1,7 @@
 package com.messenger.database;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,4 +43,36 @@ public class ChatsDataBase {
         }
         return "";
     }
+    public static int addMessage(int senderId,int receiverId, String message,byte[] picture,int replyMessageId,String messageTime) throws SQLException {
+        String statement = "INSERT INTO chats (sender_id,receiver_id,message,picture,reply_message_id,message_time) VALUES (?,?,?,?,?,?)";
+        InputStream inputStreamPicture = (picture.length == 0) ? (null) : (new ByteArrayInputStream(picture));
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement,Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setInt(1,senderId);
+            preparedStatement.setInt(2,receiverId);
+            preparedStatement.setString(3,message);
+            preparedStatement.setBlob(4,inputStreamPicture);
+            preparedStatement.setObject(5, (replyMessageId == -1) ? null : replyMessageId);
+            preparedStatement.setString(6,messageTime);
+
+            preparedStatement.executeUpdate();
+
+            // Retrieve the generated keys
+            try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1); // Return the first generated key
+                } else {
+                    throw new SQLException("Failed to retrieve generated key, no key was returned.");
+                }
+            }
+        }
+
+    }
+
+
+
+
+
+
 }

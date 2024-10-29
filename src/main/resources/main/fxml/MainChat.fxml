@@ -10,9 +10,9 @@
 
 <AnchorPane fx:id="chatAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="658.0" prefWidth="846.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainChatController">
    <children>
-      <Pane fx:id="chatBackgroundPane" prefHeight="658.0" prefWidth="846.0" styleClass="chat-upper-background" stylesheets="@../css/MainChat.css">
+      <Pane fx:id="chatBackgroundPane" prefHeight="658.0" prefWidth="846.0" styleClass="root" stylesheets="@../css/MainChat.css">
          <children>
-            <ScrollPane fx:id="chatScrollPane" fitToWidth="true" hbarPolicy="NEVER" layoutX="1.0" layoutY="64.0" prefHeight="547.0" prefWidth="846.0" styleClass="chat-scroll-pane">
+            <ScrollPane fx:id="chatScrollPane" fitToWidth="true" hbarPolicy="NEVER" layoutX="1.0" layoutY="64.0" prefHeight="534.0" prefWidth="846.0" styleClass="chat-scroll-pane">
                <content>
                   <VBox fx:id="chatVBox" alignment="BOTTOM_CENTER" maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefWidth="844.0" styleClass="chat-scroll-pane">
                      <children>
@@ -24,7 +24,8 @@
                   </VBox>
                </content>
             </ScrollPane>
-            <TextField fx:id="chatTextField" layoutY="612.0" onAction="#sendMessage" prefHeight="47.0" prefWidth="846.0" promptText="Write a message...." styleClass="chat-message-text-field" />
+            <Label layoutX="1.0" layoutY="-5.0" prefHeight="70.0" prefWidth="846.0" styleClass="chat-upper-background" />
+            <TextField fx:id="chatTextField" layoutY="610.0" onAction="#sendMessage" prefHeight="49.0" prefWidth="846.0" promptText="Write a message...." styleClass="chat-message-text-field" />
             <Label fx:id="chatMainAvatarLabel" layoutX="27.0" layoutY="18.0" prefHeight="36.0" prefWidth="36.0" styleClass="chat-avatar-label" />
             <Label fx:id="chatMainNameLabel" layoutX="71.0" layoutY="23.0" prefHeight="20.0" prefWidth="253.0" styleClass="chat-name-label" text="Name label" />
             <Label fx:id="chatAddPictureLabel" layoutX="10.0" layoutY="619.0" prefHeight="26.0" prefWidth="42.0" styleClass="chat-add-picture-label" />

@@ -80,7 +80,7 @@
 /*-----------------------------------------------------------------------------*/
 /* Scroll pane style of contacts list */
 .chat-scroll-pane {
-    -fx-background-color: #161518;
+    -fx-background-color: transparent;
 }
 .chat-scroll-pane .viewport{
     -fx-background-color: transparent;
@@ -100,16 +100,22 @@
 /* Message */
 .chat-message-pane {
     -fx-background-color: #2C2B30;
-    -fx-background-radius: 6;
+    -fx-background-radius: 7;
 }
 .chat-message-label {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
     -fx-font-size: 12;
     -fx-text-fill: white;
-    -fx-padding: 6 50 6 10;
+    -fx-padding: 6 45 4 12;
 }
 .chat-time-label {
     -fx-font-size: 9;
     -fx-text-fill: #85818F;
+}
+.chat-scroll-down-background {
+    -fx-background-color: #1D1C20;
+    -fx-background-radius: 7;
 }
 
 
