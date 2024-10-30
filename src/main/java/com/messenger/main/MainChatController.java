@@ -15,8 +15,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
+
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 
 import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
@@ -50,6 +51,29 @@ public class MainChatController {
 
 
     public void initializeWithValue() throws SQLException {
+        initializeChatInterface();
+        loadChatHistory();
+
+
+
+        // Get current date and time
+        LocalDateTime now = LocalDateTime.now();
+
+        // Define the desired format
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+        // Format the current date and time
+        String formattedDateTime = now.format(formatter);
+
+        // Print the result
+        System.out.println(formattedDateTime);
+
+
+
+
+    }
+
+    private void initializeChatInterface() throws SQLException {
         setChatPosition();
         removeTitle();
         setProfilePicture();
@@ -58,14 +82,15 @@ public class MainChatController {
         setMessageSpacing(3);
         ScrollPaneEffect.addScrollBarEffect(chatScrollPane);
         setTextFieldFocus();
-
+    }
+    private void loadChatHistory() throws SQLException {
         boolean chatIsEmpty = ChatsDataBase.getLastMessage(mainUserId,contactId).isEmpty();
         if (chatIsEmpty) {
             setChatDateLabel();
+        } else {
+            ArrayList<List<Object>> messages = ChatsDataBase.getAllMessages(mainUserId,contactId);
+            System.out.println(messages);
         }
-
-
-
     }
 
 
@@ -244,12 +269,13 @@ public class MainChatController {
 
 
         // saving message to the database
-        int messageId = addMessageToDB(messageText,new byte[0],-1,currentTime);
+        int messageId = addMessageToDB(messageText,null,-1,currentTime);
         messagePane.setId("messagePane"+messageId);
 
         messagePane.setOnMouseClicked(mouseEvent -> {
             System.out.println(messagePane.getId());
         });
+
 
 
     }

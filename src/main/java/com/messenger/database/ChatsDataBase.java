@@ -1,10 +1,16 @@
 package com.messenger.database;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.shape.Circle;
+
+import javax.print.attribute.standard.JobHoldUntil;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ChatsDataBase {
     private static final String url = "jdbc:mysql://127.0.0.1:3306/messengerdb";
@@ -45,7 +51,7 @@ public class ChatsDataBase {
     }
     public static int addMessage(int senderId,int receiverId, String message,byte[] picture,int replyMessageId,String messageTime) throws SQLException {
         String statement = "INSERT INTO chats (sender_id,receiver_id,message,picture,reply_message_id,message_time) VALUES (?,?,?,?,?,?)";
-        InputStream inputStreamPicture = (picture.length == 0) ? (null) : (new ByteArrayInputStream(picture));
+        InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement,Statement.RETURN_GENERATED_KEYS);
@@ -69,7 +75,31 @@ public class ChatsDataBase {
         }
 
     }
+    public static ArrayList<List<Object>> getAllMessages(int mainUserId,int contactId) throws SQLException {
+        ArrayList<List<Object>> messages = new ArrayList<>();
+        String statement = "SELECT * FROM chats WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)";
 
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,mainUserId);
+            preparedStatement.setInt(2,contactId);
+            preparedStatement.setInt(3,contactId);
+            preparedStatement.setInt(4,mainUserId);
+            ResultSet result = preparedStatement.executeQuery();
+            while (result.next()) {
+                List<Object> message = new ArrayList<>();
+                message.add(result.getInt("message_id"));
+                message.add(result.getInt("sender_id"));
+                message.add(result.getInt("receiver_id"));
+                message.add(result.getString("message"));
+                message.add(result.getBytes("picture"));
+                message.add((result.getInt("reply_message_id") == 0) ? (-1) : (result.getInt("reply_message_id")));
+                message.add(result.getString("message_time"));
+                messages.add(message);
+            }
+        }
+        return messages;
+    }
 
 
 
