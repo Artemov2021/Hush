@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class MainContact {
@@ -68,7 +70,14 @@ public class MainContact {
         mainContactMessageLabel.setText(message);
     }
     public void setTime(String time) {
-        mainContactTimeLabel.setText(time);
+        String pattern = "\\d\\d:\\d\\d$";
+        Pattern compliedPattern = Pattern.compile(pattern);
+        Matcher matcher = compliedPattern.matcher(time);
+        if (matcher.find()) {
+            mainContactTimeLabel.setText(matcher.group());
+        } else {
+            mainContactTimeLabel.setText("");
+        }
     }
     public void setPaneId(String name) {
         mainContactPane.setId("mainContactPane"+name);
@@ -111,6 +120,7 @@ public class MainContact {
                 });
     }
     private void setCurrentPaneFocusedStyle() {
+        mainContactPane.getStyleClass().clear();
         mainContactPane.getStyleClass().add("contact-background-pane-focused");
     }
 

@@ -4,10 +4,10 @@ import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
 import javafx.application.Platform;
+import javafx.beans.binding.ObjectExpression;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -22,10 +22,12 @@ import java.time.LocalTime;
 import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.chrono.ChronoLocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -41,8 +43,6 @@ public class MainChatController {
     @FXML
     private VBox chatVBox;
     @FXML
-    private Label chatDateLabel;
-    @FXML
     private TextField chatTextField;
 
     private AnchorPane mainAnchorPane;
@@ -50,51 +50,7 @@ public class MainChatController {
     private int mainUserId;
 
 
-    public void initializeWithValue() throws SQLException {
-        initializeChatInterface();
-        loadChatHistory();
-
-
-
-        // Get current date and time
-        LocalDateTime now = LocalDateTime.now();
-
-        // Define the desired format
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-
-        // Format the current date and time
-        String formattedDateTime = now.format(formatter);
-
-        // Print the result
-        System.out.println(formattedDateTime);
-
-
-
-
-    }
-
-    private void initializeChatInterface() throws SQLException {
-        setChatPosition();
-        removeTitle();
-        setProfilePicture();
-        setName();
-        setDateLabelSpacing();
-        setMessageSpacing(3);
-        ScrollPaneEffect.addScrollBarEffect(chatScrollPane);
-        setTextFieldFocus();
-    }
-    private void loadChatHistory() throws SQLException {
-        boolean chatIsEmpty = ChatsDataBase.getLastMessage(mainUserId,contactId).isEmpty();
-        if (chatIsEmpty) {
-            setChatDateLabel();
-        } else {
-            ArrayList<List<Object>> messages = ChatsDataBase.getAllMessages(mainUserId,contactId);
-            System.out.println(messages);
-        }
-    }
-
-
-
+    // set main value
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
     }
@@ -106,17 +62,35 @@ public class MainChatController {
     }
 
 
-    private void setChatPosition() {
-        chatBackgroundPane.setLayoutX(310);
+    // initialization of the chat window
+    public void initializeWithValue() throws SQLException {
+        initializeChatInterface();
+        loadChatHistory();
+    }
+
+
+    // chat interface
+    private void initializeChatInterface() throws SQLException {
+        removeTitle();
+        setChatPosition();
+        setProfilePicture();
+        setName();
+        applyScrollBarEffect(chatScrollPane);
+        setMessageSpacing(3);
+        setChatTextFieldFocus();
+        scrollToBottom();
     }
     private void removeTitle() {
         Set<String> titlesToRemove = new HashSet<>(Arrays.asList("mainTitle", "mainSmallTitle", "mainLoginTitle"));
 
         List<Label> titles = mainAnchorPane.getChildren().stream()
                 .filter(node -> node instanceof Label && titlesToRemove.contains(node.getId())) // Check type and ID
-                .map(node -> (Label) node) // Cast to Label
-                .collect(Collectors.toList()); // Collect into List<Label>
+                .map(node -> (Label) node)
+                .toList(); // Collect into List<Label>
         mainAnchorPane.getChildren().removeAll(titles);
+    }
+    private void setChatPosition() {
+        chatBackgroundPane.setLayoutX(310);
     }
     private void setProfilePicture() throws SQLException {
         if (UsersDataBase.getAvatarWithId(contactId) != null) {
@@ -138,78 +112,98 @@ public class MainChatController {
     private void setName() throws SQLException {
         chatMainNameLabel.setText(UsersDataBase.getNameWithId(contactId));
     }
-    private void setDateLabelSpacing() {
-        VBox.setMargin(chatDateLabel,new Insets(10,0,15,0));
+    private void applyScrollBarEffect(ScrollPane scrollPane) {
+        ScrollPaneEffect.addScrollBarEffect(scrollPane);
     }
     private void setMessageSpacing(double space) {
         chatVBox.setSpacing(space);
     }
-    private void setTextFieldFocus() {
+    private void setChatTextFieldFocus() {
         Platform.runLater(() -> {
             if (chatTextField.isVisible() && !chatTextField.isDisabled()) {
                 chatTextField.requestFocus();
             }
         });
     }
-    private void setChatDateLabel() {
+
+
+
+    // chat message history
+    private void loadChatHistory() throws SQLException {
+        boolean chatIsEmpty = ChatsDataBase.getLastMessage(mainUserId,contactId).isEmpty();
+        if (chatIsEmpty) {
+            setChatCurrentDateLabel();
+        } else {
+            List<List<Object>> allMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
+            HashMap<String,List<List<Object>>> splitMessagesByDate = getSplitByDayMessages(allMessages);
+            for (List<List<Object>> messagesBySameDay : splitMessagesByDate.values()) {
+                String messagesLongDate = getMessageLongDate(messagesBySameDay.get(0).get(6).toString());
+                setChatDateLabel(messagesLongDate);
+                loadMessages(messagesBySameDay);
+            }
+        }
+    }
+    private void setChatCurrentDateLabel() {
         LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);
         String formattedDate = today.format(formatter);
-        chatDateLabel.setText(formattedDate);
+        setChatDateLabel(formattedDate);
     }
-    private String getCurrentTime() {
-        LocalTime currentTime = LocalTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-        return currentTime.format(formatter);
-    }
-    private void sendAvatar(Label avatar) throws SQLException {
-        byte[] blobBytes = UsersDataBase.getAvatarWithId(mainUserId);
-        assert blobBytes != null;
-        ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
-        ImageView imageView = new ImageView(new Image(byteStream));
-        imageView.setFitHeight(34);
-        imageView.setFitWidth(34);
-        imageView.setSmooth(true);
-        avatar.setGraphic(imageView);
-        Circle clip = new Circle();
-        clip.setLayoutX(17);
-        clip.setLayoutY(17);
-        clip.setRadius(17);
-        avatar.setClip(clip);
-    }
-    private boolean requiresAvatarDisplay() throws SQLException {
-        return ChatsDataBase.getLastMessage(mainUserId,contactId).isEmpty();
-        // TODO
-    }
-    private void showScrollDownButton() {
-        Label scrollDownBackground = new Label();
-        scrollDownBackground.setPrefWidth(34);
-        scrollDownBackground.setPrefHeight(36);
-        scrollDownBackground.getStyleClass().add("chat-scroll-down-background");
-        scrollDownBackground.setLayoutX(800);
-        scrollDownBackground.setLayoutY(500);
-        chatBackgroundPane.getChildren().add(scrollDownBackground);
-    }
-    private int addMessageToDB(String message,byte[] picture,int replyMessageId,String time) throws SQLException {
-        return ChatsDataBase.addMessage(mainUserId,contactId,message,picture,replyMessageId,time);
-    }
-
-    @FXML
-    public void sendMessage() throws SQLException {
-        String messageText = chatTextField.getText().trim();
-        String currentTime = getCurrentTime();
-
-        if (messageText.isEmpty()) {
-            return;
+    private HashMap<String,List<List<Object>>> getSplitByDayMessages(List<List<Object>> allMessages) {
+        // returns a hash map in format: "06.12.2024"=[[message],[message]], etc.
+        HashMap<String,List<List<Object>>> splitMessagesByDate = new LinkedHashMap<>();
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        for (List<Object> message : allMessages) {
+            LocalDate messageOriginalDate = LocalDate.parse((String)message.get(6),dateTimeFormatter); //2024-12-06
+            DateTimeFormatter desiredFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            String formattedDate = messageOriginalDate.format(desiredFormat);
+            splitMessagesByDate.computeIfAbsent(formattedDate,k -> new ArrayList<>()).add(message);
         }
-
-        chatTextField.setText("");
+        return splitMessagesByDate;
+    }
+    private void setChatDateLabel(String date) {
+        Label chatDateLabel = new Label();
+        chatDateLabel.getStyleClass().add("chat-date-label");
+        chatDateLabel.setText(date);
+        VBox.setMargin(chatDateLabel,new Insets(15,0,25,0));
+        chatVBox.getChildren().add(chatDateLabel);
+    }
+    private boolean isFirstMessage(int index) {
+        return index == 0;
+    }
+    private boolean isResponseMessage(int index,List<List<Object>> messages) {
+        if (index == 0) return false;
+        return messages.get(index).get(1) != messages.get(index-1).get(1);
+    }
+    private boolean isAfterOneHourMessage(int index,List<List<Object>> messages) {
+        if (index == 0) return false;
+        return isDifferenceGreaterThanOneHour(getMessageHours((String) messages.get(index-1).get(6)),
+                getMessageHours((String) messages.get(index).get(6)));
+    }
+    private void loadMessages(List<List<Object>> messages) throws SQLException {
+        for (int i = 0;i < messages.size();i++) {
+            List<Object> message = messages.get(i);
+            boolean isFirstMessage = isFirstMessage(i);
+            boolean isResponseMessage = isResponseMessage(i,messages);   // follows after a contacts message
+            boolean isAfterOneHourMessage = isAfterOneHourMessage(i,messages);
+            boolean avatarRequired =  isFirstMessage || isResponseMessage || isAfterOneHourMessage;  // avatar near the message is going to be sent withing those conditions
+            loadMessage(message,avatarRequired);
+        }
+    }
+    private void loadMessage(List<Object> message, boolean avatarRequired) throws SQLException {
+        int messageId = (int) message.get(0);
+        int senderId = (int) message.get(1);
+        String messageText = message.get(3).toString();
+        byte[] picture = (byte[]) message.get(4);
+        int replyMessageId = (int) message.get(5);
+        String message_time = message.get(6).toString();
 
         HBox messageHBox = new HBox();
-        messageHBox.setAlignment(Pos.BOTTOM_RIGHT);
+        messageHBox.setAlignment((senderId == mainUserId) ? Pos.BOTTOM_RIGHT : Pos.BOTTOM_LEFT);
 
         Pane messagePane = new Pane();
-        messagePane.getStyleClass().add("chat-message-pane");
+        messagePane.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-pane" : "chat-message-contact-pane");
+        messagePane.setId("messagePane" + messageId);
 
         Label messageLabel = new Label(messageText);
         messageLabel.setWrapText(true);
@@ -217,29 +211,36 @@ public class MainChatController {
         messageLabel.getStyleClass().add("chat-message-label");
         messageLabel.setMaxWidth(292);
 
-        Label timeLabel = new Label(currentTime);
+        Label timeLabel = new Label(getMessageHours(message_time));
         timeLabel.getStyleClass().add("chat-time-label");
         timeLabel.layoutXProperty().bind(messagePane.widthProperty().subtract(timeLabel.widthProperty()).subtract(9)); // 10px padding from the right edge
         timeLabel.layoutYProperty().bind(messagePane.heightProperty().subtract(timeLabel.heightProperty()).subtract(4)); // 10px padding from the bottom edge
 
-        if (requiresAvatarDisplay()) {
+        // Always add the message pane first
+        messageHBox.getChildren().add(messagePane);
+
+        // If avatar is required, add it based on sender
+        if (avatarRequired) {
             Label avatarLabel = new Label();
-            sendAvatar(avatarLabel);
-            messageHBox.getChildren().add(avatarLabel);
-            HBox.setMargin(avatarLabel, new Insets(0, 25, 0, 0));
-            HBox.setMargin(messagePane, new Insets(0, 8, 0, 0));
+            sendAvatar(avatarLabel, senderId);  // Assuming this method sets the avatar for the sender
+            // Add avatar at the correct position depending on the sender (either first or after the message)
+            if (senderId == mainUserId) {
+                // For your messages, avatar on the right side
+                messageHBox.getChildren().add(avatarLabel);
+                HBox.setMargin(avatarLabel, new Insets(0, 25, 0, 0)); // Right margin
+                HBox.setMargin(messagePane, new Insets(0, 8, 0, 0));  // Left margin for message
+            } else {
+                // For contact messages, avatar on the left side
+                messageHBox.getChildren().add(0, avatarLabel);
+                HBox.setMargin(avatarLabel, new Insets(0, 0, 0, 25)); // Left margin
+                HBox.setMargin(messagePane, new Insets(0, 0, 0, 8));  // Right margin for message
+            }
         } else {
-            HBox.setMargin(messagePane, new Insets(0, 68, 0, 0));
+            // If no avatar, add appropriate margin
+            HBox.setMargin(messagePane, (senderId == mainUserId) ? new Insets(0, 63, 0, 0) : new Insets(0, 0, 0, 63));
         }
 
-        messagePane.getChildren().addAll(messageLabel,timeLabel);
-        messageHBox.getChildren().add(0,messagePane);
-        System.out.println(messageHBox.getChildren());
-        chatVBox.getChildren().add(messageHBox);
-        chatScrollPane.setVvalue(1.0); // scroll down after adding a message
-
-
-        // set minimum size for Hbox and Message Label ( prevents shrinking )
+        // Set minimum size for HBox and Message Label (prevents shrinking)
         messageHBox.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
             double hboxHeight = messageHBox.getHeight();
             messageHBox.setMinHeight(hboxHeight);
@@ -250,38 +251,78 @@ public class MainChatController {
             messageLabel.setMinHeight(labelHeight);
         });
 
-        chatScrollPane.vvalueProperty().addListener((obs, oldValue, newValue) -> {
-            showScrollDownButton();
-        });
-
-        System.out.println(ChatsDataBase.getLastMessageTime(mainUserId,contactId)+" new: "+currentTime);
-
-
-//        String time1 = ChatsDataBase.getLastMessageTime(mainUserId,contactId); // First time
-//        String time2 = "23:53"; // Second time
-//
-//        if (isDifferenceGreaterThanOneHour(time1, time2)) {
-//            System.out.println("The difference is greater than one hour.");
-//        } else {
-//            System.out.println("The difference is NOT greater than one hour.");
-//        }
-
-
-
-        // saving message to the database
-        int messageId = addMessageToDB(messageText,null,-1,currentTime);
-        messagePane.setId("messagePane"+messageId);
+        messagePane.getChildren().addAll(messageLabel, timeLabel);
+        chatVBox.getChildren().add(messageHBox);
 
         messagePane.setOnMouseClicked(mouseEvent -> {
             System.out.println(messagePane.getId());
         });
-
-
-
     }
 
 
-    public static boolean isDifferenceGreaterThanOneHour(String time1, String time2) {
+
+    // chat new message
+    @FXML
+    public void sendMessage() throws SQLException {
+        String messageText = chatTextField.getText().trim();
+        String currentDate = getCurrentDate();
+        if (messageText.isEmpty() || messageText.length() > 5000) return;
+
+        // saving message to the database
+        int messageId = addMessageToDB(messageText,null,-1,currentDate);
+
+        boolean isFirstMessage = ChatsDataBase.getLastMessage(mainUserId,contactId).isEmpty();
+        List<List<Object>> allMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
+        int chatMessageAmount = ChatsDataBase.getAllMessages(mainUserId,contactId).size();
+        boolean isResponseMessage = isResponseMessage(chatMessageAmount-1,allMessages);
+        boolean isAfterOneHourMessage = isAfterOneHourMessage(chatMessageAmount-1,allMessages);
+        boolean avatarIsRequired = isFirstMessage || isResponseMessage || isAfterOneHourMessage;
+
+        loadMessage(allMessages.get(chatMessageAmount-1),avatarIsRequired);
+
+        chatTextField.setText("");
+        Platform.runLater(() -> chatScrollPane.setVvalue(1.0));
+    }
+
+
+
+    // time operations
+    private String getCurrentTime() {
+        // for instance: "13:45"
+        LocalTime currentTime = LocalTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        return currentTime.format(formatter);
+    }
+    private String getCurrentDate() {
+        // for instance: "08.12.2024 16:55"
+        LocalDateTime currentTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        return currentTime.format(formatter);
+    }
+    private String getMessageHours(String messageTime) {
+        // for instance: "06.12.2024 12:24" -> "12:24"
+        String datePattern = "(\\d+):(\\d+)$";
+        Pattern datePatternCompiled = Pattern.compile(datePattern);
+        Matcher matcher = datePatternCompiled.matcher(messageTime);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        return "";
+    }
+    private String getMessageLongDate(String messageTime) {
+        // for instance: "06.12.2024" -> "6. December"
+        String datePattern = "^(\\d+)\\.(\\d+)\\.(\\d+)";
+        Pattern datePatternCompiled = Pattern.compile(datePattern);
+        Matcher matcher = datePatternCompiled.matcher(messageTime);
+        if (matcher.find()) {
+            DateTimeFormatter originalDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            LocalDate parsedMessageDate = LocalDate.parse(matcher.group(),originalDateFormatter);
+            DateTimeFormatter longDateFormatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);
+            return parsedMessageDate.format(longDateFormatter);
+        }
+        return "";
+    }
+    private boolean isDifferenceGreaterThanOneHour(String time1, String time2) {
         LocalTime t1 = LocalTime.parse(time1);
         LocalTime t2 = LocalTime.parse(time2);
 
@@ -297,35 +338,56 @@ public class MainChatController {
             difference += 24 * 60; // 24 hours in minutes
         }
 
-        return difference > 60; // Check if the difference is greater than 60 minutes
+        return difference >= 60; // Check if the difference is greater than 60 minutes
+    }
+
+
+
+    // Scroll to bottom button
+    private void scrollToBottom() {
+        Platform.runLater(() -> chatScrollPane.setVvalue(1.0));
+        chatVBox.heightProperty().addListener((observable, oldValue, newValue) -> {
+            chatScrollPane.setVvalue(1.0);
+        });
+    }
+    private void showScrollToBottomButton() {
+        Label scrollDownBackground = new Label();
+        scrollDownBackground.setPrefWidth(34);
+        scrollDownBackground.setPrefHeight(36);
+        scrollDownBackground.getStyleClass().add("chat-scroll-down-background");
+        scrollDownBackground.setLayoutX(800);
+        scrollDownBackground.setLayoutY(500);
+        chatBackgroundPane.getChildren().add(scrollDownBackground);
     }
 
 
 
 
-//    private void loadMessageHistory() throws SQLException {
-//        ArrayList<ArrayList<String>> messages = DetailedDataBase.getMessages(mainUserId,contactId);
-//        setDateHistoryLabel(getHours(messages.get(0).get(2)));
-//        for (ArrayList<String> message : messages) {
-//            //setDateHistoryLabel(getHours(message.get(2)));
-//        }
-//    }
-//
-//
 
-//    private void setDateHistoryLabel(String date) {
-//        LocalDate today = LocalDate.parse(date);
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);
-//        String formattedDate = today.format(formatter);
-//        timeDialogBorderLabel.setText(formattedDate);
-//    }
-//    private String getHours(String fulldate) {
-//        String datePattern = "^(\\d+)-(\\d+)-(\\d+)";
-//        Pattern datePatternCompiled = Pattern.compile(datePattern);
-//        Matcher matcher = datePatternCompiled.matcher(fulldate);
-//        if (matcher.find()) {
-//            return matcher.group();
-//        }
-//        return null;
-//    }
+    private void sendAvatar(Label avatar,int senderId) throws SQLException {
+        byte[] blobBytes = UsersDataBase.getAvatarWithId(senderId);
+        assert blobBytes != null;
+        ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
+        ImageView imageView = new ImageView(new Image(byteStream));
+        imageView.setFitHeight(30);
+        imageView.setFitWidth(30);
+        imageView.setSmooth(true);
+        avatar.setGraphic(imageView);
+        Circle clip = new Circle();
+        clip.setLayoutX(15);
+        clip.setLayoutY(15);
+        clip.setRadius(15);
+        avatar.setClip(clip);
+    }
+
+
+    private int addMessageToDB(String message,byte[] picture,int replyMessageId,String time) throws SQLException {
+        return ChatsDataBase.addMessage(mainUserId,contactId,message,picture,replyMessageId,time);
+    }
+
+
+
+
+
+
 }

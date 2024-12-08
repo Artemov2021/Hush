@@ -50,7 +50,7 @@ public class ChatsDataBase {
         return "";
     }
     public static int addMessage(int senderId,int receiverId, String message,byte[] picture,int replyMessageId,String messageTime) throws SQLException {
-        String statement = "INSERT INTO chats (sender_id,receiver_id,message,picture,reply_message_id,message_time) VALUES (?,?,?,?,?,?)";
+        String statement = "INSERT INTO chats (sender_id,receiver_id,message,picture,reply_message_id,message_time,received) VALUES (?,?,?,?,?,?,?)";
         InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
@@ -61,6 +61,7 @@ public class ChatsDataBase {
             preparedStatement.setBlob(4,inputStreamPicture);
             preparedStatement.setObject(5, (replyMessageId == -1) ? null : replyMessageId);
             preparedStatement.setString(6,messageTime);
+            preparedStatement.setBoolean(7,false);
 
             preparedStatement.executeUpdate();
 
@@ -95,6 +96,7 @@ public class ChatsDataBase {
                 message.add(result.getBytes("picture"));
                 message.add((result.getInt("reply_message_id") == 0) ? (-1) : (result.getInt("reply_message_id")));
                 message.add(result.getString("message_time"));
+                message.add(result.getString("received"));
                 messages.add(message);
             }
         }

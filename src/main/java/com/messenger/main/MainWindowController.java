@@ -64,7 +64,6 @@ public class MainWindowController {
 
         MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
         addSearchFieldListener();
-        //mainContactsVBox.getChildren().forEach(node -> System.out.println(node));
     }
     private void setMainTitle() throws SQLException {
         /* set main title on the right side. If the person has no contacts,

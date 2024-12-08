@@ -12,17 +12,13 @@
    <children>
       <Pane fx:id="chatBackgroundPane" prefHeight="658.0" prefWidth="846.0" styleClass="root" stylesheets="@../css/MainChat.css">
          <children>
-            <ScrollPane fx:id="chatScrollPane" fitToWidth="true" hbarPolicy="NEVER" layoutX="1.0" layoutY="64.0" prefHeight="534.0" prefWidth="846.0" styleClass="chat-scroll-pane">
+            <ScrollPane fx:id="chatScrollPane" fitToWidth="true" hbarPolicy="NEVER" layoutX="1.0" layoutY="64.0" prefHeight="545.0" prefWidth="846.0" styleClass="chat-scroll-pane">
                <content>
-                  <VBox fx:id="chatVBox" alignment="BOTTOM_CENTER" maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefWidth="844.0" styleClass="chat-scroll-pane">
-                     <children>
-                        <Label fx:id="chatDateLabel" prefHeight="20.0" prefWidth="79.0" styleClass="chat-date-label" text="20 October" VBox.vgrow="ALWAYS">
-                           <VBox.margin>
-                              <Insets bottom="10.0" top="10.0" />
-                           </VBox.margin></Label>
-                     </children>
-                  </VBox>
+                  <VBox fx:id="chatVBox" alignment="BOTTOM_CENTER" maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefWidth="844.0" styleClass="chat-scroll-pane" />
                </content>
+               <padding>
+                  <Insets bottom="7.0" />
+               </padding>
             </ScrollPane>
             <Label layoutX="1.0" layoutY="-5.0" prefHeight="70.0" prefWidth="846.0" styleClass="chat-upper-background" />
             <TextField fx:id="chatTextField" layoutY="610.0" onAction="#sendMessage" prefHeight="49.0" prefWidth="846.0" promptText="Write a message...." styleClass="chat-message-text-field" />

@@ -44,6 +44,7 @@
     -fx-font-size: 11;
     -fx-font-weight: bold;
     -fx-alignment: center;
+    -fx-padding: 2 12 2 12;
 }
 
 .chat-dialog-vbox {
@@ -98,8 +99,12 @@
 }
 /*-----------------------------------------------------------------------------*/
 /* Message */
-.chat-message-pane {
+.chat-message-user-pane {
     -fx-background-color: #2C2B30;
+    -fx-background-radius: 7;
+}
+.chat-message-contact-pane {
+    -fx-background-color: #1D1C20;
     -fx-background-radius: 7;
 }
 .chat-message-label {
