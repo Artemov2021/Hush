@@ -49,7 +49,7 @@ public class ChatsDataBase {
         }
         return "";
     }
-    public static int addMessage(int senderId,int receiverId, String message,byte[] picture,int replyMessageId,String messageTime) throws SQLException {
+    public static int addMessage(int senderId,int receiverId, String message,byte[] picture,int replyMessageId,String messageTime,boolean received) throws SQLException {
         String statement = "INSERT INTO chats (sender_id,receiver_id,message,picture,reply_message_id,message_time,received) VALUES (?,?,?,?,?,?,?)";
         InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
 
@@ -59,9 +59,9 @@ public class ChatsDataBase {
             preparedStatement.setInt(2,receiverId);
             preparedStatement.setString(3,message);
             preparedStatement.setBlob(4,inputStreamPicture);
-            preparedStatement.setObject(5, (replyMessageId == -1) ? null : replyMessageId);
+            preparedStatement.setObject(5,replyMessageId);
             preparedStatement.setString(6,messageTime);
-            preparedStatement.setBoolean(7,false);
+            preparedStatement.setBoolean(7,received);
 
             preparedStatement.executeUpdate();
 
@@ -94,7 +94,7 @@ public class ChatsDataBase {
                 message.add(result.getInt("receiver_id"));
                 message.add(result.getString("message"));
                 message.add(result.getBytes("picture"));
-                message.add((result.getInt("reply_message_id") == 0) ? (-1) : (result.getInt("reply_message_id")));
+                message.add(result.getInt("reply_message_id"));
                 message.add(result.getString("message_time"));
                 message.add(result.getString("received"));
                 messages.add(message);
@@ -102,7 +102,40 @@ public class ChatsDataBase {
         }
         return messages;
     }
+    public static List<Object> getMessageWithId(int messageId) throws SQLException {
+        List<Object> message = new ArrayList<>();
+        String statement = "SELECT * FROM chats WHERE message_id = ?";
 
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,messageId);
+            ResultSet result = preparedStatement.executeQuery();
+            while (result.next()) {
+                message.add(result.getInt("message_id"));
+                message.add(result.getInt("sender_id"));
+                message.add(result.getInt("receiver_id"));
+                message.add(result.getString("message"));
+                message.add(result.getBytes("picture"));
+                message.add((result.getInt("reply_message_id") == 0) ? (-1) : (result.getInt("reply_message_id")));
+                message.add(result.getString("message_time"));
+                message.add(result.getString("received"));
+            }
+        }
+        return message;
+    }
+    public static int getSenderIdWithMessageId(int messageId) throws SQLException {
+        String statement = "SELECT sender_id FROM chats WHERE message_id = ?";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,messageId);
+            ResultSet result = preparedStatement.executeQuery();
+            if (result.next()) {
+                return result.getInt("sender_id");
+            }
+        }
+        return -1;
+    }
 
 
 

@@ -118,9 +118,19 @@
     -fx-font-size: 9;
     -fx-text-fill: #85818F;
 }
+/*-----------------------------------------------------------------------------*/
+/* Scroll Down Button */
 .chat-scroll-down-background {
     -fx-background-color: #1D1C20;
     -fx-background-radius: 7;
+}
+.chat-scroll-down-arrow {
+    -fx-background-image: url("../elements/arrowDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-scroll-down-arrow-focused {
+    -fx-background-image: url("../elements/arrowFocused.png");
+    -fx-background-repeat: no-repeat;
 }
 
 
