@@ -4,6 +4,9 @@ import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
 import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -47,6 +50,8 @@ public class MainChatController {
     private AnchorPane mainAnchorPane;
     private int contactId;
     private int mainUserId;
+    private Pane mainContactPane;
+    private Label mainContactMessageLabel;
     private String sendingMessageType = "text"; // the default type of the message is always text
 
 
@@ -59,6 +64,10 @@ public class MainChatController {
     }
     public void setContactId(int id) {
         this.contactId = id;
+    }
+    public void setMainContactPane(Pane mainContactPane) {
+        this.mainContactPane = mainContactPane;
+        this.mainContactMessageLabel = (Label) mainContactPane.lookup("#mainContactMessageLabel");
     }
 
 
@@ -78,8 +87,6 @@ public class MainChatController {
         applyScrollBarEffect(chatScrollPane);
         setMessageSpacing(3);
         setChatTextFieldFocus();
-        scrollToBottom();
-        setBottomButtonListener();
     }
     private void removeTitle() {
         Set<String> titlesToRemove = new HashSet<>(Arrays.asList("mainTitle", "mainSmallTitle", "mainLoginTitle"));
@@ -142,6 +149,12 @@ public class MainChatController {
                 setChatDateLabel(messagesLongDate);
                 loadMessages(messagesBySameDay);
             }
+            // Introduce a small delay before scrolling to the bottom
+            PauseTransition pause = new PauseTransition(Duration.millis(150)); // Adjust the duration as necessary
+            pause.setOnFinished(event -> chatScrollPane.setVvalue(1.0));
+            pause.play();
+
+            setBottomButtonListener();
         }
     }
     private void setChatCurrentDateLabel() {
@@ -214,6 +227,7 @@ public class MainChatController {
         messageLabel.setFocusTraversable(false);
         messageLabel.getStyleClass().add("chat-message-label");
         messageLabel.setMaxWidth(292);
+        messageLabel.setPadding(new Insets(6,45,4,12));
 
         Label timeLabel = new Label(getMessageHours(message_time));
         timeLabel.getStyleClass().add("chat-time-label");
@@ -256,7 +270,32 @@ public class MainChatController {
         });
 
         messagePane.getChildren().addAll(messageLabel, timeLabel);
-        chatVBox.getChildren().add(messageHBox);
+
+        if (replyMessageId != -1) {
+            Pane replyMessagePane = new Pane();
+            messagePane.setMinHeight(messagePane.getHeight() + 30.0);
+            messageLabel.setPadding(new Insets(36, 45, 4, 12));
+            replyMessagePane.getStyleClass().add("chat-message-reply-pane");
+            replyMessagePane.setLayoutX(6);
+            replyMessagePane.setLayoutY(6);
+            replyMessagePane.setPrefHeight(24);
+
+            Platform.runLater(() -> {
+                replyMessagePane.setMinWidth(messagePane.getWidth()-20);
+                replyMessagePane.setMaxWidth(messagePane.getWidth()-20);
+                replyMessagePane.setPrefWidth(messagePane.getWidth()-20);
+
+                System.out.println("Message Pane Width: " + messagePane.getWidth());
+                try {
+                    Label repliedMessageUserName = new Label((String) ChatsDataBase.getMessageWithId(replyMessageId).get(1));
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            messagePane.getChildren().add(replyMessagePane);
+        }
+        chatVBox.getChildren().add(messageHBox);  // Add message to the VBox
 
         messagePane.setOnMouseClicked(mouseEvent -> {
             System.out.println(messagePane.getId());
@@ -289,13 +328,13 @@ public class MainChatController {
                 if (isNewDayMessage(getCurrentDate(),previousMessageDate)) {
                     setChatDateLabel(getCurrentLongDate());
                 }
-
-                scrollToBottom();
                 loadMessage(message,avatarIsRequired);
+                mainContactMessageLabel.setText(messageText);
+                break;
         }
 
 
-
+        scrollToBottom();
         chatTextField.setText("");
     }
 
@@ -385,7 +424,9 @@ public class MainChatController {
 
     // Scroll to bottom button
     private void scrollToBottom() {
-        Platform.runLater(() -> chatScrollPane.setVvalue(1.0));
+        Platform.runLater(() -> {
+            chatScrollPane.setVvalue(1.0);  // This ensures the ScrollPane scrolls to the bottom
+        });
     }
     private void setBottomButtonListener() {
         chatScrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {

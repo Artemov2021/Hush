@@ -79,8 +79,8 @@ public class MainContact {
             mainContactTimeLabel.setText("");
         }
     }
-    public void setPaneId(String name) {
-        mainContactPane.setId("mainContactPane"+name);
+    public void setPaneId(int contactId) {
+        mainContactPane.setId("mainContactPane"+contactId);
     }
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
@@ -99,6 +99,7 @@ public class MainContact {
         mainChatController.setMainAnchorPane(mainAnchorPane);
         mainChatController.setMainUserId(mainUserId);
         mainChatController.setContactId(currentUserId);
+        mainChatController.setMainContactPane(mainContactPane);
         mainChatController.initializeWithValue();
 
         mainAnchorPane.getChildren().removeIf(child -> Objects.equals(child.getId(), "chatAnchorPane"));

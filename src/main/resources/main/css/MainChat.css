@@ -112,11 +112,14 @@
     -fx-border-color: transparent;
     -fx-font-size: 12;
     -fx-text-fill: white;
-    -fx-padding: 6 45 4 12;
 }
 .chat-time-label {
     -fx-font-size: 9;
     -fx-text-fill: #85818F;
+}
+.chat-message-reply-pane {
+    -fx-background-color: #2C2B30;
+    -fx-background-radius: 4;
 }
 /*-----------------------------------------------------------------------------*/
 /* Scroll Down Button */

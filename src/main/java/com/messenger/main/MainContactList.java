@@ -47,7 +47,7 @@ public class MainContactList {
         contactPane.setAvatar(contactId);
         contactPane.setMessage(lastMessage);
         contactPane.setTime(lastMessageTime);
-        contactPane.setPaneId(String.valueOf(contactId));
+        contactPane.setPaneId(contactId);
         contactPane.setMainAnchorPane(mainAnchorPane);
 
         mainContactsVBox.getChildren().add(0,contactRoot);
