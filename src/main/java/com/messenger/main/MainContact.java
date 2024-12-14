@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -86,7 +87,7 @@ public class MainContact {
         this.mainAnchorPane = anchorPane;
     }
     @FXML
-    public void showChat() throws IOException, SQLException {
+    public void showChat() throws IOException, SQLException, ExecutionException, InterruptedException {
         int currentUserId = Integer.parseInt(mainContactPane.getId().split("mainContactPane")[1]);
 
         setPanesNormalStyle();
