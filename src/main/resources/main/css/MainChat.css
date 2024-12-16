@@ -109,20 +109,81 @@
 }
 .chat-message-label {
     -fx-background-color: transparent;
-    -fx-font-size: 12;
+    -fx-font-size: 13;
     -fx-text-fill: white;
 }
 .chat-time-label {
     -fx-font-size: 9;
     -fx-text-fill: #85818F;
 }
-.chat-message-reply-pane {
+.chat-message-reply-user-pane {
+    -fx-background-color: #3C3B43;
+    -fx-background-radius: 4;
+}
+.chat-message-reply-contact-pane {
     -fx-background-color: #2C2B30;
     -fx-background-radius: 4;
 }
 .chat-message-reply-name {
     -fx-text-fill: white;
     -fx-font-size: 10;
+}
+.chat-message-reply-message {
+    -fx-text-fill: #7E7D82;
+    -fx-font-size: 10;
+}
+.chat-message-buttons-background-pane {
+    -fx-background-color: #211F26;
+    -fx-background-radius: 3;
+}
+.chat-message-buttons-background-button-pane {
+    -fx-background-color: #211F26;
+    -fx-background-radius: 3;
+}
+.chat-message-buttons-background-button-pane:hover {
+    -fx-background-color: #323036;
+    -fx-background-radius: 3;
+}
+.chat-message-buttons-text {
+    -fx-text-fill: white;
+    -fx-font-size: 12;
+}
+.chat-message-buttons-reply-symbol {
+    -fx-background-image: url("../elements/messageReply.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-message-buttons-edit-symbol {
+    -fx-background-image: url("../elements/messageEdit.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-message-buttons-delete-symbol {
+    -fx-background-image: url("../elements/messageDelete.png");
+    -fx-background-repeat: no-repeat;
+}
+/*-----------------------------------------------------------------------------*/
+/* Reply Wrapper */
+.chat-reply-wrapper {
+    -fx-background-color: #1D1C20;
+}
+.chat-reply-wrapper-exit-label {
+    -fx-background-image: url("../elements/replyWrapperExitDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-reply-wrapper-exit-label:hover {
+    -fx-background-image: url("../elements/replyWrapperExitFocused.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-reply-wrapper-row-label {
+    -fx-background-image: url("../elements/replyRow.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-reply-wrapper-name-label {
+    -fx-text-fill: #95B1E8;
+    -fx-font-size: 12;
+}
+.chat-reply-wrapper-message-label {
+    -fx-text-fill: #CBCBCB;
+    -fx-font-size: 11;
 }
 /*-----------------------------------------------------------------------------*/
 /* Scroll Down Button */

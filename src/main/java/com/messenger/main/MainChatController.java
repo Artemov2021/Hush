@@ -3,18 +3,23 @@ package com.messenger.main;
 import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
-import javafx.animation.FadeTransition;
-import javafx.animation.PauseTransition;
+import javafx.animation.*;
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
@@ -81,6 +86,7 @@ public class MainChatController {
     private void initializeChatInterface() throws SQLException {
         removeTitle();
         setChatPosition();
+        checkForWrappers();
         setProfilePicture();
         setName();
         applyScrollBarEffect(chatScrollPane);
@@ -98,6 +104,12 @@ public class MainChatController {
     }
     private void setChatPosition() {
         chatBackgroundPane.setLayoutX(310);
+    }
+    private void checkForWrappers() {
+        Pane replyPane = (Pane) mainAnchorPane.lookup("#reply-wrapper");
+        Pane changePane = (Pane) mainAnchorPane.lookup("#reply-wrapper");
+        if (replyPane != null) mainAnchorPane.getChildren().remove(replyPane);
+        if (changePane != null) mainAnchorPane.getChildren().remove(changePane);
     }
     private void setProfilePicture() throws SQLException {
         if (UsersDataBase.getAvatarWithId(contactId) != null) {
@@ -207,11 +219,14 @@ public class MainChatController {
         }
     }
     private void loadMessage(List<Object> message, boolean avatarRequired) throws SQLException, ExecutionException, InterruptedException {
+        int messageId = (int) message.get(0);
         String messageType = getTypeOfMessage(message);
         int senderId = (int) message.get(1);
         String messageTime = getMessageHours((String) message.get(6));
+        int replyMessageId = (int) message.get(5);
 
         HBox messageHBox = new HBox();
+        messageHBox.setId("messageHBox"+messageId);
         messageHBox.setAlignment((senderId == mainUserId) ? Pos.BOTTOM_RIGHT : Pos.BOTTOM_LEFT);
 
         switch (messageType) {
@@ -219,9 +234,9 @@ public class MainChatController {
 
                 String messageText = (String) message.get(3);
 
-                int normalMessagePaddingTop = 5;
+                int normalMessagePaddingTop = 7;
                 int normalMessagePaddingRight = 45;
-                int normalMessagePaddingBottom = 8;
+                int normalMessagePaddingBottom = 7;
                 int normalMessagePaddingLeft = 12;
 
                 int normalMessagePaneHeight = (normalMessagePaddingTop + normalMessagePaddingBottom) + calculateLabelHeight(messageText);
@@ -240,29 +255,45 @@ public class MainChatController {
                 normalMessageTextLabel.setLayoutX(normalMessagePaddingLeft);
                 normalMessageTextLabel.setLayoutY(normalMessagePaddingTop);
 
-                Label normalMessagetimeLabel = new Label(messageTime);
-                normalMessagetimeLabel.getStyleClass().add("chat-time-label");
-                normalMessagetimeLabel.layoutXProperty().bind(normalMessagePane.widthProperty().subtract(normalMessagetimeLabel.widthProperty()).subtract(9)); // 10px padding from the right edge
-                normalMessagetimeLabel.layoutYProperty().bind(normalMessagePane.heightProperty().subtract(normalMessagetimeLabel.heightProperty()).subtract(4)); // 10px padding from the bottom edge
+                Label normalMessageTimeLabel = new Label(messageTime);
+                normalMessageTimeLabel.getStyleClass().add("chat-time-label");
+                normalMessageTimeLabel.layoutXProperty().bind(normalMessagePane.widthProperty().subtract(normalMessageTimeLabel.widthProperty()).subtract(9)); // 10px padding from the right edge
+                normalMessageTimeLabel.layoutYProperty().bind(normalMessagePane.heightProperty().subtract(normalMessageTimeLabel.heightProperty()).subtract(4)); // 10px padding from the bottom edge
 
-                normalMessagePane.getChildren().addAll(normalMessageTextLabel, normalMessagetimeLabel);
+                normalMessagePane.getChildren().addAll(normalMessageTextLabel, normalMessageTimeLabel);
                 messageHBox.getChildren().add(normalMessagePane);
 
                 if (avatarRequired) {
                     setAppropriateAvatar(messageHBox,normalMessagePane,senderId);
                 } else {
-                    // If no avatar, add appropriate margin
                     HBox.setMargin(normalMessagePane, (senderId == mainUserId) ? new Insets(0, 63, 0, 0) : new Insets(0, 0, 0, 63));
                 }
+
+                // right click on the message opens buttons (reply,edit,delete)
+                normalMessagePane.setOnMouseClicked(mouseEvent -> {
+                    if ((senderId == mainUserId) && (mouseEvent.getButton() == MouseButton.SECONDARY)) {
+                        Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(normalMessagePane,mouseEvent.getX(),mouseEvent.getY());
+                        int anchorPaneScaleX = (int) anchorPaneCoordinates.getX();
+                        int anchorPaneScaleY = (int) anchorPaneCoordinates.getY();
+                        showMessageButtons(anchorPaneScaleX,anchorPaneScaleY,messageId);
+                    } else if ((senderId != mainUserId) && (mouseEvent.getButton() == MouseButton.SECONDARY)) {
+                        Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(normalMessagePane,mouseEvent.getX(),mouseEvent.getY());
+                        int anchorPaneScaleX = (int) anchorPaneCoordinates.getX();
+                        int anchorPaneScaleY = (int) anchorPaneCoordinates.getY();
+                        showReplyMessageButton(anchorPaneScaleX,anchorPaneScaleY,messageId);
+                    }
+                });
+
+
                 break;
 
             case "reply_with_text":
 
                 String messageReplyText = (String) message.get(3);
 
-                int replyWithTextPaddingTop = 33;
+                int replyWithTextPaddingTop = 45;
                 int replyWithTextPaddingRight = 45;
-                int replyWithTextPaddingBottom = 8;
+                int replyWithTextPaddingBottom = 7;
                 int replyWithTextPaddingLeft = 12;
 
                 int replyWithTextMessagePaneHeight = (replyWithTextPaddingTop + replyWithTextPaddingBottom) + calculateLabelHeight(messageReplyText);
@@ -286,28 +317,67 @@ public class MainChatController {
                 replyWithTextTimeLabel.layoutXProperty().bind(replyWithTextMessagePane.widthProperty().subtract(replyWithTextTimeLabel.widthProperty()).subtract(9)); // 10px padding from the right edge
                 replyWithTextTimeLabel.layoutYProperty().bind(replyWithTextMessagePane.heightProperty().subtract(replyWithTextTimeLabel.heightProperty()).subtract(4)); // 10px padding from the bottom edge
 
+                int replyWithTextPaneTopMargin = 6;
+                int replyWithTextPaneLeftMargin = 6;
+                int replyWithTextReplyPaneWidth = replyWithTextMessagePaneWidth - (replyWithTextPaneLeftMargin * 2);
+                int replyWithTextReplyPaneHeight = 33;
                 Pane replyWithTextReplyPane = new Pane();
-                replyWithTextReplyPane.setPrefWidth(replyWithTextMessagePaneWidth - 14);
-                replyWithTextReplyPane.setPrefHeight(21);
-                replyWithTextReplyPane.getStyleClass().add("chat-message-reply-pane");
-                replyWithTextReplyPane.setLayoutX(7); // margin
-                replyWithTextReplyPane.setLayoutY(7);
+                replyWithTextReplyPane.setPrefWidth(replyWithTextReplyPaneWidth);
+                replyWithTextReplyPane.setPrefHeight(replyWithTextReplyPaneHeight);
+                replyWithTextReplyPane.getStyleClass().add((senderId == mainUserId) ? "chat-message-reply-user-pane" : "chat-message-reply-contact-pane");
+                replyWithTextReplyPane.setLayoutX(replyWithTextPaneLeftMargin);
+                replyWithTextReplyPane.setLayoutY(replyWithTextPaneTopMargin);
 
-                Label replyWithTextReplyName = new Label("Tymur");
+                int replyWithTextReplyNameLeftMargin = 5;
+                int replyWithTextReplyNameTopMargin = 2;
+                String repliedMessageUserName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessageWithId(replyMessageId).get(1));
+                Label replyWithTextReplyName = new Label(repliedMessageUserName);
+                replyWithTextReplyName.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextReplyNameLeftMargin * 2));
                 replyWithTextReplyName.getStyleClass().add("chat-message-reply-name");
-                replyWithTextReplyName.setLayoutX(2);
-                replyWithTextReplyName.setLayoutY(2);
+                replyWithTextReplyName.setLayoutX(replyWithTextReplyNameLeftMargin);
+                replyWithTextReplyName.setLayoutY(replyWithTextReplyNameTopMargin);
 
-                replyWithTextReplyPane.getChildren().add(replyWithTextReplyName);
+                int replyWithTextReplyMessageLeftMargin = 5;
+                int replyWithTextReplyMessageTopMargin = 15;
+                Label replyWithTextReplyMessage = new Label((String) ChatsDataBase.getMessageWithId(replyMessageId).get(3));
+                replyWithTextReplyMessage.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextReplyMessageLeftMargin * 2));
+                replyWithTextReplyMessage.getStyleClass().add("chat-message-reply-message");
+                replyWithTextReplyMessage.setLayoutX(replyWithTextReplyMessageLeftMargin);
+                replyWithTextReplyMessage.setLayoutY(replyWithTextReplyMessageTopMargin);
+
+                replyWithTextReplyPane.getChildren().addAll(replyWithTextReplyName,replyWithTextReplyMessage);
                 replyWithTextMessagePane.getChildren().addAll(replyWithTextReplyPane,replyWithTextMessageTextLabel, replyWithTextTimeLabel);
                 messageHBox.getChildren().add(replyWithTextMessagePane);
 
                 if (avatarRequired) {
                     setAppropriateAvatar(messageHBox,replyWithTextMessagePane,senderId);
                 } else {
-                    // If no avatar, add appropriate margin
                     HBox.setMargin(replyWithTextMessagePane, (senderId == mainUserId) ? new Insets(0, 63, 0, 0) : new Insets(0, 0, 0, 63));
                 }
+
+                replyWithTextReplyPane.setOnMouseClicked(mouseEvent -> {
+                    if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                        HBox repliedMessageHBox = (HBox) mainAnchorPane.lookup("#messageHBox"+replyMessageId);
+                        selectRepliedMessageHBox(repliedMessageHBox);
+                        scrollSmooth(getHBoxVvalue(repliedMessageHBox));
+                    }
+                });
+
+                // right click on the message opens buttons (reply,edit,delete)
+                replyWithTextMessagePane.setOnMouseClicked(mouseEvent -> {
+                    if ((senderId == mainUserId) && (mouseEvent.getButton() == MouseButton.SECONDARY)) {
+                        Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(replyWithTextMessagePane,mouseEvent.getX(),mouseEvent.getY());
+                        int anchorPaneScaleX = (int) anchorPaneCoordinates.getX();
+                        int anchorPaneScaleY = (int) anchorPaneCoordinates.getY();
+                        showMessageButtons(anchorPaneScaleX,anchorPaneScaleY,messageId);
+                    } else if ((senderId != mainUserId) && (mouseEvent.getButton() == MouseButton.SECONDARY)) {
+                        Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(replyWithTextMessagePane,mouseEvent.getX(),mouseEvent.getY());
+                        int anchorPaneScaleX = (int) anchorPaneCoordinates.getX();
+                        int anchorPaneScaleY = (int) anchorPaneCoordinates.getY();
+                        showReplyMessageButton(anchorPaneScaleX,anchorPaneScaleY,messageId);
+                    }
+                });
+
                 break;
         }
 
@@ -439,7 +509,7 @@ public class MainChatController {
     // Scroll to bottom button
     private void scrollToBottom() {
         Platform.runLater(() -> {
-            chatScrollPane.setVvalue(1.0);  // This ensures the ScrollPane scrolls to the bottom
+            scrollSmooth(1.0);  // This ensures the ScrollPane scrolls to the bottom
         });
     }
     private void setBottomButtonListener() {
@@ -447,6 +517,9 @@ public class MainChatController {
             Pane scrollDownButton = (Pane) chatBackgroundPane.lookup("#scrollDownButton");
             if (newValue.doubleValue() < 1.0) {
                 if (scrollDownButton == null) showScrollToBottomButton();
+                else {
+                    scrollDownButton.setLayoutY(getAppropriateBottomButtonPosition());
+                }
             } else {
                 FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.2),scrollDownButton);
                 fadeOut.setFromValue(1.0); // Start fully visible
@@ -463,7 +536,7 @@ public class MainChatController {
         scrollDownBackground.setPrefHeight(36);
         scrollDownBackground.getStyleClass().add("chat-scroll-down-background");
         scrollDownBackground.setLayoutX(797);
-        scrollDownBackground.setLayoutY(560);
+        scrollDownBackground.setLayoutY(getAppropriateBottomButtonPosition());
         Label arrow = new Label();
         arrow.setLayoutX(8);
         arrow.setLayoutY(8);
@@ -488,6 +561,17 @@ public class MainChatController {
             fadeOut.play();
             fadeOut.setOnFinished(event1 -> chatBackgroundPane.getChildren().remove(scrollDownBackground));
         });
+    }
+    private int getAppropriateBottomButtonPosition() {
+        return switch (sendingMessageType) {
+            case "text" -> 560;
+            case "reply_with_text" -> 520;
+            case "reply_with_picture" -> 520;
+            case "reply_with_picture_and_text" -> 520;
+            case "picture" -> 520;
+            case "picture_with_text" -> 520;
+            default -> 560;
+        };
     }
 
 
@@ -516,6 +600,7 @@ public class MainChatController {
     }
     public int calculateLabelHeight(String text) {
         Label textLabel = new Label(text);
+        textLabel.setStyle("-fx-font-size: 13; -fx-font-family: 'System';");
         textLabel.setVisible(false);
         textLabel.setMaxWidth(292);
         textLabel.setWrapText(true);
@@ -532,6 +617,7 @@ public class MainChatController {
     }
     public int calculateLabelWidth(String text) {
         Label textLabel = new Label(text);
+        textLabel.setStyle("-fx-font-size: 13; -fx-font-family: 'System';");
         textLabel.setVisible(false);
         textLabel.setMaxWidth(292);
         textLabel.setWrapText(true);
@@ -563,7 +649,6 @@ public class MainChatController {
     }
 
 
-
     // small functions
     private void sendAvatar(Label avatar,int senderId) throws SQLException {
         byte[] blobBytes = UsersDataBase.getAvatarWithId(senderId);
@@ -591,9 +676,320 @@ public class MainChatController {
         }
         return -1;
     }
+    private void selectRepliedMessageHBox(HBox hbox) {
+        // Initial and target colors
+        Color initialColor = Color.web("#161518");
+        Color targetColor = Color.web("#333138");
+
+        // Object property to store color for animation
+        ObjectProperty<Color> colorProperty = new SimpleObjectProperty<>(initialColor);
+
+        // Listener to update the background as the color changes
+        colorProperty.addListener((observable, oldColor, newColor) -> {
+            hbox.setBackground(new Background(new BackgroundFill(newColor, CornerRadii.EMPTY, null)));
+        });
+
+        // Animation to the target color
+        Timeline toTargetColor = new Timeline(
+                new KeyFrame(Duration.seconds(0),
+                        new KeyValue(colorProperty, initialColor)),
+                new KeyFrame(Duration.seconds(0.2),
+                        new KeyValue(colorProperty, targetColor))
+        );
+
+        // Animation back to the initial color
+        Timeline toInitialColor = new Timeline(
+                new KeyFrame(Duration.seconds(0),
+                        new KeyValue(colorProperty, targetColor)),
+                new KeyFrame(Duration.seconds(2),
+                        new KeyValue(colorProperty, initialColor))
+        );
+
+        // Pause between animations
+        PauseTransition pause = new PauseTransition(Duration.seconds(0.4));
+
+        // Play animations in sequence with the pause
+        toTargetColor.setOnFinished(event -> pause.play());
+        pause.setOnFinished(event -> toInitialColor.play());
+
+        toTargetColor.play();
+    }
+    private double getHBoxVvalue(HBox hbox) {
+            // Calculate the vertical position of the targetHBox relative to the VBox
+            double hBoxY = hbox.getLayoutY();
+
+            // Calculate the total height of the VBox
+            double vboxHeight = chatVBox.getHeight();
+
+            // Get the height of the viewport
+            double viewportHeight = chatScrollPane.getViewportBounds().getHeight();
+
+            // Adjust the vvalue so that the HBox is in the middle of the viewport
+            double vvalue = (hBoxY - viewportHeight / 2 + hbox.getHeight() / 2) /
+                    (vboxHeight - viewportHeight);
+
+            // Clamp vvalue between 0 and 1 to avoid out-of-bound errors
+            vvalue = Math.max(0, Math.min(vvalue, 1));
+
+            // Scroll to the adjusted position
+            return vvalue;
+    }
+    private void scrollSmooth(double vvalue) {
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.seconds(0), // Start immediately
+                        new KeyValue(chatScrollPane.vvalueProperty(), chatScrollPane.getVvalue())),
+                new KeyFrame(Duration.seconds(0.4), // Smooth scroll duration
+                        new KeyValue(chatScrollPane.vvalueProperty(), vvalue))
+        );
+
+        timeline.play();
+    }
+    private Point2D convertToTopLevelAnchorPaneCoordinates(Node node, double x, double y) {
+        if (node == null) {
+            return new Point2D(x, y);  // If no parent, return the current coordinates.
+        }
+
+        // If this node is an AnchorPane, return the coordinates directly
+        if (Objects.equals(node.getId(),"#anchorPane")) {
+            return node.localToParent(x, y); // Convert the coordinates relative to the AnchorPane
+        }
+
+        // Otherwise, recursively move up the parent hierarchy
+        Point2D pointInParent = node.localToParent(x, y);
+
+        // Continue traversing up the parent hierarchy
+        return convertToTopLevelAnchorPaneCoordinates(node.getParent(), pointInParent.getX(), pointInParent.getY());
+    }
+    private void showMessageButtons(int x,int y,int messageId) {
+        Pane messageButtonsOverlayPane = new Pane();
+        messageButtonsOverlayPane.setLayoutX(0);
+        messageButtonsOverlayPane.setLayoutY(0);
+        messageButtonsOverlayPane.setPrefWidth(mainAnchorPane.getPrefWidth());
+        messageButtonsOverlayPane.setPrefHeight(mainAnchorPane.getPrefHeight());
+
+        Pane messageButtonsBackgroundPane = new Pane();
+        messageButtonsBackgroundPane.getStyleClass().add("chat-message-buttons-background-pane");
+        messageButtonsBackgroundPane.setPrefWidth(83);
+        messageButtonsBackgroundPane.setPrefHeight(99);
+        messageButtonsBackgroundPane.setLayoutX(x);
+        int appropriateY = y > 500 ? y - 99 : y;
+        messageButtonsBackgroundPane.setLayoutY(appropriateY);
+
+        Pane replyButtonPane = new Pane();
+        replyButtonPane.getStyleClass().add("chat-message-buttons-background-button-pane");
+        replyButtonPane.setPrefWidth(74);
+        replyButtonPane.setPrefHeight(28);
+        replyButtonPane.setLayoutX(4);
+        replyButtonPane.setLayoutY(4);
+
+        Label replySymbol = new Label();
+        replySymbol.getStyleClass().add("chat-message-buttons-reply-symbol");
+        replySymbol.setPrefWidth(13);
+        replySymbol.setPrefHeight(13);
+        replySymbol.setLayoutX(7);
+        replySymbol.setLayoutY(6);
+
+        Label replyText = new Label("Reply");
+        replyText.getStyleClass().add("chat-message-buttons-text");
+        replyText.setLayoutX(30);
+        replyText.setLayoutY(5);
+
+        Pane editButtonPane = new Pane();
+        editButtonPane.getStyleClass().add("chat-message-buttons-background-button-pane");
+        editButtonPane.setPrefWidth(74);
+        editButtonPane.setPrefHeight(28);
+        editButtonPane.setLayoutX(4);
+        editButtonPane.setLayoutY(35);
+
+        Label editSymbol = new Label();
+        editSymbol.getStyleClass().add("chat-message-buttons-edit-symbol");
+        editSymbol.setPrefWidth(13);
+        editSymbol.setPrefHeight(13);
+        editSymbol.setLayoutX(7);
+        editSymbol.setLayoutY(6);
+
+        Label editText = new Label("Edit");
+        editText.getStyleClass().add("chat-message-buttons-text");
+        editText.setLayoutX(30);
+        editText.setLayoutY(5);
+
+        Pane deleteButtonPane = new Pane();
+        deleteButtonPane.getStyleClass().add("chat-message-buttons-background-button-pane");
+        deleteButtonPane.setPrefWidth(74);
+        deleteButtonPane.setPrefHeight(28);
+        deleteButtonPane.setLayoutX(4);
+        deleteButtonPane.setLayoutY(66);
+
+        Label deleteSymbol = new Label();
+        deleteSymbol.getStyleClass().add("chat-message-buttons-delete-symbol");
+        deleteSymbol.setPrefWidth(13);
+        deleteSymbol.setPrefHeight(13);
+        deleteSymbol.setLayoutX(7);
+        deleteSymbol.setLayoutY(6);
+
+        Label deleteText = new Label("Delete");
+        deleteText.getStyleClass().add("chat-message-buttons-text");
+        deleteText.setLayoutX(30);
+        deleteText.setLayoutY(5);
+
+        replyButtonPane.getChildren().addAll(replySymbol, replyText);
+        editButtonPane.getChildren().addAll(editSymbol,editText);
+        deleteButtonPane.getChildren().addAll(deleteSymbol,deleteText);
+        messageButtonsBackgroundPane.getChildren().addAll(replyButtonPane,editButtonPane,deleteButtonPane);
+        messageButtonsOverlayPane.getChildren().add(messageButtonsBackgroundPane);
+        mainAnchorPane.getChildren().add(messageButtonsOverlayPane);
 
 
+        messageButtonsOverlayPane.setOnMouseClicked(clickEvent -> {
+            mainAnchorPane.getChildren().remove(messageButtonsOverlayPane);
+        });
 
+        replyButtonPane.setOnMouseClicked(clickEvent -> {
+            try {
+                showReplyWrapper(messageId);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        Platform.runLater(() -> {
+            messageButtonsOverlayPane.getScene().getStylesheets().add(getClass().getResource("/main/css/MainChat.css").toExternalForm());
+        });
+
+    }
+    private void showReplyMessageButton(int x,int y,int messageId) {
+        Pane messageButtonsOverlayPane = new Pane();
+        messageButtonsOverlayPane.setLayoutX(0);
+        messageButtonsOverlayPane.setLayoutY(0);
+        messageButtonsOverlayPane.setPrefWidth(mainAnchorPane.getPrefWidth());
+        messageButtonsOverlayPane.setPrefHeight(mainAnchorPane.getPrefHeight());
+
+        Pane messageButtonsBackgroundPane = new Pane();
+        messageButtonsBackgroundPane.getStyleClass().add("chat-message-buttons-background-pane");
+        messageButtonsBackgroundPane.setPrefWidth(83);
+        messageButtonsBackgroundPane.setPrefHeight(36);
+        messageButtonsBackgroundPane.setLayoutX(x);
+        messageButtonsBackgroundPane.setLayoutY(y);
+
+        Pane replyButtonPane = new Pane();
+        replyButtonPane.getStyleClass().add("chat-message-buttons-background-button-pane");
+        replyButtonPane.setPrefWidth(74);
+        replyButtonPane.setPrefHeight(28);
+        replyButtonPane.setLayoutX(4);
+        replyButtonPane.setLayoutY(4);
+
+        Label replySymbol = new Label();
+        replySymbol.getStyleClass().add("chat-message-buttons-reply-symbol");
+        replySymbol.setPrefWidth(13);
+        replySymbol.setPrefHeight(13);
+        replySymbol.setLayoutX(7);
+        replySymbol.setLayoutY(6);
+
+        Label replyText = new Label("Reply");
+        replyText.getStyleClass().add("chat-message-buttons-text");
+        replyText.setLayoutX(30);
+        replyText.setLayoutY(5);
+
+        replyButtonPane.getChildren().addAll(replySymbol, replyText);
+        messageButtonsBackgroundPane.getChildren().add(replyButtonPane);
+        messageButtonsOverlayPane.getChildren().add(messageButtonsBackgroundPane);
+        mainAnchorPane.getChildren().add(messageButtonsOverlayPane);
+
+        messageButtonsOverlayPane.setOnMouseClicked(clickEvent -> {
+            mainAnchorPane.getChildren().remove(messageButtonsOverlayPane);
+        });
+
+        Platform.runLater(() -> {
+            messageButtonsOverlayPane.getScene().getStylesheets().add(getClass().getResource("/main/css/MainChat.css").toExternalForm());
+        });
+
+        replyButtonPane.setOnMouseClicked(clickEvent -> {
+            try {
+                showReplyWrapper(messageId);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+    private void showReplyWrapper(int messageId) throws SQLException {
+        if (mainAnchorPane.lookup("#replyWrapper") != null) {
+            Label replyWrapperName = (Label) mainAnchorPane.lookup("#replyWrapperName");
+            String name = UsersDataBase.getNameWithId((int)ChatsDataBase.getMessageWithId(messageId).get(1));
+            Label replyWrapperMessage = (Label) mainAnchorPane.lookup("#replyWrapperMessage");
+            String message = (String) ChatsDataBase.getMessageWithId(messageId).get(3);
+
+            replyWrapperName.setText(name);
+            replyWrapperMessage.setText(message);
+        } else if (mainAnchorPane.lookup("#reply-wrapper") == null) {
+            sendingMessageType = "reply_with_text";
+            Pane scrollDownButton = (Pane) chatBackgroundPane.lookup("#scrollDownButton");
+            if (scrollDownButton != null) scrollDownButton.setLayoutY(getAppropriateBottomButtonPosition());
+            chatScrollPane.setPadding(new Insets(0,0,50,0));
+            chatTextField.requestFocus();
+            Pane replyWrapperPane = new Pane();
+            replyWrapperPane.setId("replyWrapper");
+            replyWrapperPane.getStyleClass().add("chat-reply-wrapper");
+            replyWrapperPane.setPrefWidth(846);
+            replyWrapperPane.setPrefHeight(45);
+            replyWrapperPane.setLayoutX(convertToTopLevelAnchorPaneCoordinates(chatTextField,chatTextField.getLayoutX(),chatTextField.getLayoutY()).getX());
+            replyWrapperPane.setLayoutY(chatTextField.getScene().getHeight() - 94);
+
+            Label replyWrapperExitLabel = new Label();
+            replyWrapperExitLabel.getStyleClass().add("chat-reply-wrapper-exit-label");
+            replyWrapperExitLabel.setPrefWidth(18);
+            replyWrapperExitLabel.setPrefHeight(18);
+            replyWrapperExitLabel.setLayoutX(806);
+            replyWrapperExitLabel.setLayoutY(14);
+
+            Label replyWrapperRow = new Label();
+            replyWrapperRow.getStyleClass().add("chat-reply-wrapper-row-label");
+            replyWrapperRow.setPrefWidth(26);
+            replyWrapperRow.setPrefHeight(29);
+            replyWrapperRow.setLayoutX(21);
+            replyWrapperRow.setLayoutY(9);
+
+            String messageUserName = UsersDataBase.getNameWithId((int)ChatsDataBase.getMessageWithId(messageId).get(1));
+            Label replyWrapperName = new Label(messageUserName);
+            replyWrapperName.setId("replyWrapperName");
+            replyWrapperName.getStyleClass().add("chat-reply-wrapper-name-label");
+            replyWrapperName.setLayoutX(58);
+            replyWrapperName.setLayoutY(7);
+
+            String message = (String) ChatsDataBase.getMessageWithId(messageId).get(3);
+            Label replyWrapperMessageText = new Label(message);
+            replyWrapperMessageText.setId("replyWrapperMessage");
+            replyWrapperMessageText.getStyleClass().add("chat-reply-wrapper-message-label");
+            replyWrapperMessageText.setMaxWidth(720);
+            replyWrapperMessageText.setLayoutX(58);
+            replyWrapperMessageText.setLayoutY(24);
+
+            replyWrapperPane.getChildren().addAll(replyWrapperExitLabel,replyWrapperRow,replyWrapperName,replyWrapperMessageText);
+            mainAnchorPane.getChildren().add(replyWrapperPane);
+
+            replyWrapperExitLabel.setOnMouseClicked(clickedEvent -> {
+                mainAnchorPane.getChildren().remove(replyWrapperPane);
+                chatScrollPane.setPadding(new Insets(0,0,0,0));
+                sendingMessageType = "text";
+                Pane newScrollDownButton = (Pane) chatBackgroundPane.lookup("#scrollDownButton");
+                if (newScrollDownButton != null) {
+                    newScrollDownButton.setLayoutY(getAppropriateBottomButtonPosition());
+                }
+            });
+        }
+    }
+    private void showEditWrapper(int messageId) throws SQLException {
+        if (mainAnchorPane.lookup("#editWrapper") != null) {
+            Label editWrapperName = (Label) mainAnchorPane.lookup("#editWrapperName");
+            String name = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessageWithId(messageId).get(1));
+            Label editWrapperMessage = (Label) mainAnchorPane.lookup("#editWrapperMessage");
+            String message = (String) ChatsDataBase.getMessageWithId(messageId).get(3);
+
+            editWrapperName.setText(name);
+            editWrapperMessage.setText(message);
+        } else if (mainAnchorPane.lookup("#editWrapper") == null) {
+
+        }
+    }
 
 
 }
