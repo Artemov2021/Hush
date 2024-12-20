@@ -49,6 +49,22 @@ public class ChatsDataBase {
         }
         return "";
     }
+    public static int getLastMessageId(int mainUserId,int contactId) throws SQLException {
+        String statement = "SELECT message_id FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id DESC LIMIT 1";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,mainUserId);
+            preparedStatement.setInt(2,contactId);
+            preparedStatement.setInt(3,mainUserId);
+            preparedStatement.setInt(4,contactId);
+            ResultSet result = preparedStatement.executeQuery();
+            if (result.next()) {
+                return result.getInt("message_id");
+            }
+        }
+        return -1;
+    }
     public static int addMessage(int senderId,int receiverId, String message,byte[] picture,int replyMessageId,String messageTime,boolean received) throws SQLException {
         String statement = "INSERT INTO chats (sender_id,receiver_id,message,picture,reply_message_id,message_time,received) VALUES (?,?,?,?,?,?,?)";
         InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
@@ -136,6 +152,15 @@ public class ChatsDataBase {
         }
         return -1;
     }
+    public static void editMessage(int messageId,String newMessage) throws SQLException {
+        String statement = "UPDATE chats SET message = ? WHERE message_id = ?";
 
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setString(1,newMessage);
+            preparedStatement.setInt(2,messageId);
+            preparedStatement.executeUpdate();
+        }
+    }
 
 }

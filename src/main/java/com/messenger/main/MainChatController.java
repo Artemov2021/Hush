@@ -56,7 +56,10 @@ public class MainChatController {
     private int mainUserId;
     private Pane mainContactPane;
     private Label mainContactMessageLabel;
+    private Label mainContactTimeLabel;
     private String sendingMessageType = "text"; // the default type of the message is always text
+    private int editedMessageId = -1;
+    private int repliedMessageId = -1;
 
 
     // set main value
@@ -72,6 +75,9 @@ public class MainChatController {
     public void setMainContactPane(Pane mainContactPane) {
         this.mainContactPane = mainContactPane;
         this.mainContactMessageLabel = (Label) mainContactPane.lookup("#mainContactMessageLabel");
+    }
+    public void setMainContactTimeLabel(Label timeLabel) {
+        this.mainContactTimeLabel = timeLabel;
     }
 
 
@@ -243,11 +249,13 @@ public class MainChatController {
                 int normalMessagePaneWidth = (normalMessagePaddingLeft + normalMessagePaddingRight) + calculateLabelWidth(messageText);
 
                 Pane normalMessagePane = new Pane();
+                normalMessagePane.setId("messagePane"+messageId);
                 normalMessagePane.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-pane" : "chat-message-contact-pane");
                 normalMessagePane.setPrefHeight(normalMessagePaneHeight);
                 normalMessagePane.setPrefWidth(normalMessagePaneWidth);
 
                 Label normalMessageTextLabel = new Label(messageText);
+                normalMessageTextLabel.setId("messageLabel"+messageId);
                 normalMessageTextLabel.getStyleClass().add("chat-message-label");
                 normalMessageTextLabel.setWrapText(true);  // Text soll umgebrochen werden
                 normalMessageTextLabel.setMinWidth(0);     // Minimale Breite 0
@@ -269,7 +277,7 @@ public class MainChatController {
                     HBox.setMargin(normalMessagePane, (senderId == mainUserId) ? new Insets(0, 63, 0, 0) : new Insets(0, 0, 0, 63));
                 }
 
-                // right click on the message opens buttons (reply,edit,delete)
+                // right-click on the message opens buttons (reply,edit,delete)
                 normalMessagePane.setOnMouseClicked(mouseEvent -> {
                     if ((senderId == mainUserId) && (mouseEvent.getButton() == MouseButton.SECONDARY)) {
                         Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(normalMessagePane,mouseEvent.getX(),mouseEvent.getY());
@@ -300,11 +308,13 @@ public class MainChatController {
                 int replyWithTextMessagePaneWidth = (replyWithTextPaddingLeft + replyWithTextPaddingRight) + calculateLabelWidth(messageReplyText);
 
                 Pane replyWithTextMessagePane = new Pane();
+                replyWithTextMessagePane.setId("messagePane"+messageId);
                 replyWithTextMessagePane.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-pane" : "chat-message-contact-pane");
                 replyWithTextMessagePane.setPrefHeight(replyWithTextMessagePaneHeight);
                 replyWithTextMessagePane.setPrefWidth(replyWithTextMessagePaneWidth);
 
                 Label replyWithTextMessageTextLabel = new Label(messageReplyText);
+                replyWithTextMessageTextLabel.setId("messageLabel"+messageId);
                 replyWithTextMessageTextLabel.getStyleClass().add("chat-message-label");
                 replyWithTextMessageTextLabel.setWrapText(true);  // Text soll umgebrochen werden
                 replyWithTextMessageTextLabel.setMinWidth(0);     // Minimale Breite 0
@@ -322,6 +332,7 @@ public class MainChatController {
                 int replyWithTextReplyPaneWidth = replyWithTextMessagePaneWidth - (replyWithTextPaneLeftMargin * 2);
                 int replyWithTextReplyPaneHeight = 33;
                 Pane replyWithTextReplyPane = new Pane();
+                replyWithTextReplyPane.setId("replyMessagePane"+messageId);
                 replyWithTextReplyPane.setPrefWidth(replyWithTextReplyPaneWidth);
                 replyWithTextReplyPane.setPrefHeight(replyWithTextReplyPaneHeight);
                 replyWithTextReplyPane.getStyleClass().add((senderId == mainUserId) ? "chat-message-reply-user-pane" : "chat-message-reply-contact-pane");
@@ -332,6 +343,7 @@ public class MainChatController {
                 int replyWithTextReplyNameTopMargin = 2;
                 String repliedMessageUserName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessageWithId(replyMessageId).get(1));
                 Label replyWithTextReplyName = new Label(repliedMessageUserName);
+                replyWithTextReplyName.setId("replyNameLabel"+messageId);
                 replyWithTextReplyName.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextReplyNameLeftMargin * 2));
                 replyWithTextReplyName.getStyleClass().add("chat-message-reply-name");
                 replyWithTextReplyName.setLayoutX(replyWithTextReplyNameLeftMargin);
@@ -340,6 +352,7 @@ public class MainChatController {
                 int replyWithTextReplyMessageLeftMargin = 5;
                 int replyWithTextReplyMessageTopMargin = 15;
                 Label replyWithTextReplyMessage = new Label((String) ChatsDataBase.getMessageWithId(replyMessageId).get(3));
+                replyWithTextReplyMessage.setId("replyMessageLabel"+messageId);
                 replyWithTextReplyMessage.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextReplyMessageLeftMargin * 2));
                 replyWithTextReplyMessage.getStyleClass().add("chat-message-reply-message");
                 replyWithTextReplyMessage.setLayoutX(replyWithTextReplyMessageLeftMargin);
@@ -394,6 +407,7 @@ public class MainChatController {
         String currentMessageFullDate = getCurrentFullDate();
         switch (sendingMessageType) {
             case "text":
+
                 String messageText = chatTextField.getText().trim();
                 if (messageText.isEmpty()) return;
 
@@ -414,7 +428,93 @@ public class MainChatController {
                 }
                 loadMessage(message,avatarIsRequired);
                 mainContactMessageLabel.setText(messageText);
+                mainContactTimeLabel.setText(getCurrentTime());
+
                 break;
+
+            case "edit":
+
+                String editedMessageText = chatTextField.getText().trim();
+                if (editedMessageText.isEmpty()) return;
+
+                String messageType = getTypeOfMessage(ChatsDataBase.getMessageWithId(editedMessageId));
+
+                int paddingTop = getPaddingTop(messageType);
+                int paddingRight = 45;
+                int paddingBottom = 7;
+                int paddingLeft = 12;
+
+                int messagePaneWidth = (paddingLeft + paddingRight) + calculateLabelWidth(editedMessageText);
+                int messagePaneHeight = (paddingTop + paddingBottom) + calculateLabelHeight(editedMessageText);
+
+                Pane messagePane = (( Pane ) mainAnchorPane.lookup("#messagePane"+editedMessageId));
+
+                messagePane.setPrefWidth(messagePaneWidth);
+                messagePane.setPrefHeight(messagePaneHeight);
+
+                int replyPaneLeftPadding = 6;
+                int nameMessageLeftPadding = 5;
+                int replyMessagePaneWidth = messagePaneWidth - (replyPaneLeftPadding * 2);
+                int replyMessageNameMessageWidth = messagePaneWidth - (nameMessageLeftPadding * 2) - (replyPaneLeftPadding * 2);
+                if (messageType.contains("reply")) {
+                    ((Pane) mainAnchorPane.lookup("#replyMessagePane"+editedMessageId)).setPrefWidth(replyMessagePaneWidth);
+                    ((Label)(mainAnchorPane.lookup("#replyNameLabel"+editedMessageId))).setPrefWidth(replyMessageNameMessageWidth);
+                    ((Label)(mainAnchorPane.lookup("#replyNameLabel"+editedMessageId))).setMinWidth(replyMessageNameMessageWidth);
+                    ((Label)(mainAnchorPane.lookup("#replyMessageLabel"+editedMessageId))).setPrefWidth(replyMessageNameMessageWidth);
+                    ((Label)(mainAnchorPane.lookup("#replyMessageLabel"+editedMessageId))).setMinWidth(replyMessageNameMessageWidth);
+                }
+
+                chatScrollPane.setPadding(new Insets(0,0,8,0));
+
+                ChatsDataBase.editMessage(editedMessageId,editedMessageText);
+
+                (( Label ) mainAnchorPane.lookup("#messageLabel"+editedMessageId)).setText(editedMessageText);
+
+                if (mainAnchorPane.lookup("#editWrapper") != null) {
+                    mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#editWrapper"));
+                }
+
+                if (editedMessageId == ChatsDataBase.getLastMessageId(mainUserId,contactId)) {
+                    mainContactMessageLabel.setText(editedMessageText);
+                }
+
+                sendingMessageType = "text";
+
+                break;
+
+            case "reply_with_text":
+
+                String replyMessageText = chatTextField.getText().trim();
+                if (replyMessageText.isEmpty()) return;
+
+                int replyMessageId = addMessageToDB(replyMessageText,null,repliedMessageId,currentMessageFullDate,false);
+                List<List<Object>> allMessages1 = ChatsDataBase.getAllMessages(mainUserId,contactId);
+                String previousMessageDate1 = getMessageDate((String) allMessages1.get(getIndexWithMessageId(allMessages1,replyMessageId)-1).get(6));
+
+                boolean isFirstMessage1 = isFirstMessage(allMessages1,replyMessageId);
+                boolean isResponseMessage1 = isResponseMessage(allMessages1,replyMessageId);
+                boolean isAfterOneHourMessage1 = isAfterOneHourMessage(allMessages1,replyMessageId);
+                boolean isNewDayMessage1 = isNewDayMessage(getCurrentDate(), previousMessageDate1);
+                boolean avatarIsRequired1 = isFirstMessage1 || isResponseMessage1 || isAfterOneHourMessage1 || isNewDayMessage1;
+
+                List<Object> replyMessage = ChatsDataBase.getMessageWithId(replyMessageId);
+
+                if (isNewDayMessage(getCurrentDate(), previousMessageDate1)) {
+                    setChatDateLabel(getCurrentLongDate());
+                }
+                loadMessage(replyMessage, avatarIsRequired1);
+                mainContactMessageLabel.setText(replyMessageText);
+                mainContactTimeLabel.setText(getCurrentTime());
+
+                if (mainAnchorPane.lookup("#replyWrapper") != null) {
+                    mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#replyWrapper"));
+                }
+
+                chatScrollPane.setPadding(new Insets(0,0,8,0));
+                sendingMessageType = "text";
+
+                break;
+
         }
 
 
@@ -507,9 +607,14 @@ public class MainChatController {
 
 
     // Scroll to bottom button
-    private void scrollToBottom() {
+    private void scrollSmoothToBottom() {
         Platform.runLater(() -> {
             scrollSmooth(1.0);  // This ensures the ScrollPane scrolls to the bottom
+        });
+    }
+    private void scrollToBottom() {
+        Platform.runLater(() -> {
+            chatScrollPane.setVvalue(1.0);  // This ensures the ScrollPane scrolls to the bottom
         });
     }
     private void setBottomButtonListener() {
@@ -554,7 +659,7 @@ public class MainChatController {
             arrow.getStyleClass().add("chat-scroll-down-arrow");
         });
         scrollDownBackground.setOnMouseClicked(event -> {
-            scrollToBottom();
+            scrollSmoothToBottom();
             FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.2),scrollDownBackground);
             fadeOut.setFromValue(1.0); // Start fully visible
             fadeOut.setToValue(0.0);   // End fully transparent
@@ -565,11 +670,12 @@ public class MainChatController {
     private int getAppropriateBottomButtonPosition() {
         return switch (sendingMessageType) {
             case "text" -> 560;
+            case "edit" -> 520;
             case "reply_with_text" -> 520;
             case "reply_with_picture" -> 520;
             case "reply_with_picture_and_text" -> 520;
-            case "picture" -> 520;
-            case "picture_with_text" -> 520;
+            case "picture" -> 560;
+            case "picture_with_text" -> 560;
             default -> 560;
         };
     }
@@ -852,6 +958,22 @@ public class MainChatController {
             }
         });
 
+        editButtonPane.setOnMouseClicked(clickEvent -> {
+            try {
+                showEditWrapper(messageId);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        deleteButtonPane.setOnMouseClicked(clickEvent -> {
+            try {
+                showDeleteMessageCaution(messageId);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
         Platform.runLater(() -> {
             messageButtonsOverlayPane.getScene().getStylesheets().add(getClass().getResource("/main/css/MainChat.css").toExternalForm());
         });
@@ -913,35 +1035,34 @@ public class MainChatController {
     }
     private void showReplyWrapper(int messageId) throws SQLException {
         if (mainAnchorPane.lookup("#replyWrapper") != null) {
-            Label replyWrapperName = (Label) mainAnchorPane.lookup("#replyWrapperName");
-            String name = UsersDataBase.getNameWithId((int)ChatsDataBase.getMessageWithId(messageId).get(1));
-            Label replyWrapperMessage = (Label) mainAnchorPane.lookup("#replyWrapperMessage");
-            String message = (String) ChatsDataBase.getMessageWithId(messageId).get(3);
-
-            replyWrapperName.setText(name);
-            replyWrapperMessage.setText(message);
-        } else if (mainAnchorPane.lookup("#reply-wrapper") == null) {
+            mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#replyWrapper"));
+        } else if (mainAnchorPane.lookup("#editWrapper") != null) {
+            mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#editWrapper"));
+        }
+        if (mainAnchorPane.lookup("#reply-wrapper") == null) {
             sendingMessageType = "reply_with_text";
+            repliedMessageId = messageId;
             Pane scrollDownButton = (Pane) chatBackgroundPane.lookup("#scrollDownButton");
             if (scrollDownButton != null) scrollDownButton.setLayoutY(getAppropriateBottomButtonPosition());
             chatScrollPane.setPadding(new Insets(0,0,50,0));
             chatTextField.requestFocus();
             Pane replyWrapperPane = new Pane();
             replyWrapperPane.setId("replyWrapper");
-            replyWrapperPane.getStyleClass().add("chat-reply-wrapper");
+            replyWrapperPane.getStyleClass().add("chat-wrapper");
             replyWrapperPane.setPrefWidth(846);
             replyWrapperPane.setPrefHeight(45);
             replyWrapperPane.setLayoutX(convertToTopLevelAnchorPaneCoordinates(chatTextField,chatTextField.getLayoutX(),chatTextField.getLayoutY()).getX());
             replyWrapperPane.setLayoutY(chatTextField.getScene().getHeight() - 94);
 
             Label replyWrapperExitLabel = new Label();
-            replyWrapperExitLabel.getStyleClass().add("chat-reply-wrapper-exit-label");
+            replyWrapperExitLabel.getStyleClass().add("chat-wrapper-exit-label");
             replyWrapperExitLabel.setPrefWidth(18);
             replyWrapperExitLabel.setPrefHeight(18);
             replyWrapperExitLabel.setLayoutX(806);
             replyWrapperExitLabel.setLayoutY(14);
 
             Label replyWrapperRow = new Label();
+            replyWrapperRow.setId("replyWrapperRow");
             replyWrapperRow.getStyleClass().add("chat-reply-wrapper-row-label");
             replyWrapperRow.setPrefWidth(26);
             replyWrapperRow.setPrefHeight(29);
@@ -951,14 +1072,14 @@ public class MainChatController {
             String messageUserName = UsersDataBase.getNameWithId((int)ChatsDataBase.getMessageWithId(messageId).get(1));
             Label replyWrapperName = new Label(messageUserName);
             replyWrapperName.setId("replyWrapperName");
-            replyWrapperName.getStyleClass().add("chat-reply-wrapper-name-label");
+            replyWrapperName.getStyleClass().add("chat-wrapper-name-label");
             replyWrapperName.setLayoutX(58);
             replyWrapperName.setLayoutY(7);
 
             String message = (String) ChatsDataBase.getMessageWithId(messageId).get(3);
             Label replyWrapperMessageText = new Label(message);
             replyWrapperMessageText.setId("replyWrapperMessage");
-            replyWrapperMessageText.getStyleClass().add("chat-reply-wrapper-message-label");
+            replyWrapperMessageText.getStyleClass().add("chat-wrapper-message-label");
             replyWrapperMessageText.setMaxWidth(720);
             replyWrapperMessageText.setLayoutX(58);
             replyWrapperMessageText.setLayoutY(24);
@@ -968,7 +1089,7 @@ public class MainChatController {
 
             replyWrapperExitLabel.setOnMouseClicked(clickedEvent -> {
                 mainAnchorPane.getChildren().remove(replyWrapperPane);
-                chatScrollPane.setPadding(new Insets(0,0,0,0));
+                chatScrollPane.setPadding(new Insets(0,0,8,0));
                 sendingMessageType = "text";
                 Pane newScrollDownButton = (Pane) chatBackgroundPane.lookup("#scrollDownButton");
                 if (newScrollDownButton != null) {
@@ -979,17 +1100,96 @@ public class MainChatController {
     }
     private void showEditWrapper(int messageId) throws SQLException {
         if (mainAnchorPane.lookup("#editWrapper") != null) {
-            Label editWrapperName = (Label) mainAnchorPane.lookup("#editWrapperName");
-            String name = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessageWithId(messageId).get(1));
-            Label editWrapperMessage = (Label) mainAnchorPane.lookup("#editWrapperMessage");
+            mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#editWrapper"));
+        } else  if (mainAnchorPane.lookup("#replyWrapper") != null) {
+            mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#replyWrapper"));
+        }
+        if (mainAnchorPane.lookup("#editWrapper") == null) {
+            sendingMessageType = "edit";
+            editedMessageId = messageId;
+            chatTextField.setText((String)ChatsDataBase.getMessageWithId(messageId).get(3));
+            Pane scrollDownButton = (Pane) chatBackgroundPane.lookup("#scrollDownButton");
+            if (scrollDownButton != null) scrollDownButton.setLayoutY(getAppropriateBottomButtonPosition());
+            chatScrollPane.setPadding(new Insets(0,0,50,0));
+            chatTextField.requestFocus();
+            chatTextField.deselect();
+            chatTextField.positionCaret(chatTextField.getText().length());
+
+            Pane editWrapperPane = new Pane();
+            editWrapperPane.setId("editWrapper");
+            editWrapperPane.getStyleClass().add("chat-wrapper");
+            editWrapperPane.setPrefWidth(846);
+            editWrapperPane.setPrefHeight(45);
+            editWrapperPane.setLayoutX(convertToTopLevelAnchorPaneCoordinates(chatTextField,chatTextField.getLayoutX(),chatTextField.getLayoutY()).getX());
+            editWrapperPane.setLayoutY(chatTextField.getScene().getHeight() - 94);
+
+            Label editWrapperExitLabel = new Label();
+            editWrapperExitLabel.getStyleClass().add("chat-wrapper-exit-label");
+            editWrapperExitLabel.setPrefWidth(18);
+            editWrapperExitLabel.setPrefHeight(18);
+            editWrapperExitLabel.setLayoutX(806);
+            editWrapperExitLabel.setLayoutY(14);
+
+            Label editWrapperSign = new Label();
+            editWrapperSign.setId("editWrapperSign");
+            editWrapperSign.getStyleClass().add("chat-wrapper-edit-label");
+            editWrapperSign.setPrefWidth(26);
+            editWrapperSign.setPrefHeight(29);
+            editWrapperSign.setLayoutX(21);
+            editWrapperSign.setLayoutY(13);
+
+            String messageUserName = UsersDataBase.getNameWithId((int)ChatsDataBase.getMessageWithId(messageId).get(1));
+            Label replyWrapperName = new Label(messageUserName);
+            replyWrapperName.setId("editWrapperName");
+            replyWrapperName.getStyleClass().add("chat-wrapper-name-label");
+            replyWrapperName.setLayoutX(58);
+            replyWrapperName.setLayoutY(7);
+
             String message = (String) ChatsDataBase.getMessageWithId(messageId).get(3);
+            Label editWrapperMessageText = new Label(message);
+            editWrapperMessageText.setId("editWrapperMessage");
+            editWrapperMessageText.getStyleClass().add("chat-wrapper-message-label");
+            editWrapperMessageText.setMaxWidth(720);
+            editWrapperMessageText.setLayoutX(58);
+            editWrapperMessageText.setLayoutY(24);
 
-            editWrapperName.setText(name);
-            editWrapperMessage.setText(message);
-        } else if (mainAnchorPane.lookup("#editWrapper") == null) {
+            editWrapperPane.getChildren().addAll(editWrapperExitLabel, editWrapperSign,replyWrapperName, editWrapperMessageText);
+            mainAnchorPane.getChildren().add(editWrapperPane);
 
+            editWrapperExitLabel.setOnMouseClicked(clickedEvent -> {
+                chatTextField.setText("");
+                mainAnchorPane.getChildren().remove(editWrapperPane);
+                chatScrollPane.setPadding(new Insets(0,0,8,0));
+                sendingMessageType = "text";
+                Pane newScrollDownButton = (Pane) chatBackgroundPane.lookup("#scrollDownButton");
+                if (newScrollDownButton != null) {
+                    newScrollDownButton.setLayoutY(getAppropriateBottomButtonPosition());
+                }
+            });
         }
     }
+    private void showDeleteMessageCaution(int messageId) throws SQLException {
+        Pane deleteMessageOverlayPane = new Pane();
+        deleteMessageOverlayPane.setStyle("-fx-background-color: #0000007C;");
+        deleteMessageOverlayPane.setLayoutX(0);
+        deleteMessageOverlayPane.setLayoutY(0);
+        deleteMessageOverlayPane.setPrefWidth(mainAnchorPane.getPrefWidth());
+        deleteMessageOverlayPane.setPrefHeight(mainAnchorPane.getPrefHeight());
 
+        mainAnchorPane.getChildren().add(deleteMessageOverlayPane);
+
+        deleteMessageOverlayPane.setOnMouseClicked(clickEvent -> {
+            mainAnchorPane.getChildren().remove(deleteMessageOverlayPane);
+        });
+    }
+    private int getPaddingTop(String messageType) {
+        return switch (messageType) {
+            case "text" -> 7;
+            case "reply_with_text" -> 45;
+            case "picture_with_picture_and_text" -> 7;
+            case "picture_with_text" -> 7;
+            default -> -1;
+        };
+    }
 
 }

@@ -162,14 +162,14 @@
 }
 /*-----------------------------------------------------------------------------*/
 /* Reply Wrapper */
-.chat-reply-wrapper {
+.chat-wrapper {
     -fx-background-color: #1D1C20;
 }
-.chat-reply-wrapper-exit-label {
+.chat-wrapper-exit-label {
     -fx-background-image: url("../elements/replyWrapperExitDefault.png");
     -fx-background-repeat: no-repeat;
 }
-.chat-reply-wrapper-exit-label:hover {
+.chat-wrapper-exit-label:hover {
     -fx-background-image: url("../elements/replyWrapperExitFocused.png");
     -fx-background-repeat: no-repeat;
 }
@@ -177,11 +177,15 @@
     -fx-background-image: url("../elements/replyRow.png");
     -fx-background-repeat: no-repeat;
 }
-.chat-reply-wrapper-name-label {
+.chat-wrapper-edit-label {
+    -fx-background-image: url("../elements/edit.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-wrapper-name-label {
     -fx-text-fill: #95B1E8;
     -fx-font-size: 12;
 }
-.chat-reply-wrapper-message-label {
+.chat-wrapper-message-label {
     -fx-text-fill: #CBCBCB;
     -fx-font-size: 11;
 }
