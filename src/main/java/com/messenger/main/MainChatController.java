@@ -7,11 +7,13 @@ import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -369,14 +371,14 @@ public class MainChatController {
                 }
 
                 replyWithTextReplyPane.setOnMouseClicked(mouseEvent -> {
-                    if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                    if (mouseEvent.getButton() == MouseButton.PRIMARY && (mainAnchorPane.lookup("#messageHBox"+replyMessageId) != null)) {
                         HBox repliedMessageHBox = (HBox) mainAnchorPane.lookup("#messageHBox"+replyMessageId);
                         selectRepliedMessageHBox(repliedMessageHBox);
                         scrollSmooth(getHBoxVvalue(repliedMessageHBox));
                     }
                 });
 
-                // right click on the message opens buttons (reply,edit,delete)
+                // right-click on the message opens buttons (reply,edit,delete)
                 replyWithTextMessagePane.setOnMouseClicked(mouseEvent -> {
                     if ((senderId == mainUserId) && (mouseEvent.getButton() == MouseButton.SECONDARY)) {
                         Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(replyWithTextMessagePane,mouseEvent.getX(),mouseEvent.getY());
@@ -413,7 +415,7 @@ public class MainChatController {
 
                 int messageId = addMessageToDB(messageText,null,-1,currentMessageFullDate,false);
                 List<List<Object>> allMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
-                String previousMessageDate = getMessageDate((String) allMessages.get(getIndexWithMessageId(allMessages,messageId)-1).get(6));
+                String previousMessageDate = isFirstMessage(allMessages,messageId) ? "0" : getMessageDate((String) allMessages.get(getIndexWithMessageId(allMessages,messageId)-1).get(6));
 
                 boolean isFirstMessage = isFirstMessage(allMessages,messageId);
                 boolean isResponseMessage = isResponseMessage(allMessages,messageId);
@@ -423,12 +425,14 @@ public class MainChatController {
 
                 List<Object> message = ChatsDataBase.getMessageWithId(messageId);
 
-                if (isNewDayMessage(getCurrentDate(),previousMessageDate)) {
+                if (isNewDayMessage(getCurrentDate(),previousMessageDate) && !isFirstMessage) {
                     setChatDateLabel(getCurrentLongDate());
                 }
+
                 loadMessage(message,avatarIsRequired);
                 mainContactMessageLabel.setText(messageText);
                 mainContactTimeLabel.setText(getCurrentTime());
+                scrollToBottom();
 
                 break;
 
@@ -518,7 +522,6 @@ public class MainChatController {
         }
 
 
-        scrollToBottom();
         chatTextField.setText("");
     }
 
@@ -1176,11 +1179,116 @@ public class MainChatController {
         deleteMessageOverlayPane.setPrefWidth(mainAnchorPane.getPrefWidth());
         deleteMessageOverlayPane.setPrefHeight(mainAnchorPane.getPrefHeight());
 
+        Pane deleteMessageBackgroundPane = new Pane();
+        deleteMessageBackgroundPane.getStyleClass().add("chat-delete-message-background");
+        deleteMessageBackgroundPane.setLayoutX(543);
+        deleteMessageBackgroundPane.setLayoutY(286);
+        deleteMessageBackgroundPane.setPrefWidth(246);
+        deleteMessageBackgroundPane.setPrefHeight(102);
+
+        Label deleteMessageLabel = new Label("You want to delete the message?");
+        deleteMessageLabel.getStyleClass().add("chat-delete-message-text");
+        deleteMessageLabel.setLayoutX(15);
+        deleteMessageLabel.setLayoutY(12);
+
+        Button deleteButton = new Button("Delete");
+        deleteButton.getStyleClass().add("chat-delete-button");
+        deleteButton.setLayoutX(177);
+        deleteButton.setLayoutY(68);
+        deleteButton.setPrefWidth(60);
+        deleteButton.setPrefHeight(15);
+
+        Button cancelButton = new Button("Cancel");
+        cancelButton.getStyleClass().add("chat-cancel-button");
+        cancelButton.setLayoutX(110);
+        cancelButton.setLayoutY(68);
+        cancelButton.setPrefWidth(60);
+        cancelButton.setPrefHeight(15);
+
+        deleteMessageBackgroundPane.getChildren().addAll(deleteMessageLabel,deleteButton,cancelButton);
+        deleteMessageOverlayPane.getChildren().add(deleteMessageBackgroundPane);
         mainAnchorPane.getChildren().add(deleteMessageOverlayPane);
+
+        showOpeningEffect(deleteMessageOverlayPane,deleteMessageBackgroundPane);
+
+        deleteMessageBackgroundPane.setOnMouseClicked(Event::consume);
 
         deleteMessageOverlayPane.setOnMouseClicked(clickEvent -> {
             mainAnchorPane.getChildren().remove(deleteMessageOverlayPane);
         });
+
+        cancelButton.setOnMouseClicked(clickEvent -> {
+            mainAnchorPane.getChildren().remove(deleteMessageOverlayPane);
+        });
+
+        Platform.runLater(() -> {
+            deleteMessageOverlayPane.getScene().getStylesheets().add(getClass().getResource("/main/css/MainChat.css").toExternalForm());
+        });
+
+        deleteButton.setOnMouseClicked(clickEvent -> {
+            try {
+                int messageChatIndex = getMessageIndexWithId(messageId);
+                List<List<Object>> allMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
+
+                boolean isTheOnlyOneMessage = ChatsDataBase.getAllMessages(mainUserId,contactId).size() == 1;
+                boolean isTheLastMessageWithDateLabel = (ChatsDataBase.getLastMessageId(mainUserId,contactId) == messageId) && (chatVBox.getChildren().get(messageChatIndex-1) instanceof Label);
+                boolean isBetweenDateLabels = !isTheOnlyOneMessage && !isTheLastMessageWithDateLabel &&
+                        (chatVBox.getChildren().get(messageChatIndex-1) instanceof Label) && (chatVBox.getChildren().get(messageChatIndex+1) instanceof Label);
+                boolean dateLabelRemoveRequired = isTheOnlyOneMessage || isTheLastMessageWithDateLabel || isBetweenDateLabels;
+
+                if (dateLabelRemoveRequired) {
+                    chatVBox.getChildren().remove(messageChatIndex-1);
+                }
+
+                if (isTheOnlyOneMessage) {
+                    setChatCurrentDateLabel();
+                }
+
+                if (ChatsDataBase.getLastMessageId(mainUserId,contactId) == messageId) {
+                    int previousMessageId = (int) allMessages.get(getIndexWithMessageId(allMessages,messageId) - 1).get(0);
+                    changeLastContactMessageAndTime(previousMessageId);
+                }
+
+                if (!isTheOnlyOneMessage && !(ChatsDataBase.getLastMessageId(mainUserId,contactId) == messageId)) {
+                    int previousMessageId = (int) allMessages.get(getIndexWithMessageId(allMessages,messageId)-1).get(0);
+                    boolean isFirstMessage = isFirstMessage(allMessages,previousMessageId);
+                    boolean isResponseMessage = isResponseMessage(allMessages,previousMessageId);
+                    boolean isAfterOneHourMessage = isAfterOneHourMessage(allMessages,previousMessageId);
+                    boolean avatarRequired =  isFirstMessage || isResponseMessage || isAfterOneHourMessage;
+
+                    if (avatarRequired) {
+                        System.out.println("avatar is required");
+                        Label avatarLabel = new Label();
+                        sendAvatar(avatarLabel,mainUserId);
+                        HBox messageHBox = (HBox) chatVBox.lookup("#messageHBox")
+                        messageHBox.getChildren().add(avatarLabel);
+                        HBox.setMargin(avatarLabel, new Insets(0, 25, 0, 0));
+                        HBox.setMargin(messagePane, new Insets(0, 8, 0, 0));
+
+                    }
+                }
+
+                ChatsDataBase.deleteMessage(messageId);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+            chatVBox.getChildren().remove(mainAnchorPane.lookup("#messageHBox"+messageId));
+            mainAnchorPane.getChildren().remove(deleteMessageOverlayPane);
+        });
+    }
+    private void showOpeningEffect(Pane overlay,Pane background) {
+        // Appearing time
+        FadeTransition FadeIn = new FadeTransition(Duration.millis(180),overlay);
+        FadeIn.setFromValue(0);
+        FadeIn.setToValue(1);
+        FadeIn.play();
+
+        // Appearing move to left
+        TranslateTransition translateIn = new TranslateTransition(Duration.millis(180), background);
+        translateIn.setFromX(0);
+        translateIn.setToX(-35);
+        translateIn.play();
     }
     private int getPaddingTop(String messageType) {
         return switch (messageType) {
@@ -1190,6 +1298,22 @@ public class MainChatController {
             case "picture_with_text" -> 7;
             default -> -1;
         };
+    }
+    private int getMessageIndexWithId(int messageId) {
+        for (int i = 0;i < chatVBox.getChildren().size(); i++) {
+            if (chatVBox.getChildren().get(i).getId() != null && chatVBox.getChildren().get(i).getId().contains(String.valueOf(messageId))) return i;
+        }
+        return -1;
+    }
+    private void changeLastContactMessageAndTime(int messageId) throws SQLException {
+        List<Object> message = ChatsDataBase.getMessageWithId(messageId);
+        String messageType = getTypeOfMessage(message);
+        if (messageType.contains("text")) {
+            mainContactMessageLabel.setText((String) message.get(3));
+            mainContactTimeLabel.setText(getMessageHours((String) message.get(6)));
+            System.out.println(true);
+        }
+        // TODO
     }
 
 }

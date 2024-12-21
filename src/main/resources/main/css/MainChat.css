@@ -189,6 +189,42 @@
     -fx-text-fill: #CBCBCB;
     -fx-font-size: 11;
 }
+.chat-delete-message-background {
+    -fx-background-color: #1D1C20;
+    -fx-background-radius: 6;
+}
+.chat-delete-message-text {
+    -fx-text-fill: white;
+    -fx-font-size: 14;
+}
+.chat-delete-button {
+    -fx-background-color: #C12727;
+    -fx-background-radius: 6;
+    -fx-font-size: 12;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+.chat-delete-button:hover {
+    -fx-background-color: #D83A3A;
+}
+.chat-delete-button:pressed {
+    -fx-background-color: #C12727;
+    -fx-text-fill: #F8C1C1;
+}
+.chat-cancel-button {
+    -fx-background-color: #2C2B30;
+    -fx-background-radius: 6;
+    -fx-font-size: 12;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+.chat-cancel-button:hover {
+    -fx-background-color: #413F49;
+}
+.chat-cancel.button:pressed {
+    -fx-background-color: #2C2B30;
+    -fx-text-fill: #909090;
+}
 /*-----------------------------------------------------------------------------*/
 /* Scroll Down Button */
 .chat-scroll-down-background {

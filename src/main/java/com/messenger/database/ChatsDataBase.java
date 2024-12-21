@@ -162,5 +162,14 @@ public class ChatsDataBase {
             preparedStatement.executeUpdate();
         }
     }
+    public static void deleteMessage(int messageId) throws SQLException {
+        String statement = "DELETE FROM chats WHERE message_id = ?";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,messageId);
+            preparedStatement.executeUpdate();
+        }
+    }
 
 }
