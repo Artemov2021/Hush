@@ -6,6 +6,7 @@ import com.messenger.design.ScrollPaneEffect;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
+import javafx.scene.shape.Rectangle;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -25,11 +26,16 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
+import javafx.scene.Cursor;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -64,9 +70,13 @@ public class MainChatController {
     private Pane mainContactPane;
     private Label mainContactMessageLabel;
     private Label mainContactTimeLabel;
+
     private String sendingMessageType = "text"; // the default type of the message is always text
     private int editedMessageId = -1;
     private int repliedMessageId = -1;
+
+    private String pathToPicture = "";
+    private String messageToThePicture = "";
 
 
     // set main value
@@ -412,8 +422,11 @@ public class MainChatController {
                         showReplyMessageButton(anchorPaneScaleX,anchorPaneScaleY,messageId);
                     }
                 });
-
+                setHoverCursorToHand(replyWithTextReplyPane);
                 break;
+
+            case "picture":
+                // TODO
         }
 
 
@@ -425,7 +438,7 @@ public class MainChatController {
 
     // chat message sending
     @FXML
-    public void sendMessage() throws SQLException, ExecutionException, InterruptedException {
+    public void sendMessage() throws SQLException, ExecutionException, InterruptedException, IOException {
         String currentMessageFullDate = getCurrentFullDate();
         switch (sendingMessageType) {
             case "text":
@@ -456,7 +469,37 @@ public class MainChatController {
 
                 break;
 
-            case "edit":
+            case "picture":
+
+                if (pathToPicture.isEmpty()) return;
+                int messageId1 = addMessageToDB(null,convertPictureIntoByte(pathToPicture),-1,currentMessageFullDate,false);
+
+                List<List<Object>> allMessages1 = ChatsDataBase.getAllMessages(mainUserId,contactId);
+                String previousMessageDate1 = isFirstMessage(allMessages1,messageId1) ? "0" : getMessageDate((String) allMessages1.get(getIndexWithMessageId(allMessages1,messageId1)-1).get(6));
+
+                boolean isFirstMessage1 = isFirstMessage(allMessages1,messageId1);
+                boolean isResponseMessage1 = isResponseMessage(allMessages1,messageId1);
+                boolean isAfterOneHourMessage1 = isAfterOneHourMessage(allMessages1,messageId1);
+                boolean isNewDayMessage1 = isNewDayMessage(getCurrentDate(),previousMessageDate1);
+                boolean avatarIsRequired1 = isFirstMessage1 || isResponseMessage1 || isAfterOneHourMessage1 || isNewDayMessage1;
+
+                List<Object> message1 = ChatsDataBase.getMessageWithId(messageId1);
+
+                if (isNewDayMessage(getCurrentDate(),previousMessageDate1) && !isFirstMessage1) {
+                    setChatDateLabel(getCurrentLongDate());
+                }
+
+                loadMessage(message1,avatarIsRequired1);
+                mainContactMessageLabel.setText("Picture");
+                mainContactMessageLabel.getStyleClass().clear();
+                mainContactMessageLabel.setStyle("-fx-text-fill: white;");
+
+                mainContactTimeLabel.setText(getCurrentTime());
+                scrollToBottom();
+
+                break;
+
+            case "edit_with_text":
 
                 String editedMessageText = chatTextField.getText().trim();
                 if (editedMessageText.isEmpty()) return;
@@ -710,6 +753,7 @@ public class MainChatController {
             fadeOut.play();
             fadeOut.setOnFinished(event1 -> chatBackgroundPane.getChildren().remove(scrollDownBackground));
         });
+        setHoverCursorToHand(scrollDownBackground);
     }
     private int getAppropriateBottomButtonPosition() {
         return switch (sendingMessageType) {
@@ -1019,6 +1063,8 @@ public class MainChatController {
             }
         });
 
+        setHoverCursorToHand(replyButtonPane,editButtonPane,deleteButtonPane);
+
         Platform.runLater(() -> {
             messageButtonsOverlayPane.getScene().getStylesheets().add(getClass().getResource("/main/css/MainChat.css").toExternalForm());
         });
@@ -1141,6 +1187,7 @@ public class MainChatController {
                     newScrollDownButton.setLayoutY(getAppropriateBottomButtonPosition());
                 }
             });
+            setHoverCursorToHand(replyWrapperExitLabel);
         }
     }
     private void showEditWrapper(int messageId) throws SQLException {
@@ -1150,7 +1197,7 @@ public class MainChatController {
             mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#replyWrapper"));
         }
         if (mainAnchorPane.lookup("#editWrapper") == null) {
-            sendingMessageType = "edit";
+            sendingMessageType = "edit_with_text";
             editedMessageId = messageId;
             chatTextField.setText((String)ChatsDataBase.getMessageWithId(messageId).get(3));
             Pane scrollDownButton = (Pane) chatBackgroundPane.lookup("#scrollDownButton");
@@ -1211,6 +1258,7 @@ public class MainChatController {
                     newScrollDownButton.setLayoutY(getAppropriateBottomButtonPosition());
                 }
             });
+            setHoverCursorToHand(editWrapperExitLabel);
         }
     }
     private void showDeleteMessageCaution(int messageId) throws SQLException {
@@ -1262,6 +1310,8 @@ public class MainChatController {
         cancelButton.setOnMouseClicked(clickEvent -> {
             mainAnchorPane.getChildren().remove(deleteMessageOverlayPane);
         });
+
+        setHoverCursorToHand(deleteButton,cancelButton);
 
         Platform.runLater(() -> {
             deleteMessageOverlayPane.getScene().getStylesheets().add(getClass().getResource("/main/css/MainChat.css").toExternalForm());
@@ -1375,21 +1425,24 @@ public class MainChatController {
         }
         // TODO
     }
-    private void setImageToLabel(String imagePath, Label label,int width) {
-        System.out.println(imagePath);
+    private void setImageToLabel(String imagePath, Label label, int width, int height) {
         // Load the original image
-        Image originalImage = new Image("file:"+imagePath);
+        Image originalImage = new Image("file:" + imagePath);
 
         // Calculate the crop area
-        double cropHeight = (width / 1.15);
-        double cropWidth = width;
-        System.out.println("width: "+cropWidth+" height: "+cropHeight);
-        double offsetY = (originalImage.getHeight() - cropHeight) / 2;
+        double cropWidth = (width < height) ? width : height;
+        double cropHeight = (width < height) ? (width / 1.15) : (height / 1.15);
+        double offsetX = (originalImage.getWidth() - cropWidth) / 2; // Center horizontally
+        double offsetY = (originalImage.getHeight() - cropHeight) / 2; // Center vertically
 
-        // Crop the image to 936x814
+        // Ensure the crop area is within bounds
+        cropWidth = Math.min(cropWidth, originalImage.getWidth());
+        cropHeight = Math.min(cropHeight, originalImage.getHeight());
+
+        // Crop the image
         WritableImage croppedImage = new WritableImage(
                 originalImage.getPixelReader(),
-                0, (int) offsetY, (int) cropWidth, (int) cropHeight
+                (int) offsetX, (int) offsetY, (int) cropWidth, (int) cropHeight
         );
 
         // Resize the image to fit the label size (276x240)
@@ -1400,8 +1453,20 @@ public class MainChatController {
 
         // Set the image view to the label
         label.setGraphic(imageView);
-        imageView.setStyle("-fx-background-radius: 12;");
-        label.setStyle("-fx-background-radius: 12;");
+
+        // Apply rounded corners to the label
+        label.setStyle(
+                "-fx-background-color: transparent;" + // Set background color for visibility
+                        "-fx-background-radius: 12;" +  // Apply rounded corners
+                        "-fx-border-radius: 12;" +      // Ensure border matches the background radius
+                        "-fx-border-color: transparent;" // Optional: Border color can be set or made transparent
+        );
+
+        // Clip the label to maintain rounded corners effect
+        Rectangle clip = new Rectangle(label.getPrefWidth(), label.getPrefHeight());
+        clip.setArcWidth(20); // Double the radius for a smoother effect
+        clip.setArcHeight(20);
+        label.setClip(clip);
     }
     private void showSendPictureWindow(String path,int width,int height) {
         Pane sendingPictureOverlayPane = new Pane();
@@ -1419,12 +1484,18 @@ public class MainChatController {
         sendingPictureBackgroundPane.setPrefHeight(348);
 
         Label pictureLabel = new Label();
-        //pictureLabel.setStyle("-fx-background-color: #2C2B30; -fx-background-radius: 8");
         pictureLabel.setLayoutX(12);
         pictureLabel.setLayoutY(12);
         pictureLabel.setPrefWidth(276);
         pictureLabel.setPrefHeight(240);
-        setImageToLabel(path,pictureLabel,width);
+        setImageToLabel(path,pictureLabel,width,height);
+
+        Label editeLabel = new Label();
+        editeLabel.getStyleClass().add("chat-send-picture-edite");
+        editeLabel.setLayoutX(258);
+        editeLabel.setLayoutY(17);
+        editeLabel.setPrefWidth(26);
+        editeLabel.setPrefHeight(26);
 
         Label sendPictureButton = new Label();
         sendPictureButton.getStyleClass().add("chat-send-picture");
@@ -1447,15 +1518,67 @@ public class MainChatController {
         sendPictureTextField.setLayoutY(265);
         sendPictureTextField.setPrefWidth(276);
         sendPictureTextField.setPrefHeight(33);
-        Platform.runLater(sendPictureTextField::requestFocus);
+        Platform.runLater(() -> {
+            sendPictureTextField.requestFocus();
+            if (!chatTextField.getText().isEmpty()) {
+                sendPictureTextField.setText(chatTextField.getText().trim());
+                sendPictureTextField.deselect();
+                sendPictureTextField.positionCaret(chatTextField.getText().length());
+                chatTextField.setText("");
+            }
+        });
 
-
-        sendingPictureBackgroundPane.getChildren().addAll(pictureLabel,sendPictureButton,sendPictureCancelButton,sendPictureTextField);
+        sendingPictureBackgroundPane.getChildren().addAll(pictureLabel,sendPictureButton,sendPictureCancelButton,sendPictureTextField,editeLabel);
         sendingPictureOverlayPane.getChildren().add(sendingPictureBackgroundPane);
         mainAnchorPane.getChildren().add(sendingPictureOverlayPane);
+        setHoverCursorToHand(sendPictureCancelButton,sendPictureButton,editeLabel);
 
         sendPictureCancelButton.setOnMouseClicked(clickEvent -> {
             showFastCloseEffect(sendingPictureOverlayPane,sendingPictureBackgroundPane);
+        });
+
+        editeLabel.setOnMouseClicked(clickEvent -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select an image");
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image Files","*.png","*.jpg"));
+
+            File selectedFile = fileChooser.showOpenDialog(mainAnchorPane.getScene().getWindow());
+
+            if (selectedFile != null) {
+                Image image = new Image(selectedFile.toURI().toString());
+
+                double newWidth = image.getWidth();
+                double newHeight = image.getHeight();
+
+                System.out.println(newWidth);
+                System.out.println(newHeight);
+
+                setImageToLabel(selectedFile.getPath(),pictureLabel,(int)newWidth,(int)newHeight);
+            }
+        });
+
+        sendPictureButton.setOnMouseClicked(clickEvent -> {
+            switch (sendingMessageType) {
+                case "text":
+                    if (!sendPictureTextField.getText().trim().isEmpty()) {
+                        sendingMessageType = "picture_with_text";
+                    } else {
+                        sendingMessageType = "picture";
+                    }
+                case "reply_with_text":
+                    if (!sendPictureTextField.getText().trim().isEmpty()) {
+                        sendingMessageType = "reply_with_picture_and_text";
+                    } else {
+                        sendingMessageType = "reply_with_picture";
+                    }
+                case "edit_with_text":
+                    if (!sendPictureTextField.getText().trim().isEmpty()) {
+                        sendingMessageType = "edit_with_picture_and_text";
+                    } else {
+                        sendingMessageType = "edit_with_picture";
+                    }
+            }
+            System.out.println(sendingMessageType);
         });
 
         Platform.runLater(() -> {
@@ -1472,5 +1595,15 @@ public class MainChatController {
             mainAnchorPane.getChildren().remove(overlay);
         });
         fadeOut.play();
+    }
+    private void setHoverCursorToHand(Node... elements) {
+        for (Node element : elements) {
+            element.setOnMouseEntered(event -> element.setCursor(Cursor.HAND));
+            element.setOnMouseExited(event -> element.setCursor(Cursor.DEFAULT));
+        }
+    }
+    private byte[] convertPictureIntoByte(String path) throws IOException {
+        Path pathObject = Paths.get(path);
+        return Files.readAllBytes(pathObject);
     }
 }

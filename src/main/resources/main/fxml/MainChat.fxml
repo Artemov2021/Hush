@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
@@ -24,9 +25,18 @@
             <TextField fx:id="chatTextField" layoutY="610.0" onAction="#sendMessage" prefHeight="49.0" prefWidth="846.0" promptText="Write a message...." styleClass="chat-message-text-field" />
             <Label fx:id="chatMainAvatarLabel" layoutX="27.0" layoutY="18.0" prefHeight="36.0" prefWidth="36.0" styleClass="chat-avatar-label" />
             <Label fx:id="chatMainNameLabel" layoutX="71.0" layoutY="23.0" prefHeight="20.0" prefWidth="253.0" styleClass="chat-name-label" text="Name label" />
-            <Label fx:id="chatAddPictureLabel" layoutX="10.0" layoutY="619.0" onMouseClicked="#sendPicture" prefHeight="26.0" prefWidth="42.0" styleClass="chat-add-picture-label" />
-            <Label fx:id="chatSendLabel" layoutX="799.0" layoutY="618.0" onMouseClicked="#sendMessage" prefHeight="26.0" prefWidth="42.0" styleClass="chat-send-label" />
-            <Label layoutX="800.0" layoutY="19.0" prefHeight="26.0" prefWidth="36.0" styleClass="chat-message-lupe" />
+            <Label fx:id="chatAddPictureLabel" layoutX="10.0" layoutY="619.0" onMouseClicked="#sendPicture" prefHeight="26.0" prefWidth="42.0" styleClass="chat-add-picture-label">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor></Label>
+            <Label fx:id="chatSendLabel" layoutX="799.0" layoutY="618.0" onMouseClicked="#sendMessage" prefHeight="26.0" prefWidth="42.0" styleClass="chat-send-label">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor></Label>
+            <Label layoutX="800.0" layoutY="19.0" prefHeight="26.0" prefWidth="36.0" styleClass="chat-message-lupe">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor></Label>
          </children>
       </Pane>
    </children>

@@ -272,5 +272,13 @@
     -fx-prompt-text-fill: #8A8893;
     -fx-text-fill: white;
 }
+.chat-send-picture-edite {
+    -fx-background-image: url("../elements/sendPictureEdite.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-send-picture-edite:pressed {
+    -fx-background-image: url("../elements/sendPictureEditeFocused.png");
+    -fx-background-repeat: no-repeat;
+}
 
 
