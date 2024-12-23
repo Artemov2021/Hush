@@ -132,6 +132,10 @@
     -fx-text-fill: #7E7D82;
     -fx-font-size: 10;
 }
+.chat-message-reply-deleted {
+    -fx-text-fill: #7E7D82;
+    -fx-font-size: 12;
+}
 .chat-message-buttons-background-pane {
     -fx-background-color: #211F26;
     -fx-background-radius: 3;
@@ -239,6 +243,34 @@
     -fx-background-image: url("../elements/arrowFocused.png");
     -fx-background-repeat: no-repeat;
 }
-
+/*-----------------------------------------------------------------------------*/
+/* Send Picture */
+.chat-send-picture {
+    -fx-background-image: url("../elements/sendPictureDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-send-picture:pressed {
+    -fx-background-image: url("../elements/sendPictureFocused.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-send-picture-cancel {
+    -fx-background-image: url("../elements/sendPictureCancelDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-send-picture-cancel:hover {
+    -fx-background-image: url("../elements/sendPictureCancelHover.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-send-picture-cancel:pressed {
+    -fx-background-image: url("../elements/sendPictureCancelFocused.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-send-picture-field {
+    -fx-background-color: #2C2B30;
+    -fx-background-radius: 5;
+    -fx-border-color: transparent;
+    -fx-prompt-text-fill: #8A8893;
+    -fx-text-fill: white;
+}
 
 

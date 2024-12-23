@@ -171,5 +171,39 @@ public class ChatsDataBase {
             preparedStatement.executeUpdate();
         }
     }
+    public static boolean messageExists(int mainUserId,int contactId,int messageId) throws SQLException {
+        String statement = "SELECT * FROM chats WHERE message_id = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))";
 
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,messageId);
+            preparedStatement.setInt(2,mainUserId);
+            preparedStatement.setInt(3,contactId);
+            preparedStatement.setInt(4,contactId);
+            preparedStatement.setInt(5,mainUserId);
+            ResultSet result = preparedStatement.executeQuery();
+            if (result.next()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public static List<Integer> getRepliedMessageIds(int mainUserId,int contactId,int messageId) throws SQLException {
+        List<Integer> ids = new ArrayList<>();
+        String statement = "SELECT message_id FROM chats WHERE reply_message_id = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,messageId);
+            preparedStatement.setInt(2,mainUserId);
+            preparedStatement.setInt(3,contactId);
+            preparedStatement.setInt(4,contactId);
+            preparedStatement.setInt(5,mainUserId);
+            ResultSet result = preparedStatement.executeQuery();
+            while (result.next()) {
+                ids.add(result.getInt("message_id"));
+            }
+        }
+        return ids;
+    }
 }
