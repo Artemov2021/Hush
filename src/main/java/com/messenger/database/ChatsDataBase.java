@@ -33,6 +33,27 @@ public class ChatsDataBase {
         }
         return "";
     }
+    public static List<Object> getLastMessageWithId(int mainUserId,int contactId) throws SQLException {
+        List<Object> lastMessageWithId = new ArrayList<>();
+        String statement = "SELECT message,message_id FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id DESC LIMIT 1";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,mainUserId);
+            preparedStatement.setInt(2,contactId);
+            preparedStatement.setInt(3,mainUserId);
+            preparedStatement.setInt(4,contactId);
+            ResultSet result = preparedStatement.executeQuery();
+            if (result.next()) {
+                lastMessageWithId.add(result.getString("message"));
+                lastMessageWithId.add(result.getInt("message_id"));
+                return lastMessageWithId;
+            }
+        }
+        lastMessageWithId.add(null);
+        lastMessageWithId.add(-1);
+        return lastMessageWithId;
+    }
     public static String getLastMessageTime(int mainUserId,int contactId) throws SQLException {
         String statement = "SELECT message_time FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id DESC LIMIT 1";
 

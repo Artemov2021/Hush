@@ -28,9 +28,6 @@ import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import javafx.scene.Cursor;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -172,7 +169,8 @@ public class MainChatController {
 
     // chat message history
     private void loadChatHistory() throws SQLException, ExecutionException, InterruptedException {
-        boolean chatIsEmpty = ChatsDataBase.getLastMessage(mainUserId,contactId).isEmpty();
+        List<Object> lastMessage = ChatsDataBase.getLastMessageWithId(mainUserId,contactId);
+        boolean chatIsEmpty = (lastMessage.get(0) == null) && ((int)lastMessage.get(1) == -1);
         if (chatIsEmpty) {
             setChatCurrentDateLabel();
         } else {
@@ -247,6 +245,7 @@ public class MainChatController {
         int senderId = (int) message.get(1);
         String messageTime = getMessageHours((String) message.get(6));
         int replyMessageId = (int) message.get(5);
+        byte[] picture = (byte[]) message.get(4);
 
         HBox messageHBox = new HBox();
         messageHBox.setId("messageHBox"+messageId);
@@ -426,7 +425,25 @@ public class MainChatController {
                 break;
 
             case "picture":
-                // TODO
+
+                Label pictureLabel = new Label();
+                pictureLabel.setId("messageLabel"+messageId);
+
+                setPictureToLabel(picture,pictureLabel);
+                messageHBox.getChildren().add(pictureLabel);
+                setHoverCursorToHand(pictureLabel);
+
+                if (avatarRequired) {
+                    setAppropriateAvatar(messageHBox,pictureLabel,senderId,messageId);
+                } else {
+                    HBox.setMargin(pictureLabel,(senderId == mainUserId) ? new Insets(0, 63, 0, 0) : new Insets(0, 0, 0, 63));
+                }
+
+                Platform.runLater(() -> {
+
+                });
+
+                break;
         }
 
 
@@ -472,6 +489,7 @@ public class MainChatController {
             case "picture":
 
                 if (pathToPicture.isEmpty()) return;
+
                 int messageId1 = addMessageToDB(null,convertPictureIntoByte(pathToPicture),-1,currentMessageFullDate,false);
 
                 List<List<Object>> allMessages1 = ChatsDataBase.getAllMessages(mainUserId,contactId);
@@ -496,6 +514,10 @@ public class MainChatController {
 
                 mainContactTimeLabel.setText(getCurrentTime());
                 scrollToBottom();
+
+                pathToPicture = "";
+
+                sendingMessageType = "text";
 
                 break;
 
@@ -555,21 +577,21 @@ public class MainChatController {
                 if (replyMessageText.isEmpty()) return;
 
                 int replyMessageId = addMessageToDB(replyMessageText,null,repliedMessageId,currentMessageFullDate,false);
-                List<List<Object>> allMessages1 = ChatsDataBase.getAllMessages(mainUserId,contactId);
-                String previousMessageDate1 = getMessageDate((String) allMessages1.get(getIndexWithMessageId(allMessages1,replyMessageId)-1).get(6));
+                List<List<Object>> allMessages2 = ChatsDataBase.getAllMessages(mainUserId,contactId);
+                String previousMessageDate2 = getMessageDate((String) allMessages2.get(getIndexWithMessageId(allMessages2,replyMessageId)-1).get(6));
 
-                boolean isFirstMessage1 = isFirstMessage(allMessages1,replyMessageId);
-                boolean isResponseMessage1 = isResponseMessage(allMessages1,replyMessageId);
-                boolean isAfterOneHourMessage1 = isAfterOneHourMessage(allMessages1,replyMessageId);
-                boolean isNewDayMessage1 = isNewDayMessage(getCurrentDate(), previousMessageDate1);
-                boolean avatarIsRequired1 = isFirstMessage1 || isResponseMessage1 || isAfterOneHourMessage1 || isNewDayMessage1;
+                boolean isFirstMessage2 = isFirstMessage(allMessages2,replyMessageId);
+                boolean isResponseMessage2 = isResponseMessage(allMessages2,replyMessageId);
+                boolean isAfterOneHourMessage2 = isAfterOneHourMessage(allMessages2,replyMessageId);
+                boolean isNewDayMessage2 = isNewDayMessage(getCurrentDate(), previousMessageDate2);
+                boolean avatarIsRequired2 = isFirstMessage2 || isResponseMessage2 || isAfterOneHourMessage2 || isNewDayMessage2;
 
                 List<Object> replyMessage = ChatsDataBase.getMessageWithId(replyMessageId);
 
-                if (isNewDayMessage(getCurrentDate(), previousMessageDate1)) {
+                if (isNewDayMessage(getCurrentDate(), previousMessageDate2)) {
                     setChatDateLabel(getCurrentLongDate());
                 }
-                loadMessage(replyMessage, avatarIsRequired1);
+                loadMessage(replyMessage, avatarIsRequired2);
                 mainContactMessageLabel.setText(replyMessageText);
                 mainContactTimeLabel.setText(getCurrentTime());
 
@@ -578,6 +600,7 @@ public class MainChatController {
                 }
 
                 chatScrollPane.setPadding(new Insets(0,0,8,0));
+
                 sendingMessageType = "text";
                 scrollToBottom();
 
@@ -826,7 +849,7 @@ public class MainChatController {
 
         return labelWidth;
     }
-    private void setAppropriateAvatar(HBox messageHBox,Pane messagePane, int senderId,int messageId) throws SQLException {
+    private void setAppropriateAvatar(HBox messageHBox,Node message, int senderId,int messageId) throws SQLException {
         Label avatarLabel = new Label();
         avatarLabel.setId("avatarLabel"+messageId);
         sendAvatar(avatarLabel, senderId);
@@ -834,12 +857,12 @@ public class MainChatController {
             // For your messages, avatar on the right side
             messageHBox.getChildren().add(avatarLabel);
             HBox.setMargin(avatarLabel, new Insets(0, 25, 0, 0));
-            HBox.setMargin(messagePane, new Insets(0, 8, 0, 0));
+            HBox.setMargin(message, new Insets(0, 8, 0, 0));
         } else {
             // For contact messages, avatar on the left side
             messageHBox.getChildren().add(0,avatarLabel);
             HBox.setMargin(avatarLabel, new Insets(0, 0, 0, 25));
-            HBox.setMargin(messagePane, new Insets(0, 0, 0, 8));
+            HBox.setMargin(message, new Insets(0, 0, 0, 8));
         }
     }
 
@@ -1328,36 +1351,38 @@ public class MainChatController {
                         (chatVBox.getChildren().get(messageChatIndex-1) instanceof Label) && (chatVBox.getChildren().get(messageChatIndex+1) instanceof Label);
                 boolean dateLabelRemoveRequired = isTheOnlyOneMessage || isTheLastMessageWithDateLabel || isBetweenDateLabels;
 
+
                 if (dateLabelRemoveRequired) {
                     chatVBox.getChildren().remove(messageChatIndex-1);
                 }
 
                 if (isTheOnlyOneMessage) {
                     setChatCurrentDateLabel();
-                }
+                    mainContactMessageLabel.setText("");
+                    mainContactTimeLabel.setText("");
+                } else if (isTheOnlyOneMessage) {
+                    int followedMessageId = (int) allMessages.get(getIndexWithMessageId(allMessages,messageId) + 1).get(0);
+                    changeLastContactMessageAndTime(followedMessageId);
 
-                if (ChatsDataBase.getLastMessageId(mainUserId,contactId) == messageId) {
-                    int previousMessageId = (int) allMessages.get(getIndexWithMessageId(allMessages,messageId) - 1).get(0);
-                    changeLastContactMessageAndTime(previousMessageId);
-                }
-
-                if (!isTheOnlyOneMessage && !(ChatsDataBase.getLastMessageId(mainUserId,contactId) == messageId)) {
                     int previousMessageId = (int) allMessages.get(getIndexWithMessageId(allMessages,messageId)+1).get(0);
                     allMessages.remove(getIndexWithMessageId(allMessages,messageId));
                     boolean isFirstMessage = isFirstMessage(allMessages,previousMessageId);
                     boolean isResponseMessage = isResponseMessage(allMessages,previousMessageId);
                     boolean isAfterOneHourMessage = isAfterOneHourMessage(allMessages,previousMessageId);
                     boolean avatarRequired =  isFirstMessage || isResponseMessage || isAfterOneHourMessage;
-                    boolean hasAlreadyAvatar = chatVBox.lookup("#avatarLabel"+messageId) != null;
+                    boolean hasAlreadyAvatar = chatVBox.lookup("#avatarLabel"+previousMessageId) != null;
+                    System.out.println("prev message needs avatar: "+avatarRequired);
+                    System.out.println("has already avatar: "+hasAlreadyAvatar);
 
                     if (avatarRequired && !hasAlreadyAvatar) {
                         Label avatarLabel = new Label();
                         sendAvatar(avatarLabel,mainUserId);
                         HBox messageHBox = (HBox) chatVBox.lookup("#messageHBox"+previousMessageId);
                         Pane messagePane = (Pane) chatVBox.lookup("#messagePane"+previousMessageId);
+                        Label pictureLabel = (Label) chatVBox.lookup("#messageLabel"+previousMessageId);
                         messageHBox.getChildren().add(avatarLabel);
                         HBox.setMargin(avatarLabel, new Insets(0, 25, 0, 0));
-                        HBox.setMargin(messagePane, new Insets(0, 8, 0, 0));
+                        HBox.setMargin((messagePane == null ? pictureLabel : messagePane), new Insets(0, 8, 0, 0));
                     }
                 }
 
@@ -1425,7 +1450,7 @@ public class MainChatController {
         }
         // TODO
     }
-    private void setImageToLabel(String imagePath, Label label, int width, int height) {
+    private void setPreviewImageToLabel(String imagePath, Label label, int width, int height) {
         // Load the original image
         Image originalImage = new Image("file:" + imagePath);
 
@@ -1488,7 +1513,7 @@ public class MainChatController {
         pictureLabel.setLayoutY(12);
         pictureLabel.setPrefWidth(276);
         pictureLabel.setPrefHeight(240);
-        setImageToLabel(path,pictureLabel,width,height);
+        setPreviewImageToLabel(path,pictureLabel,width,height);
 
         Label editeLabel = new Label();
         editeLabel.getStyleClass().add("chat-send-picture-edite");
@@ -1553,11 +1578,12 @@ public class MainChatController {
                 System.out.println(newWidth);
                 System.out.println(newHeight);
 
-                setImageToLabel(selectedFile.getPath(),pictureLabel,(int)newWidth,(int)newHeight);
+                setPreviewImageToLabel(selectedFile.getPath(),pictureLabel,(int)newWidth,(int)newHeight);
             }
         });
 
         sendPictureButton.setOnMouseClicked(clickEvent -> {
+            System.out.println(sendingMessageType);
             switch (sendingMessageType) {
                 case "text":
                     if (!sendPictureTextField.getText().trim().isEmpty()) {
@@ -1565,20 +1591,29 @@ public class MainChatController {
                     } else {
                         sendingMessageType = "picture";
                     }
+                    break;
                 case "reply_with_text":
                     if (!sendPictureTextField.getText().trim().isEmpty()) {
                         sendingMessageType = "reply_with_picture_and_text";
                     } else {
                         sendingMessageType = "reply_with_picture";
                     }
+                    break;
                 case "edit_with_text":
                     if (!sendPictureTextField.getText().trim().isEmpty()) {
                         sendingMessageType = "edit_with_picture_and_text";
                     } else {
                         sendingMessageType = "edit_with_picture";
                     }
+                    break;
             }
             System.out.println(sendingMessageType);
+            pathToPicture = path;
+            try {
+                sendMessage();
+            } catch (SQLException | ExecutionException | InterruptedException | IOException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         Platform.runLater(() -> {
@@ -1605,5 +1640,41 @@ public class MainChatController {
     private byte[] convertPictureIntoByte(String path) throws IOException {
         Path pathObject = Paths.get(path);
         return Files.readAllBytes(pathObject);
+    }
+    private void setPictureToLabel(byte[] picture,Label pictureLabel) {
+        ByteArrayInputStream originalPictureInputStream = new ByteArrayInputStream(picture);
+        Image originalImage = new Image(originalPictureInputStream);
+
+        double originalPictureWidth = originalImage.getWidth();
+        double originalPictureHeight = originalImage.getHeight();
+        double originalPictureRatio = originalPictureWidth / originalPictureHeight;
+
+        int pictureWidth = 349;
+        int pictureHeight = (int) (pictureWidth / originalPictureRatio);
+        pictureLabel.setPrefWidth(pictureWidth);
+        pictureLabel.setPrefHeight(pictureHeight);
+
+
+        ImageView imageView = new ImageView(originalImage);
+        imageView.setFitWidth(pictureWidth);
+        imageView.setFitHeight(pictureHeight);
+        imageView.setPreserveRatio(true); // Maintain aspect ratio while resizing
+
+        // Set the image view to the label
+        pictureLabel.setGraphic(imageView);
+
+        // Apply rounded corners to the label
+        pictureLabel.setStyle(
+                "-fx-background-color: transparent;" + // Set background color for visibility
+                        "-fx-background-radius: 12;" +  // Apply rounded corners
+                        "-fx-border-radius: 12;" +      // Ensure border matches the background radius
+                        "-fx-border-color: transparent;" // Optional: Border color can be set or made transparent
+        );
+
+        // Clip the label to maintain rounded corners effect
+        Rectangle clip = new Rectangle(pictureLabel.getPrefWidth(), pictureLabel.getPrefHeight());
+        clip.setArcWidth(24); // Double the radius for a smoother effect
+        clip.setArcHeight(24);
+        pictureLabel.setClip(clip);
     }
 }

@@ -67,8 +67,25 @@ public class MainContact {
             mainContactAvatarLabel.setClip(clip);
         }
     }
-    public void setMessage(String message) {
-        mainContactMessageLabel.setText(message);
+    public void setMessage(String message,int messageId) {
+        mainContactMessageLabel.getStyleClass().clear();
+
+        // if there is no last message and its id ( chat is empty )
+        if (message == null && messageId == -1) {
+            mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
+            mainContactMessageLabel.setText("");
+
+        // if there is no message, but there is message id ( means it is a picture )
+        } else if (message == null && messageId != -1) {
+            mainContactMessageLabel.setStyle("-fx-text-fill: white;");
+            mainContactMessageLabel.setText("Picture");
+
+        // otherwise ( if there is last message )
+        } else {
+            mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
+            mainContactMessageLabel.setText(message);
+        }
+
     }
     public void setTime(String time) {
         String pattern = "\\d\\d:\\d\\d$";
@@ -86,6 +103,7 @@ public class MainContact {
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
     }
+
     @FXML
     public void showChat() throws IOException, SQLException, ExecutionException, InterruptedException {
         int currentUserId = Integer.parseInt(mainContactPane.getId().split("mainContactPane")[1]);
@@ -126,10 +144,6 @@ public class MainContact {
         mainContactPane.getStyleClass().clear();
         mainContactPane.getStyleClass().add("contact-background-pane-focused");
     }
-
-
-
-
 
 
 }

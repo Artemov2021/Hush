@@ -10,6 +10,7 @@ import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 
 public class MainContactList {
@@ -39,13 +40,13 @@ public class MainContactList {
 
         MainContact contactPane = fxmlLoader.getController();
         String contactName = UsersDataBase.getNameWithId(contactId);
-        String lastMessage = ChatsDataBase.getLastMessage(mainUserId,contactId);
+        List<Object> lastMessageWithId = ChatsDataBase.getLastMessageWithId(mainUserId,contactId);
         String lastMessageTime = ChatsDataBase.getLastMessageTime(mainUserId,contactId);
 
         contactPane.setMainUserId(mainUserId);
         contactPane.setName(contactName);
         contactPane.setAvatar(contactId);
-        contactPane.setMessage(lastMessage);
+        contactPane.setMessage((String)lastMessageWithId.get(0),(int)lastMessageWithId.get(1));
         contactPane.setTime(lastMessageTime);
         contactPane.setPaneId(contactId);
         contactPane.setMainAnchorPane(mainAnchorPane);
