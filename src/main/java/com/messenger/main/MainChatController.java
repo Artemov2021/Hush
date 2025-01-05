@@ -24,10 +24,12 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import javafx.scene.Cursor;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -368,16 +370,42 @@ public class MainChatController {
                     replyWithTextReplyName.setLayoutX(replyWithTextReplyNameLeftMargin);
                     replyWithTextReplyName.setLayoutY(replyWithTextReplyNameTopMargin);
 
-                    int replyWithTextReplyMessageLeftMargin = 5;
-                    int replyWithTextReplyMessageTopMargin = 15;
-                    Label replyWithTextReplyMessage = new Label((String) ChatsDataBase.getMessageWithId(replyMessageId).get(3));
-                    replyWithTextReplyMessage.setId("replyMessageLabel"+messageId);
-                    replyWithTextReplyMessage.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextReplyMessageLeftMargin * 2));
-                    replyWithTextReplyMessage.getStyleClass().add("chat-message-reply-message");
-                    replyWithTextReplyMessage.setLayoutX(replyWithTextReplyMessageLeftMargin);
-                    replyWithTextReplyMessage.setLayoutY(replyWithTextReplyMessageTopMargin);
 
-                    replyWithTextReplyPane.getChildren().addAll(replyWithTextReplyName,replyWithTextReplyMessage);
+                    if (replyMessageId != -1 && ChatsDataBase.getMessageWithId(replyMessageId).get(4) != null) {
+                        int replyWithTextReplyPhotoSymbolLeftMargin = 5;
+                        int replyWithTextReplyPhotoSymbolTopMargin = 17;
+                        Label replyWithTextReplyPhotoSymbolLabel = new Label();
+                        replyWithTextReplyPhotoSymbolLabel.getStyleClass().add("chat-reply-photo-symbol");
+                        replyWithTextReplyPhotoSymbolLabel.setPrefWidth(13);
+                        replyWithTextReplyPhotoSymbolLabel.setPrefHeight(13);
+                        replyWithTextReplyPhotoSymbolLabel.setLayoutX(replyWithTextReplyPhotoSymbolLeftMargin);
+                        replyWithTextReplyPhotoSymbolLabel.setLayoutY(replyWithTextReplyPhotoSymbolTopMargin);
+
+                        int replyWithTextReplyMessageLeftMargin = replyWithTextReplyPhotoSymbolLeftMargin + 15;
+                        int replyWithTextReplyMessageTopMargin = replyWithTextReplyPhotoSymbolTopMargin - 1;
+                        Label replyWithTextReplyMessage = new Label("Photo");
+                        replyWithTextReplyMessage.setId("replyMessageLabel"+messageId);
+                        replyWithTextReplyMessage.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextReplyMessageLeftMargin * 2));
+                        replyWithTextReplyMessage.getStyleClass().add("chat-message-reply-message");
+                        replyWithTextReplyMessage.setLayoutX(replyWithTextReplyMessageLeftMargin);
+                        replyWithTextReplyMessage.setLayoutY(replyWithTextReplyMessageTopMargin);
+
+                        replyWithTextReplyPane.getChildren().addAll(replyWithTextReplyPhotoSymbolLabel,replyWithTextReplyMessage);
+                    } else {
+                        int replyWithTextReplyMessageLeftMargin = 5;
+                        int replyWithTextReplyMessageTopMargin = 15;
+                        Label replyWithTextReplyMessage = new Label((String) ChatsDataBase.getMessageWithId(replyMessageId).get(3));
+                        replyWithTextReplyMessage.setId("replyMessageLabel"+messageId);
+                        replyWithTextReplyMessage.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextReplyMessageLeftMargin * 2));
+                        replyWithTextReplyMessage.getStyleClass().add("chat-message-reply-message");
+                        replyWithTextReplyMessage.setLayoutX(replyWithTextReplyMessageLeftMargin);
+                        replyWithTextReplyMessage.setLayoutY(replyWithTextReplyMessageTopMargin);
+
+                        replyWithTextReplyPane.getChildren().add(replyWithTextReplyMessage);
+                    }
+
+
+                    replyWithTextReplyPane.getChildren().addAll(replyWithTextReplyName);
                 } else {
                     int replyWithTextDeletedMessageLeftMargin = 7;
                     int replyWithTextDeletedMessageTopMargin = 8;
@@ -424,24 +452,184 @@ public class MainChatController {
                 setHoverCursorToHand(replyWithTextReplyPane);
                 break;
 
-            case "picture":
+            case "reply_with_picture":
 
-                Label pictureLabel = new Label();
-                pictureLabel.setId("messageLabel"+messageId);
+                int replyWithPicturePaddingTop = 45;
+                int replyWithPicturePaddingRight = 6;
+                int replyWithPicturePaddingBottom = 6;
+                int replyWithPicturePaddingLeft = 6;
+                int replyWithPictureMessagePaneHeight = (replyWithPicturePaddingTop + replyWithPicturePaddingBottom) + calculatePictureHeight(picture);
+                int replyWithPictureMessagePaneWidth = 349;
 
-                setPictureToLabel(picture,pictureLabel);
-                messageHBox.getChildren().add(pictureLabel);
-                setHoverCursorToHand(pictureLabel);
+                Pane replyWithPictureMessagePane = new Pane();
+                replyWithPictureMessagePane.setId("messagePane"+messageId);
+                replyWithPictureMessagePane.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-pane" : "chat-message-contact-pane");
+                replyWithPictureMessagePane.setPrefHeight(replyWithPictureMessagePaneHeight);
+                replyWithPictureMessagePane.setPrefWidth(replyWithPictureMessagePaneWidth);
 
-                if (avatarRequired) {
-                    setAppropriateAvatar(messageHBox,pictureLabel,senderId,messageId);
+                int replyWithPicturePaneTopMargin = 6;
+                int replyWithPicturePaneLeftMargin = 6;
+                int replyWithPictureReplyPaneWidth = replyWithPictureMessagePaneWidth - (replyWithPicturePaneLeftMargin * 2);
+                int replyWithPictureReplyPaneHeight = 33;
+                Pane replyWithPictureReplyPane = new Pane();
+                replyWithPictureReplyPane.setId("replyMessagePane"+messageId);
+                replyWithPictureReplyPane.setPrefWidth(replyWithPictureReplyPaneWidth);
+                replyWithPictureReplyPane.setPrefHeight(replyWithPictureReplyPaneHeight);
+                replyWithPictureReplyPane.getStyleClass().add((senderId == mainUserId) ? "chat-message-reply-user-pane" : "chat-message-reply-contact-pane");
+                replyWithPictureReplyPane.setLayoutX(replyWithPicturePaneLeftMargin);
+                replyWithPictureReplyPane.setLayoutY(replyWithPicturePaneTopMargin);
+
+                Label replyWithPictureLabel = new Label();
+                setPictureToLabel(picture,replyWithPictureLabel,337);
+                replyWithPictureLabel.setLayoutX(replyWithPicturePaddingLeft);
+                replyWithPictureLabel.setLayoutY(replyWithPicturePaddingTop);
+
+                Label pictureTimeLabel = new Label(messageTime);
+                pictureTimeLabel.setMouseTransparent(true);
+                pictureTimeLabel.getStyleClass().add("chat-picture-time");
+                pictureTimeLabel.layoutXProperty().bind(replyWithPictureMessagePane.widthProperty().subtract(pictureTimeLabel.widthProperty()).subtract(12)); // 10px padding from the right edge
+                pictureTimeLabel.layoutYProperty().bind(replyWithPictureMessagePane.heightProperty().subtract(pictureTimeLabel.heightProperty()).subtract(12)); // 10px padding from the bottom edge
+
+                replyWithPictureMessagePane.getChildren().addAll(replyWithPictureReplyPane,replyWithPictureLabel,pictureTimeLabel);
+                messageHBox.getChildren().add(replyWithPictureMessagePane);
+
+                boolean repliedMessageExists1 = ChatsDataBase.messageExists(mainUserId,contactId,replyMessageId);
+
+                if (repliedMessageExists1) {
+                    int replyWithTextReplyNameLeftMargin = 5;
+                    int replyWithTextReplyNameTopMargin = 2;
+                    String repliedMessageUserName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessageWithId(replyMessageId).get(1));
+                    Label replyWithTextReplyName = new Label(repliedMessageUserName);
+                    replyWithTextReplyName.setId("replyNameLabel"+messageId);
+                    replyWithTextReplyName.setMaxWidth(replyWithPictureReplyPaneWidth - (replyWithTextReplyNameLeftMargin * 2));
+                    replyWithTextReplyName.getStyleClass().add("chat-message-reply-name");
+                    replyWithTextReplyName.setLayoutX(replyWithTextReplyNameLeftMargin);
+                    replyWithTextReplyName.setLayoutY(replyWithTextReplyNameTopMargin);
+
+
+                    if (replyMessageId != -1 && ChatsDataBase.getMessageWithId(replyMessageId).get(4) != null) {
+                        int replyWithTextReplyPhotoSymbolLeftMargin = 5;
+                        int replyWithTextReplyPhotoSymbolTopMargin = 17;
+                        Label replyWithTextReplyPhotoSymbolLabel = new Label();
+                        replyWithTextReplyPhotoSymbolLabel.getStyleClass().add("chat-reply-photo-symbol");
+                        replyWithTextReplyPhotoSymbolLabel.setPrefWidth(13);
+                        replyWithTextReplyPhotoSymbolLabel.setPrefHeight(13);
+                        replyWithTextReplyPhotoSymbolLabel.setLayoutX(replyWithTextReplyPhotoSymbolLeftMargin);
+                        replyWithTextReplyPhotoSymbolLabel.setLayoutY(replyWithTextReplyPhotoSymbolTopMargin);
+
+                        int replyWithTextReplyMessageLeftMargin = replyWithTextReplyPhotoSymbolLeftMargin + 15;
+                        int replyWithTextReplyMessageTopMargin = replyWithTextReplyPhotoSymbolTopMargin - 1;
+                        Label replyWithTextReplyMessage = new Label("Photo");
+                        replyWithTextReplyMessage.setId("replyMessageLabel"+messageId);
+                        replyWithTextReplyMessage.setMaxWidth(replyWithPictureReplyPaneWidth - (replyWithTextReplyMessageLeftMargin * 2));
+                        replyWithTextReplyMessage.getStyleClass().add("chat-message-reply-message");
+                        replyWithTextReplyMessage.setLayoutX(replyWithTextReplyMessageLeftMargin);
+                        replyWithTextReplyMessage.setLayoutY(replyWithTextReplyMessageTopMargin);
+
+                        replyWithPictureReplyPane.getChildren().addAll(replyWithTextReplyPhotoSymbolLabel,replyWithTextReplyMessage);
+                    } else {
+                        int replyWithTextReplyMessageLeftMargin = 5;
+                        int replyWithTextReplyMessageTopMargin = 15;
+                        Label replyWithTextReplyMessage = new Label((String) ChatsDataBase.getMessageWithId(replyMessageId).get(3));
+                        replyWithTextReplyMessage.setId("replyMessageLabel"+messageId);
+                        replyWithTextReplyMessage.setMaxWidth(replyWithPictureReplyPaneWidth - (replyWithTextReplyMessageLeftMargin * 2));
+                        replyWithTextReplyMessage.getStyleClass().add("chat-message-reply-message");
+                        replyWithTextReplyMessage.setLayoutX(replyWithTextReplyMessageLeftMargin);
+                        replyWithTextReplyMessage.setLayoutY(replyWithTextReplyMessageTopMargin);
+
+                        replyWithPictureReplyPane.getChildren().add(replyWithTextReplyMessage);
+                    }
+
+
+                    replyWithPictureReplyPane.getChildren().addAll(replyWithTextReplyName);
                 } else {
-                    HBox.setMargin(pictureLabel,(senderId == mainUserId) ? new Insets(0, 63, 0, 0) : new Insets(0, 0, 0, 63));
+                    int replyWithTextDeletedMessageLeftMargin = 7;
+                    int replyWithTextDeletedMessageTopMargin = 8;
+                    Label deletedMessageLabel = new Label("(deleted)");
+                    deletedMessageLabel.getStyleClass().add("chat-message-reply-deleted");
+                    deletedMessageLabel.setMaxWidth(replyWithPictureReplyPaneWidth - (replyWithTextDeletedMessageLeftMargin * 2));
+                    deletedMessageLabel.setLayoutX(replyWithTextDeletedMessageLeftMargin);
+                    deletedMessageLabel.setLayoutY(replyWithTextDeletedMessageTopMargin);
+
+                    replyWithPictureReplyPane.getChildren().add(deletedMessageLabel);
                 }
 
-                Platform.runLater(() -> {
+                if (avatarRequired) {
+                    setAppropriateAvatar(messageHBox,replyWithPictureMessagePane,senderId,messageId);
+                } else {
+                    HBox.setMargin(replyWithPictureMessagePane, (senderId == mainUserId) ? new Insets(0, 63, 0, 0) : new Insets(0, 0, 0, 63));
+                }
 
+                replyWithPictureReplyPane.setOnMouseClicked(mouseEvent -> {
+                    if (mouseEvent.getButton() == MouseButton.PRIMARY && (mainAnchorPane.lookup("#messageHBox"+replyMessageId) != null)) {
+                        HBox repliedMessageHBox = (HBox) mainAnchorPane.lookup("#messageHBox"+replyMessageId);
+                        selectRepliedMessageHBox(repliedMessageHBox);
+                        scrollSmooth(getHBoxVvalue(repliedMessageHBox));
+                    }
                 });
+
+                // right-click on the message opens buttons (reply,edit,delete)
+                replyWithPictureMessagePane.setOnMouseClicked(mouseEvent -> {
+                    if ((senderId == mainUserId) && (mouseEvent.getButton() == MouseButton.SECONDARY)) {
+                        Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(replyWithPictureMessagePane,mouseEvent.getX(),mouseEvent.getY());
+                        int anchorPaneScaleX = (int) anchorPaneCoordinates.getX();
+                        int anchorPaneScaleY = (int) anchorPaneCoordinates.getY();
+                        showMessageButtons(anchorPaneScaleX,anchorPaneScaleY,messageId);
+                    } else if ((senderId != mainUserId) && (mouseEvent.getButton() == MouseButton.SECONDARY)) {
+                        Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(replyWithPictureMessagePane,mouseEvent.getX(),mouseEvent.getY());
+                        int anchorPaneScaleX = (int) anchorPaneCoordinates.getX();
+                        int anchorPaneScaleY = (int) anchorPaneCoordinates.getY();
+                        showReplyMessageButton(anchorPaneScaleX,anchorPaneScaleY,messageId);
+                    }
+                });
+                setHoverCursorToHand(replyWithPictureReplyPane);
+                setHoverCursorToHand(replyWithPictureLabel);
+
+
+
+                break;
+
+            case "picture":
+
+                Pane pictureMessagePane = new Pane();
+                pictureMessagePane.setId("messagePane"+messageId);
+
+                Label pictureLabel = new Label();
+                setPictureToLabel(picture,pictureLabel,349);
+
+                pictureMessagePane.getChildren().add(pictureLabel);
+                messageHBox.getChildren().add(pictureMessagePane);
+                setHoverCursorToHand(pictureLabel);
+
+                Label pictureTimeLabel1 = new Label(messageTime);
+                pictureTimeLabel1.setMouseTransparent(true);
+                pictureTimeLabel1.getStyleClass().add("chat-picture-time");
+                pictureTimeLabel1.layoutXProperty().bind(pictureMessagePane.widthProperty().subtract(pictureTimeLabel1.widthProperty()).subtract(7)); // 10px padding from the right edge
+                pictureTimeLabel1.layoutYProperty().bind(pictureMessagePane.heightProperty().subtract(pictureTimeLabel1.heightProperty()).subtract(7)); // 10px padding from the bottom edge
+                pictureMessagePane.getChildren().add(pictureTimeLabel1);
+
+                if (avatarRequired) {
+                    setAppropriateAvatar(messageHBox,pictureMessagePane,senderId,messageId);
+                } else {
+                    HBox.setMargin(pictureMessagePane,(senderId == mainUserId) ? new Insets(0, 63, 0, 0) : new Insets(0, 0, 0, 63));
+                }
+
+                pictureLabel.setOnMouseClicked(clickEvent -> {
+                    if ((senderId == mainUserId) && (clickEvent.getButton() == MouseButton.SECONDARY)) {
+                        Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(pictureLabel,clickEvent.getX(),clickEvent.getY());
+                        int anchorPaneScaleX = (int) anchorPaneCoordinates.getX();
+                        int anchorPaneScaleY = (int) anchorPaneCoordinates.getY();
+                        showMessageButtons(anchorPaneScaleX,anchorPaneScaleY,messageId);
+                    } else if ((senderId != mainUserId) && (clickEvent.getButton() == MouseButton.SECONDARY)) {
+                        Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(pictureLabel,clickEvent.getX(),clickEvent.getY());
+                        int anchorPaneScaleX = (int) anchorPaneCoordinates.getX();
+                        int anchorPaneScaleY = (int) anchorPaneCoordinates.getY();
+                        showReplyMessageButton(anchorPaneScaleX,anchorPaneScaleY,messageId);
+                    }
+                });
+
+                setHoverCursorToHand(pictureLabel);
+
 
                 break;
         }
@@ -480,44 +668,11 @@ public class MainChatController {
                 }
 
                 loadMessage(message,avatarIsRequired);
+                mainContactMessageLabel.getStyleClass().clear();
+                mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
                 mainContactMessageLabel.setText(messageText);
                 mainContactTimeLabel.setText(getCurrentTime());
                 scrollToBottom();
-
-                break;
-
-            case "picture":
-
-                if (pathToPicture.isEmpty()) return;
-
-                int messageId1 = addMessageToDB(null,convertPictureIntoByte(pathToPicture),-1,currentMessageFullDate,false);
-
-                List<List<Object>> allMessages1 = ChatsDataBase.getAllMessages(mainUserId,contactId);
-                String previousMessageDate1 = isFirstMessage(allMessages1,messageId1) ? "0" : getMessageDate((String) allMessages1.get(getIndexWithMessageId(allMessages1,messageId1)-1).get(6));
-
-                boolean isFirstMessage1 = isFirstMessage(allMessages1,messageId1);
-                boolean isResponseMessage1 = isResponseMessage(allMessages1,messageId1);
-                boolean isAfterOneHourMessage1 = isAfterOneHourMessage(allMessages1,messageId1);
-                boolean isNewDayMessage1 = isNewDayMessage(getCurrentDate(),previousMessageDate1);
-                boolean avatarIsRequired1 = isFirstMessage1 || isResponseMessage1 || isAfterOneHourMessage1 || isNewDayMessage1;
-
-                List<Object> message1 = ChatsDataBase.getMessageWithId(messageId1);
-
-                if (isNewDayMessage(getCurrentDate(),previousMessageDate1) && !isFirstMessage1) {
-                    setChatDateLabel(getCurrentLongDate());
-                }
-
-                loadMessage(message1,avatarIsRequired1);
-                mainContactMessageLabel.setText("Picture");
-                mainContactMessageLabel.getStyleClass().clear();
-                mainContactMessageLabel.setStyle("-fx-text-fill: white;");
-
-                mainContactTimeLabel.setText(getCurrentTime());
-                scrollToBottom();
-
-                pathToPicture = "";
-
-                sendingMessageType = "text";
 
                 break;
 
@@ -564,9 +719,75 @@ public class MainChatController {
                 }
 
                 if (editedMessageId == ChatsDataBase.getLastMessageId(mainUserId,contactId)) {
+                    mainContactMessageLabel.getStyleClass().clear();
+                    mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
                     mainContactMessageLabel.setText(editedMessageText);
                 }
 
+                List<Integer> linkedByReplyMessageIds = ChatsDataBase.getRepliedMessageIds(mainUserId,contactId,editedMessageId);
+                if (!linkedByReplyMessageIds.isEmpty()) {
+                    for (int id:linkedByReplyMessageIds) {
+                        Pane replyPane = (Pane) chatVBox.lookup("#replyMessagePane"+id);
+                        Label replyPaneMessageLabel = (Label) replyPane.lookup("#replyMessageLabel"+id);
+
+                        replyPaneMessageLabel.setText(editedMessageText);
+                    }
+                }
+
+                sendingMessageType = "text";
+                editedMessageId = -1;
+
+                break;
+
+            case "edit_with_picture":
+
+                mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#editWrapper"));
+                chatScrollPane.setPadding(new Insets(0,0,8,0));
+
+                HBox messageHBox = (HBox) chatVBox.lookup("#messageHBox"+editedMessageId);
+                messageHBox.getChildren().remove(messageHBox.lookup("#messagePane"+editedMessageId));
+                messageHBox.getChildren().remove(messageHBox.lookup("#pictureStackPane"+editedMessageId));
+
+                Label pictureLabel = new Label();
+                setPictureToLabel(convertPictureIntoByte(pathToPicture),pictureLabel,349);
+                messageHBox.getChildren().add(0,pictureLabel);
+
+                if (messageHBox.lookup("#avatarLabel"+editedMessageId) != null) {
+                    HBox.setMargin(pictureLabel,new Insets(0, 8, 0, 0));
+                } else {
+                    HBox.setMargin(pictureLabel,new Insets(0, 63, 0, 0));
+                }
+
+                List<Integer> linkedByReplyMessageIds1 = ChatsDataBase.getRepliedMessageIds(mainUserId,contactId,editedMessageId);
+                if (!linkedByReplyMessageIds1.isEmpty()) {
+                    for (int id:linkedByReplyMessageIds1) {
+                        Pane replyPane = (Pane) chatVBox.lookup("#replyMessagePane"+id);
+                        Label replyPaneMessageLabel = (Label) replyPane.lookup("#replyMessageLabel"+id);
+                        replyPane.getChildren().remove(replyPaneMessageLabel);
+
+                        int replyWithTextReplyPhotoSymbolLeftMargin = 5;
+                        int replyWithTextReplyPhotoSymbolTopMargin = 17;
+                        Label replyWithTextReplyPhotoSymbolLabel = new Label();
+                        replyWithTextReplyPhotoSymbolLabel.getStyleClass().add("chat-reply-photo-symbol");
+                        replyWithTextReplyPhotoSymbolLabel.setPrefWidth(13);
+                        replyWithTextReplyPhotoSymbolLabel.setPrefHeight(13);
+                        replyWithTextReplyPhotoSymbolLabel.setLayoutX(replyWithTextReplyPhotoSymbolLeftMargin);
+                        replyWithTextReplyPhotoSymbolLabel.setLayoutY(replyWithTextReplyPhotoSymbolTopMargin);
+
+                        int replyWithTextReplyMessageLeftMargin = replyWithTextReplyPhotoSymbolLeftMargin + 15;
+                        int replyWithTextReplyMessageTopMargin = replyWithTextReplyPhotoSymbolTopMargin - 1;
+                        Label replyWithTextReplyMessage = new Label("Photo");
+                        replyWithTextReplyMessage.setId("replyMessageLabel"+id);
+                        replyWithTextReplyMessage.setMaxWidth(replyPane.getWidth() - (replyWithTextReplyMessageLeftMargin * 2));
+                        replyWithTextReplyMessage.getStyleClass().add("chat-message-reply-message");
+                        replyWithTextReplyMessage.setLayoutX(replyWithTextReplyMessageLeftMargin);
+                        replyWithTextReplyMessage.setLayoutY(replyWithTextReplyMessageTopMargin);
+
+                        replyPane.getChildren().addAll(replyWithTextReplyPhotoSymbolLabel,replyWithTextReplyMessage);
+                    }
+                }
+
+                editedMessageId = -1;
                 sendingMessageType = "text";
 
                 break;
@@ -592,6 +813,9 @@ public class MainChatController {
                     setChatDateLabel(getCurrentLongDate());
                 }
                 loadMessage(replyMessage, avatarIsRequired2);
+
+                mainContactMessageLabel.getStyleClass().clear();
+                mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
                 mainContactMessageLabel.setText(replyMessageText);
                 mainContactTimeLabel.setText(getCurrentTime());
 
@@ -602,9 +826,64 @@ public class MainChatController {
                 chatScrollPane.setPadding(new Insets(0,0,8,0));
 
                 sendingMessageType = "text";
+                repliedMessageId = -1;
+
                 scrollToBottom();
 
                 break;
+
+            case "reply_with_picture":
+
+                mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#replyWrapper"));
+                chatScrollPane.setPadding(new Insets(0,0,8,0));
+
+                int messageId2 = addMessageToDB(null,convertPictureIntoByte(pathToPicture),repliedMessageId,currentMessageFullDate,false);
+                List<Object> message2 = ChatsDataBase.getMessageWithId(messageId2);
+
+                loadMessage(message2,false);
+
+                scrollToBottom();
+
+                break;
+                
+            case "picture":
+
+                if (pathToPicture.isEmpty()) return;
+
+                int messageId1 = addMessageToDB(null,convertPictureIntoByte(pathToPicture),-1,currentMessageFullDate,false);
+
+                List<List<Object>> allMessages1 = ChatsDataBase.getAllMessages(mainUserId,contactId);
+                String previousMessageDate1 = isFirstMessage(allMessages1,messageId1) ? "0" : getMessageDate((String) allMessages1.get(getIndexWithMessageId(allMessages1,messageId1)-1).get(6));
+
+                boolean isFirstMessage1 = isFirstMessage(allMessages1,messageId1);
+                boolean isResponseMessage1 = isResponseMessage(allMessages1,messageId1);
+                boolean isAfterOneHourMessage1 = isAfterOneHourMessage(allMessages1,messageId1);
+                boolean isNewDayMessage1 = isNewDayMessage(getCurrentDate(),previousMessageDate1);
+                boolean avatarIsRequired1 = isFirstMessage1 || isResponseMessage1 || isAfterOneHourMessage1 || isNewDayMessage1;
+
+                List<Object> message1 = ChatsDataBase.getMessageWithId(messageId1);
+
+                if (isNewDayMessage(getCurrentDate(),previousMessageDate1) && !isFirstMessage1) {
+                    setChatDateLabel(getCurrentLongDate());
+                }
+
+                loadMessage(message1,avatarIsRequired1);
+                mainContactMessageLabel.setText("Picture");
+                mainContactMessageLabel.getStyleClass().clear();
+                mainContactMessageLabel.setStyle("-fx-text-fill: white;");
+
+                mainContactTimeLabel.setText(getCurrentTime());
+                scrollToBottom();
+
+                pathToPicture = "";
+
+                sendingMessageType = "text";
+
+                break;
+
+
+
+
 
         }
 
@@ -624,9 +903,6 @@ public class MainChatController {
 
             double width = image.getWidth();
             double height = image.getHeight();
-
-            System.out.println(width);
-            System.out.println(height);
 
 
             showSendPictureWindow(selectedFile.getPath(),(int) width,(int) height);
@@ -831,6 +1107,20 @@ public class MainChatController {
         mainAnchorPane.getChildren().remove(textLabel);
 
         return labelHeight;
+    }
+    public int calculatePictureHeight(byte[] picture) {
+        Label pictureLabel = new Label();
+        setPictureToLabel(picture,pictureLabel,337);
+
+        pictureLabel.setVisible(false);
+        mainAnchorPane.getChildren().add(pictureLabel);
+        mainAnchorPane.applyCss();
+        mainAnchorPane.layout();
+
+        int pictureHeight = (int) pictureLabel.getHeight();
+
+        mainAnchorPane.getChildren().remove(pictureLabel);
+        return pictureHeight;
     }
     public int calculateLabelWidth(String text) {
         Label textLabel = new Label(text);
@@ -1190,21 +1480,46 @@ public class MainChatController {
             replyWrapperName.setLayoutX(58);
             replyWrapperName.setLayoutY(7);
 
-            String message = (String) ChatsDataBase.getMessageWithId(messageId).get(3);
-            Label replyWrapperMessageText = new Label(message);
-            replyWrapperMessageText.setId("replyWrapperMessage");
-            replyWrapperMessageText.getStyleClass().add("chat-wrapper-message-label");
-            replyWrapperMessageText.setMaxWidth(720);
-            replyWrapperMessageText.setLayoutX(58);
-            replyWrapperMessageText.setLayoutY(24);
+            String messageType = getTypeOfMessage(ChatsDataBase.getMessageWithId(messageId));
 
-            replyWrapperPane.getChildren().addAll(replyWrapperExitLabel,replyWrapperRow,replyWrapperName,replyWrapperMessageText);
+            if (messageType.equals("text") || messageType.equals("reply_with_text") || messageType.equals("reply_with_picture_and_text") || messageType.equals("picture_and_text")) {
+                String message = (String) ChatsDataBase.getMessageWithId(messageId).get(3);
+                Label replyWrapperMessageText = new Label(message);
+                replyWrapperMessageText.setId("replyWrapperMessage");
+                replyWrapperMessageText.getStyleClass().add("chat-wrapper-message-label");
+                replyWrapperMessageText.setMaxWidth(720);
+                replyWrapperMessageText.setLayoutX(58);
+                replyWrapperMessageText.setLayoutY(24);
+
+                replyWrapperPane.getChildren().add(replyWrapperMessageText);
+            } else {
+                Label photoSymbol = new Label();
+                photoSymbol.getStyleClass().add("chat-photo-symbol-wrapper");
+                photoSymbol.setPrefWidth(13);
+                photoSymbol.setPrefHeight(13);
+                photoSymbol.setLayoutX(58);
+                photoSymbol.setLayoutY(25);
+
+                Label replyWrapperMessageText = new Label("Picture");
+                replyWrapperMessageText.setId("replyWrapperMessage");
+                replyWrapperMessageText.getStyleClass().add("chat-wrapper-message-label");
+                replyWrapperMessageText.setMaxWidth(720);
+                replyWrapperMessageText.setLayoutX(75);
+                replyWrapperMessageText.setLayoutY(24);
+
+                replyWrapperPane.getChildren().addAll(photoSymbol,replyWrapperMessageText);
+            }
+
+
+
+            replyWrapperPane.getChildren().addAll(replyWrapperExitLabel,replyWrapperRow,replyWrapperName);
             mainAnchorPane.getChildren().add(replyWrapperPane);
 
             replyWrapperExitLabel.setOnMouseClicked(clickedEvent -> {
                 mainAnchorPane.getChildren().remove(replyWrapperPane);
                 chatScrollPane.setPadding(new Insets(0,0,8,0));
                 sendingMessageType = "text";
+                repliedMessageId = -1;
                 Pane newScrollDownButton = (Pane) chatBackgroundPane.lookup("#scrollDownButton");
                 if (newScrollDownButton != null) {
                     newScrollDownButton.setLayoutY(getAppropriateBottomButtonPosition());
@@ -1360,10 +1675,7 @@ public class MainChatController {
                     setChatCurrentDateLabel();
                     mainContactMessageLabel.setText("");
                     mainContactTimeLabel.setText("");
-                } else if (isTheOnlyOneMessage) {
-                    int followedMessageId = (int) allMessages.get(getIndexWithMessageId(allMessages,messageId) + 1).get(0);
-                    changeLastContactMessageAndTime(followedMessageId);
-
+                } else if (ChatsDataBase.getLastMessageId(mainUserId,contactId) != messageId){
                     int previousMessageId = (int) allMessages.get(getIndexWithMessageId(allMessages,messageId)+1).get(0);
                     allMessages.remove(getIndexWithMessageId(allMessages,messageId));
                     boolean isFirstMessage = isFirstMessage(allMessages,previousMessageId);
@@ -1371,8 +1683,6 @@ public class MainChatController {
                     boolean isAfterOneHourMessage = isAfterOneHourMessage(allMessages,previousMessageId);
                     boolean avatarRequired =  isFirstMessage || isResponseMessage || isAfterOneHourMessage;
                     boolean hasAlreadyAvatar = chatVBox.lookup("#avatarLabel"+previousMessageId) != null;
-                    System.out.println("prev message needs avatar: "+avatarRequired);
-                    System.out.println("has already avatar: "+hasAlreadyAvatar);
 
                     if (avatarRequired && !hasAlreadyAvatar) {
                         Label avatarLabel = new Label();
@@ -1384,6 +1694,9 @@ public class MainChatController {
                         HBox.setMargin(avatarLabel, new Insets(0, 25, 0, 0));
                         HBox.setMargin((messagePane == null ? pictureLabel : messagePane), new Insets(0, 8, 0, 0));
                     }
+                } else {
+                    int followedMessageId = (int) allMessages.get(getIndexWithMessageId(allMessages,messageId) - 1).get(0);
+                    changeLastContactMessageAndTime(followedMessageId);
                 }
 
                 List<Integer> linkedByReplyMessageIds = ChatsDataBase.getRepliedMessageIds(mainUserId,contactId,messageId);
@@ -1395,6 +1708,7 @@ public class MainChatController {
                         int replyWithTextDeletedMessageLeftMargin = 7;
                         int replyWithTextDeletedMessageTopMargin = 8;
                         Label deletedMessageLabel = new Label("(deleted)");
+                        deletedMessageLabel.setAlignment(Pos.TOP_CENTER);
                         deletedMessageLabel.getStyleClass().add("chat-message-reply-deleted");
                         deletedMessageLabel.setMaxWidth(replyPane.getWidth() - (replyWithTextDeletedMessageLeftMargin * 2));
                         deletedMessageLabel.setLayoutX(replyWithTextDeletedMessageLeftMargin);
@@ -1444,8 +1758,14 @@ public class MainChatController {
     private void changeLastContactMessageAndTime(int messageId) throws SQLException {
         List<Object> message = ChatsDataBase.getMessageWithId(messageId);
         String messageType = getTypeOfMessage(message);
-        if (messageType.contains("text")) {
+        if (messageType.equals("text") || messageType.equals("edit_with_text") || messageType.equals("reply_with_text")) {
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
             mainContactMessageLabel.setText((String) message.get(3));
+            mainContactTimeLabel.setText(getMessageHours((String) message.get(6)));
+        } else {
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.setStyle("-fx-text-fill: white;");
             mainContactTimeLabel.setText(getMessageHours((String) message.get(6)));
         }
         // TODO
@@ -1575,15 +1895,11 @@ public class MainChatController {
                 double newWidth = image.getWidth();
                 double newHeight = image.getHeight();
 
-                System.out.println(newWidth);
-                System.out.println(newHeight);
-
                 setPreviewImageToLabel(selectedFile.getPath(),pictureLabel,(int)newWidth,(int)newHeight);
             }
         });
 
         sendPictureButton.setOnMouseClicked(clickEvent -> {
-            System.out.println(sendingMessageType);
             switch (sendingMessageType) {
                 case "text":
                     if (!sendPictureTextField.getText().trim().isEmpty()) {
@@ -1607,8 +1923,8 @@ public class MainChatController {
                     }
                     break;
             }
-            System.out.println(sendingMessageType);
             pathToPicture = path;
+            mainAnchorPane.getChildren().remove(sendingPictureOverlayPane);
             try {
                 sendMessage();
             } catch (SQLException | ExecutionException | InterruptedException | IOException e) {
@@ -1641,7 +1957,7 @@ public class MainChatController {
         Path pathObject = Paths.get(path);
         return Files.readAllBytes(pathObject);
     }
-    private void setPictureToLabel(byte[] picture,Label pictureLabel) {
+    private void setPictureToLabel(byte[] picture,Label pictureLabel,int pictureWidth) {
         ByteArrayInputStream originalPictureInputStream = new ByteArrayInputStream(picture);
         Image originalImage = new Image(originalPictureInputStream);
 
@@ -1649,7 +1965,6 @@ public class MainChatController {
         double originalPictureHeight = originalImage.getHeight();
         double originalPictureRatio = originalPictureWidth / originalPictureHeight;
 
-        int pictureWidth = 349;
         int pictureHeight = (int) (pictureWidth / originalPictureRatio);
         pictureLabel.setPrefWidth(pictureWidth);
         pictureLabel.setPrefHeight(pictureHeight);

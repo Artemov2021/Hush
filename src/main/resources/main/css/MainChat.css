@@ -164,6 +164,21 @@
     -fx-background-image: url("../elements/messageDelete.png");
     -fx-background-repeat: no-repeat;
 }
+.chat-photo-symbol-wrapper {
+    -fx-background-image: url("../elements/photoWrapperSymbol.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-reply-photo-symbol {
+    -fx-background-image: url("../elements/photoReplySymbol.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-picture-time {
+    -fx-background-image: url("../elements/pictureTimeBackground.png");
+    -fx-background-repeat: no-repeat;
+    -fx-font-size: 10;
+    -fx-text-fill: white;
+    -fx-padding: 2 5 2 5;
+}
 /*-----------------------------------------------------------------------------*/
 /* Reply Wrapper */
 .chat-wrapper {
