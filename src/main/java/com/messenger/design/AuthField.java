@@ -12,8 +12,8 @@ import javafx.util.Duration;
 public class AuthField {
     private double MOVE_X;
     private double MOVE_Y;
-    private double WIDTH_CHANGE;
-    private double HEIGHT_CHANGE;
+    private double NEW_WIDTH;
+    private double NEW_HEIGHT;
 
     private final TextInputControl Field;
     private final Label Label;
@@ -23,20 +23,19 @@ public class AuthField {
         Label = label;
     }
 
-    public void setLabelChanges(double WIDTH_CHANGE, double HEIGHT_CHANGE) {
-        this.WIDTH_CHANGE = WIDTH_CHANGE;
-        this.HEIGHT_CHANGE = HEIGHT_CHANGE;
+    public void setLabelChanges(double NEW_WIDTH, double NEW_HEIGHT) {
+        this.NEW_WIDTH = NEW_WIDTH;
+        this.NEW_HEIGHT = NEW_HEIGHT;
     }
-
     public void setLabelMovePath(double MOVE_X, double MOVE_Y) {
         this.MOVE_X = MOVE_X;
         this.MOVE_Y = MOVE_Y;
     }
-
     public void setStyle() {
         Field.focusedProperty().addListener((observable, oldValue, newValue) -> { handleFocusProperty(newValue); });
         Field.textProperty().addListener((observable, oldValue, newValue) -> { handleTextProperty(newValue); });
     }
+
 
     private void handleFocusProperty(boolean focus) {
         String text = Field.getText();
@@ -58,6 +57,7 @@ public class AuthField {
         }
     }
 
+
     private void move(String direction,Label label) {
         if (direction.equals("up")) {
             label.toFront();
@@ -66,8 +66,8 @@ public class AuthField {
         }
 
         String newLabelStyle = direction.equals("up") ? "input-field-label-small" : "input-field-label";
-        double signedWidthChange = direction.equals("up") ? WIDTH_CHANGE : -WIDTH_CHANGE;
-        double signedHeightChange = direction.equals("up") ? HEIGHT_CHANGE : -HEIGHT_CHANGE;
+        double signedWidthChange = direction.equals("up") ? NEW_WIDTH : -NEW_WIDTH;
+        double signedHeightChange = direction.equals("up") ? NEW_HEIGHT : -NEW_HEIGHT;
         double signedMoveX = direction.equals("up") ? MOVE_X : -MOVE_X;
         double signedMoveY = direction.equals("up") ? MOVE_Y : -MOVE_Y;
 
@@ -81,6 +81,7 @@ public class AuthField {
         translateTransition.setByY(signedMoveY);
         translateTransition.play();
     }
+
 
     public static void setErrorStyle(TextInputControl textField,Label errorLabel,String message) {
         textField.getStyleClass().clear();

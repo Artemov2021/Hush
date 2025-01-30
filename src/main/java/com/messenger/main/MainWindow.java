@@ -17,10 +17,10 @@ public class MainWindow extends Application {
     public void start(Stage stage) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/fxml/MainWindow.fxml"));
         Scene scene = new Scene(loader.load());
-        stage.setResizable(false);
+        stage.setMaximized(true);
         stage.setScene(scene);
         stage.setTitle("Main");
-        stage.setResizable(false);
+        //stage.setResizable(false);
         stage.show();
     }
 }

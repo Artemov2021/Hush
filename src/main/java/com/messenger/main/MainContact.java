@@ -119,7 +119,6 @@ public class MainContact {
         mainChatController.setMainUserId(mainUserId);
         mainChatController.setContactId(currentUserId);
         mainChatController.setMainContactPane(mainContactPane);
-        mainChatController.setMainContactTimeLabel(mainContactTimeLabel);
         mainChatController.initializeWithValue();
 
         mainAnchorPane.getChildren().removeIf(child -> Objects.equals(child.getId(), "chatAnchorPane"));

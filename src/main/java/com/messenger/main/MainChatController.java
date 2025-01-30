@@ -3,6 +3,7 @@ package com.messenger.main;
 import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
+import com.messenger.main.chat.ChatHistory;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
@@ -59,16 +60,18 @@ public class MainChatController {
     @FXML
     private Label chatMainNameLabel;
     @FXML
-    private VBox chatVBox;
+    public VBox chatVBox;
     @FXML
     private TextField chatTextField;
 
-    private AnchorPane mainAnchorPane;
-    private int contactId;
-    private int mainUserId;
-    private Pane mainContactPane;
-    private Label mainContactMessageLabel;
-    private Label mainContactTimeLabel;
+    public AnchorPane mainAnchorPane;
+    public int contactId;
+    public int mainUserId;
+    public Pane mainContactPane;
+    public Label mainContactMessageLabel;
+    public Label mainContactTimeLabel;
+
+
 
     private String sendingMessageType = "text"; // the default type of the message is always text
     private int editedMessageId = -1;
@@ -78,6 +81,7 @@ public class MainChatController {
     private String messageToThePicture = "";
 
 
+    private boolean initializedWithValue = false;
     // set main value
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
@@ -91,17 +95,20 @@ public class MainChatController {
     public void setMainContactPane(Pane mainContactPane) {
         this.mainContactPane = mainContactPane;
         this.mainContactMessageLabel = (Label) mainContactPane.lookup("#mainContactMessageLabel");
-    }
-    public void setMainContactTimeLabel(Label timeLabel) {
-        this.mainContactTimeLabel = timeLabel;
+        this.mainContactTimeLabel = (Label) mainContactPane.lookup("#mainContactTimeLabel");
     }
 
 
     // initialization of the chat window
     public void initializeWithValue() throws SQLException, ExecutionException, InterruptedException {
         initializeChatInterface();
-        loadChatHistory();
+
+        ChatHistory currentChatHistory = new ChatHistory(ChatsDataBase.getAllMessages(mainUserId,contactId));
+        System.out.println(mainAnchorPane.getWidth());
+        System.out.println(mainAnchorPane.getHeight());
+        //currentChatHistory.load();  // loading chat history from database!
     }
+
 
 
     // chat interface
@@ -678,190 +685,7 @@ public class MainChatController {
 
             case "edit_with_text":
 
-                String editedMessageType = getTypeOfMessage(ChatsDataBase.getMessageWithId(editedMessageId));
-                HBox editedWithTextMessageHBox = (HBox) mainAnchorPane.lookup("#messageHBox"+editedMessageId);
-                editedWithTextMessageHBox.getChildren().remove(editedWithTextMessageHBox.lookup("#messagePane"+editedMessageId));
 
-                if (editedMessageType.contains("reply")) {
-
-                    List<Object> editedWithTextMessage = ChatsDataBase.getMessageWithId(editedMessageId);
-
-                    String newMessageText = chatTextField.getText().trim();
-
-                    int replyWithTextPaddingTop = 45;
-                    int replyWithTextPaddingRight = 45;
-                    int replyWithTextPaddingBottom = 7;
-                    int replyWithTextPaddingLeft = 12;
-
-                    int replyWithTextMessagePaneHeight = (replyWithTextPaddingTop + replyWithTextPaddingBottom) + calculateLabelHeight(newMessageText);
-                    int replyWithTextMessagePaneWidth = (replyWithTextPaddingLeft + replyWithTextPaddingRight) + calculateLabelWidth(newMessageText);
-
-                    Pane replyWithTextMessagePane = new Pane();
-                    replyWithTextMessagePane.setId("messagePane"+editedMessageId);
-                    replyWithTextMessagePane.getStyleClass().add("chat-message-user-pane");
-                    replyWithTextMessagePane.setPrefHeight(replyWithTextMessagePaneHeight);
-                    replyWithTextMessagePane.setPrefWidth(replyWithTextMessagePaneWidth);
-
-                    Label replyWithTextMessageTextLabel = new Label(newMessageText);
-                    replyWithTextMessageTextLabel.setId("messageLabel"+editedMessageId);
-                    replyWithTextMessageTextLabel.getStyleClass().add("chat-message-label");
-                    replyWithTextMessageTextLabel.setWrapText(true);  // Text soll umgebrochen werden
-                    replyWithTextMessageTextLabel.setMinWidth(0);     // Minimale Breite 0
-                    replyWithTextMessageTextLabel.setMaxWidth(292);   // Maximale Breite 292
-                    replyWithTextMessageTextLabel.setLayoutX(replyWithTextPaddingLeft);
-                    replyWithTextMessageTextLabel.setLayoutY(replyWithTextPaddingTop);
-
-                    Label replyWithTextTimeLabel = new Label(getMessageHours((String) editedWithTextMessage.get(6)));
-                    replyWithTextTimeLabel.getStyleClass().add("chat-time-label");
-                    replyWithTextTimeLabel.layoutXProperty().bind(replyWithTextMessagePane.widthProperty().subtract(replyWithTextTimeLabel.widthProperty()).subtract(9)); // 10px padding from the right edge
-                    replyWithTextTimeLabel.layoutYProperty().bind(replyWithTextMessagePane.heightProperty().subtract(replyWithTextTimeLabel.heightProperty()).subtract(4)); // 10px padding from the bottom edge
-
-                    int replyWithTextPaneTopMargin = 6;
-                    int replyWithTextPaneLeftMargin = 6;
-                    int replyWithTextReplyPaneWidth = replyWithTextMessagePaneWidth - (replyWithTextPaneLeftMargin * 2);
-                    int replyWithTextReplyPaneHeight = 33;
-                    Pane replyWithTextReplyPane = new Pane();
-                    replyWithTextReplyPane.setId("replyMessagePane"+editedMessageId);
-                    replyWithTextReplyPane.setPrefWidth(replyWithTextReplyPaneWidth);
-                    replyWithTextReplyPane.setPrefHeight(replyWithTextReplyPaneHeight);
-                    replyWithTextReplyPane.getStyleClass().add("chat-message-reply-user-pane");
-                    replyWithTextReplyPane.setLayoutX(replyWithTextPaneLeftMargin);
-                    replyWithTextReplyPane.setLayoutY(replyWithTextPaneTopMargin);
-
-                    boolean repliedMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,(int)editedWithTextMessage.get(5));
-
-                    if (repliedMessageExists) {
-                        int replyWithTextReplyNameLeftMargin = 5;
-                        int replyWithTextReplyNameTopMargin = 2;
-                        String repliedMessageUserName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessageWithId((int)editedWithTextMessage.get(5)).get(1));
-                        Label replyWithTextReplyName = new Label(repliedMessageUserName);
-                        replyWithTextReplyName.setId("replyNameLabel"+editedMessageId);
-                        replyWithTextReplyName.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextReplyNameLeftMargin * 2));
-                        replyWithTextReplyName.getStyleClass().add("chat-message-reply-name");
-                        replyWithTextReplyName.setLayoutX(replyWithTextReplyNameLeftMargin);
-                        replyWithTextReplyName.setLayoutY(replyWithTextReplyNameTopMargin);
-
-
-                        if ((int)editedWithTextMessage.get(5) != -1 && ChatsDataBase.getMessageWithId((int)editedWithTextMessage.get(5)).get(4) != null) {
-                            int replyWithTextReplyPhotoSymbolLeftMargin = 5;
-                            int replyWithTextReplyPhotoSymbolTopMargin = 17;
-                            Label replyWithTextReplyPhotoSymbolLabel = new Label();
-                            replyWithTextReplyPhotoSymbolLabel.getStyleClass().add("chat-reply-photo-symbol");
-                            replyWithTextReplyPhotoSymbolLabel.setPrefWidth(13);
-                            replyWithTextReplyPhotoSymbolLabel.setPrefHeight(13);
-                            replyWithTextReplyPhotoSymbolLabel.setLayoutX(replyWithTextReplyPhotoSymbolLeftMargin);
-                            replyWithTextReplyPhotoSymbolLabel.setLayoutY(replyWithTextReplyPhotoSymbolTopMargin);
-
-                            int replyWithTextReplyMessageLeftMargin = replyWithTextReplyPhotoSymbolLeftMargin + 15;
-                            int replyWithTextReplyMessageTopMargin = replyWithTextReplyPhotoSymbolTopMargin - 1;
-                            Label replyWithTextReplyMessage = new Label("Photo");
-                            replyWithTextReplyMessage.setId("replyMessageLabel"+editedMessageId);
-                            replyWithTextReplyMessage.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextReplyMessageLeftMargin * 2));
-                            replyWithTextReplyMessage.getStyleClass().add("chat-message-reply-message");
-                            replyWithTextReplyMessage.setLayoutX(replyWithTextReplyMessageLeftMargin);
-                            replyWithTextReplyMessage.setLayoutY(replyWithTextReplyMessageTopMargin);
-
-                            replyWithTextReplyPane.getChildren().addAll(replyWithTextReplyPhotoSymbolLabel,replyWithTextReplyMessage);
-                        } else {
-                            int replyWithTextReplyMessageLeftMargin = 5;
-                            int replyWithTextReplyMessageTopMargin = 15;
-                            Label replyWithTextReplyMessage = new Label((String) ChatsDataBase.getMessageWithId((int)editedWithTextMessage.get(5)).get(3));
-                            replyWithTextReplyMessage.setId("replyMessageLabel"+editedMessageId);
-                            replyWithTextReplyMessage.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextReplyMessageLeftMargin * 2));
-                            replyWithTextReplyMessage.getStyleClass().add("chat-message-reply-message");
-                            replyWithTextReplyMessage.setLayoutX(replyWithTextReplyMessageLeftMargin);
-                            replyWithTextReplyMessage.setLayoutY(replyWithTextReplyMessageTopMargin);
-
-                            replyWithTextReplyPane.getChildren().add(replyWithTextReplyMessage);
-                        }
-
-
-                        replyWithTextReplyPane.getChildren().addAll(replyWithTextReplyName);
-                    } else {
-                        int replyWithTextDeletedMessageLeftMargin = 7;
-                        int replyWithTextDeletedMessageTopMargin = 8;
-                        Label deletedMessageLabel = new Label("(deleted)");
-                        deletedMessageLabel.getStyleClass().add("chat-message-reply-deleted");
-                        deletedMessageLabel.setMaxWidth(replyWithTextReplyPaneWidth - (replyWithTextDeletedMessageLeftMargin * 2));
-                        deletedMessageLabel.setLayoutX(replyWithTextDeletedMessageLeftMargin);
-                        deletedMessageLabel.setLayoutY(replyWithTextDeletedMessageTopMargin);
-
-                        replyWithTextReplyPane.getChildren().add(deletedMessageLabel);
-                    }
-
-                    replyWithTextMessagePane.getChildren().addAll(replyWithTextReplyPane,replyWithTextMessageTextLabel, replyWithTextTimeLabel);
-                    editedWithTextMessageHBox.getChildren().add(0,replyWithTextMessagePane);
-
-                    boolean avatarRequired = ((editedWithTextMessageHBox.lookup("#avatarLabel"+repliedMessageId))) == null;
-                    if (avatarRequired) {
-                        HBox.setMargin(replyWithTextMessagePane, new Insets(0, 8, 0, 0));
-                    } else {
-                        HBox.setMargin(replyWithTextMessagePane,new Insets(0, 63, 0, 0));
-                    }
-
-                    replyWithTextReplyPane.setOnMouseClicked(mouseEvent -> {
-                        if (mouseEvent.getButton() == MouseButton.PRIMARY && (mainAnchorPane.lookup("#messageHBox"+(int)editedWithTextMessage.get(5)) != null)) {
-                            HBox repliedMessageHBox = (HBox) mainAnchorPane.lookup("#messageHBox"+(int)editedWithTextMessage.get(5));
-                            selectRepliedMessageHBox(repliedMessageHBox);
-                            scrollSmooth(getHBoxVvalue(repliedMessageHBox));
-                        }
-                    });
-
-                    // right-click on the message opens buttons (reply,edit,delete)
-                    replyWithTextMessagePane.setOnMouseClicked(mouseEvent -> {
-                        System.out.println((int)editedWithTextMessage.get(2));
-                        if (((int)editedWithTextMessage.get(1) == mainUserId) && (mouseEvent.getButton() == MouseButton.SECONDARY)) {
-                            Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(replyWithTextMessagePane,mouseEvent.getX(),mouseEvent.getY());
-                            int anchorPaneScaleX = (int) anchorPaneCoordinates.getX();
-                            int anchorPaneScaleY = (int) anchorPaneCoordinates.getY();
-                            showMessageButtons(anchorPaneScaleX,anchorPaneScaleY,editedMessageId);
-                        } else if (((int)editedWithTextMessage.get(1) != mainUserId) && (mouseEvent.getButton() == MouseButton.SECONDARY)) {
-                            Point2D anchorPaneCoordinates = convertToTopLevelAnchorPaneCoordinates(replyWithTextMessagePane,mouseEvent.getX(),mouseEvent.getY());
-                            int anchorPaneScaleX = (int) anchorPaneCoordinates.getX();
-                            int anchorPaneScaleY = (int) anchorPaneCoordinates.getY();
-                            showReplyMessageButton(anchorPaneScaleX,anchorPaneScaleY,editedMessageId);
-                        }
-                    });
-                    setHoverCursorToHand(replyWithTextReplyPane);
-
-
-                } else {
-
-                    List<Object> editedWithTextMessage = ChatsDataBase.getMessageWithId(editedMessageId);
-
-
-
-                }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//                List<Integer> linkedByReplyMessageIds = ChatsDataBase.getRepliedMessageIds(mainUserId,contactId,editedMessageId);
-//                if (!linkedByReplyMessageIds.isEmpty()) {
-//                    for (int id:linkedByReplyMessageIds) {
-//                        Pane replyPane = (Pane) chatVBox.lookup("#replyMessagePane"+id);
-//                        Label replyPaneMessageLabel = (Label) replyPane.lookup("#replyMessageLabel"+id);
-//
-//                        replyPaneMessageLabel.setText(editedMessageText);
-//                    }
-//                }
-
-                sendingMessageType = "text";
-                editedMessageId = -1;
 
                 break;
 
