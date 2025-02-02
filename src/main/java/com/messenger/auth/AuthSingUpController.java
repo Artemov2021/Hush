@@ -114,6 +114,14 @@ public class AuthSingUpController {
         }
 
         if (identifierStatus.equals("Email or name is empty")) {
+
+            identifierErrorLabel.setVisible(true);
+            identifierErrorLabel.setText("Email or name is emtpy");
+            identifierField.getStyleClass().clear();
+            identifierField.getStyleClass().add("input-field-error");
+
+            passwordGroup.setTranslateY(17);
+
             // 1. apply error style
             // 2. move password group
         }

@@ -10,6 +10,8 @@
     -fx-text-fill: #CECECE;
     -fx-font-size: 14;
 }
+/*-------------------------------------------------*/
+/* Text Field */
 .input-field {
     -fx-background-color: transparent;
     -fx-text-fill: white;
@@ -32,7 +34,9 @@
     -fx-border-radius: 10;
     -fx-background-radius: 10;
     -fx-padding: 13;
+    -fx-cursor: text;
 }
+/*------------------------------------------------*/
 .input-field-label {
     -fx-background-color: #181818;
     -fx-text-fill: #565656;
