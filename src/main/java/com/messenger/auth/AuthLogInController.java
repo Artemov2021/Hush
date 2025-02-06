@@ -2,11 +2,7 @@ package com.messenger.auth;
 
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.AuthField;
-import com.messenger.design.LoadingDots;
 import com.messenger.main.MainWindowController;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
@@ -15,11 +11,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
-import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.sql.SQLException;
 
 public class AuthLogInController {
     @FXML
@@ -37,18 +30,20 @@ public class AuthLogInController {
     @FXML
     private Label passwordErrorLabel;
     @FXML
-    private Button singUpButton;
-    @FXML
     private Button accountButton;
     @FXML
     private Label extraLabel;
-    @FXML
-    private ProgressBar progressBar;
 
     private Group passwordGroup;
 
 
     public void initialize () {
+        setSceneStyles();
+        fieldsApplyStyle(); // makes label animation
+    }
+
+
+    public void setSceneStyles() {
         identifierField.setFocusTraversable(false);
         passwordField.setFocusTraversable(false);
         accountButton.setUnderline(true);
@@ -60,59 +55,92 @@ public class AuthLogInController {
         // group of all password field elements ( will be moved down, if email is invalid )
         passwordGroup = new Group(lowerLabel, passwordField, passwordErrorLabel);
         anchorPane.getChildren().add(passwordGroup);
-
-        // makes label animation and solves unnecessary spaces
-        fieldsApplyStyle();
     }
-    public void checkInformation() {
-        if (anchorPane.lookup("#dotsContainer") == null) {
-            setDefaultFieldsStyle();
-            setLoadingButton();
-            setLoadingProgress(0.2);
-            passwordGroup.setLayoutY(0);
-        }
-        try {
-            String identifier = identifierField.getText().trim();
-            String password = passwordField.getText().trim();
-            byte occuredExceptions = 0;
+    public void fieldsApplyStyle() {
+        var emailFieldStyled = new AuthField(identifierField,identifierLabel);
+        emailFieldStyled.setLabelChanges(-26, -2);
+        emailFieldStyled.setLabelMovePath(-5, -24);
+        emailFieldStyled.setStyle();
 
-            AuthField.deleteErrorStyle(identifierField,identifierErrorLabel);
-            AuthField.deleteErrorStyle(passwordField, passwordErrorLabel);
-            passwordGroup.setLayoutY(0);
-
-            String identifierType = getIdentifierType(identifier);
-
-            if (identifierType.equals("-") || !UsersDataBase.getUserPresence(identifier)) {  // if identifier is invalid
-                String exceptionsReason = identifierType.equals("-") ? "Invalid information" : "Incorrect information";
-                AuthField.setErrorStyle(identifierField,identifierErrorLabel,exceptionsReason);
-                passwordGroup.setLayoutY(16);
-                occuredExceptions++;
-            }
-
-            if (password.isEmpty() || !UsersDataBase.getPasswordValidity(identifier,password)) {
-                String exceptionsReason = password.isEmpty() ? "Invalid password" : "Incorrect password";
-                AuthField.setErrorStyle(passwordField,passwordErrorLabel,exceptionsReason);
-                occuredExceptions++;
-            }
-
-            if (occuredExceptions == 0) {
-                setLoadingProgress(0.7);
-                Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(3), e -> {
-                    openMainWindow(identifier,identifierType);
-                    ((Stage) (anchorPane.getScene().getWindow())).close();  // close current window
-                }));
-                timeline.setCycleCount(1);
-                timeline.play();
-            }
-            if (occuredExceptions > 0) {
-                resetProgress();
-                setNormalButton();
-            }
-        } catch (Exception e) {
-            extraLabel.setText(e.getMessage());
-            e.printStackTrace();
-        }
+        var passwordFieldStyled = new AuthField(passwordField, lowerLabel);
+        passwordFieldStyled.setLabelChanges(-11, -2);
+        passwordFieldStyled.setLabelMovePath(-5, -24);
+        passwordFieldStyled.setStyle();
     }
+
+
+    @FXML
+    public void login() throws SQLException {
+        String identifier = identifierField.getText().trim();
+        String password = passwordField.getText().trim();
+
+        String identifierStatus = checkIdentifier(identifier);
+        String passwordStatus = checkPassword(identifier,password);
+        setIdentifierDefaultStyle();
+        setPasswordDefaultStyle();
+
+        if (identifierStatus.equals("valid") && passwordStatus.equals("valid")) {
+
+            openMainWindow(identifier,password);
+            closeLogInWindow();
+
+            return;
+        }
+
+        if (identifierStatus.equals("Email or name is empty") || identifierStatus.equals("Email or name was not found")) {
+
+            identifierErrorLabel.setVisible(true);
+            identifierErrorLabel.setText(identifierStatus);
+            identifierField.getStyleClass().clear();
+            identifierField.getStyleClass().add("input-field-error");
+
+            passwordGroup.setTranslateY(17);
+
+        }
+
+        if (passwordStatus.equals("Password is empty") || passwordStatus.equals("Password is incorrect")) {
+
+            passwordErrorLabel.setVisible(true);
+            passwordErrorLabel.setText(passwordStatus);
+            passwordField.getStyleClass().clear();
+            passwordField.getStyleClass().add("input-field-error");
+
+        }
+
+
+    }
+    public String checkIdentifier(String identifier) throws SQLException {
+
+        if (identifier.isEmpty())
+            return "Email or name is empty";
+        if (!UsersDataBase.getUserPresence(identifier))
+            return "Email or name was not found";
+
+        return "valid";
+    }
+    public String checkPassword(String identifier,String password) throws SQLException {
+
+        if (password.isEmpty())
+            return "Password is empty";
+        if (!identifier.isEmpty() && UsersDataBase.getUserPresence(identifier) && !UsersDataBase.getPasswordValidity(identifier,password))
+            return "Password is incorrect";
+
+        return "valid";
+    }
+    public void setIdentifierDefaultStyle() {
+        identifierErrorLabel.setVisible(false);
+        identifierField.getStyleClass().clear();
+        identifierField.getStyleClass().add("input-field");
+    }
+    public void setPasswordDefaultStyle() {
+        passwordErrorLabel.setVisible(false);
+        passwordField.getStyleClass().clear();
+        passwordField.getStyleClass().add("input-field");
+        passwordGroup.setTranslateY(0);
+    }
+
+
+    @FXML
     public void openSingUp() {
         try {
             Stage stage = new Stage();
@@ -129,8 +157,7 @@ public class AuthLogInController {
     }
 
 
-
-    private void openMainWindow(String identifier,String identifierType){
+    public void openMainWindow(String identifier,String identifierType){
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/fxml/MainWindow.fxml"));
             Parent root = loader.load();
@@ -148,61 +175,8 @@ public class AuthLogInController {
             extraLabel.setText(e.getMessage());
         }
     }
-    private void fieldsApplyStyle() {
-        var emailFieldStyled = new AuthField(identifierField,identifierLabel);
-        emailFieldStyled.setLabelChanges(-26, -2);
-        emailFieldStyled.setLabelMovePath(-5, -24);
-        emailFieldStyled.setStyle();
-
-        var passwordFieldStyled = new AuthField(passwordField, lowerLabel);
-        passwordFieldStyled.setLabelChanges(-11, -2);
-        passwordFieldStyled.setLabelMovePath(-5, -24);
-        passwordFieldStyled.setStyle();
-    }
-    private String getIdentifierType(String identifier) {
-        String emailPattern = "^.+@\\S*\\.[a-z]{2,}$";
-        Pattern emailPatternCompile = Pattern.compile(emailPattern);
-        Matcher emailMatcher = emailPatternCompile.matcher(identifier);
-
-        String namePattern = "^[a-zA-Z][a-zA-Z0-9 ]+$";
-        Pattern namePatternCompile = Pattern.compile(namePattern);
-        Matcher nameMatcher = namePatternCompile.matcher(identifier);
-
-        if (emailMatcher.find()) {
-            return "email";
-        } else if (nameMatcher.find()) {
-            return "name";
-        } else {
-            return "-";
-        }
-    }
-    private void setDefaultFieldsStyle() {
-        AuthField.deleteErrorStyle(identifierField,identifierErrorLabel);
-        AuthField.deleteErrorStyle(passwordField, passwordErrorLabel);
-    }
-    private void setLoadingProgress(double progress) {
-        Platform.runLater(()->{
-            progressBar.setProgress(progress);
-        });
-    }
-    private void resetProgress() {
-        Platform.runLater(()-> {
-            progressBar.setProgress(0);
-        });
-    }
-    private void setLoadingButton() {
-        Platform.runLater(()-> {
-            singUpButton.getStyleClass().clear();
-            singUpButton.getStyleClass().add("main-button-loading");
-            LoadingDots.startAnimation(anchorPane);
-        });
-    }
-    private void setNormalButton() {
-        Platform.runLater(()->{
-            singUpButton.getStyleClass().clear();
-            singUpButton.getStyleClass().add("main-button");
-            anchorPane.getChildren().remove(anchorPane.lookup("#dotsContainer"));
-        });
+    public void closeLogInWindow() {
+        ((Stage) (anchorPane.getScene().getWindow())).close();
     }
 
 

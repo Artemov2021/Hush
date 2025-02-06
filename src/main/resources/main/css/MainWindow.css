@@ -4,6 +4,8 @@
 .left-background {
     -fx-background-color: #1D1C20;
 }
+/*-----------------------------------------------------*/
+/* Title */
 .main-title {
     -fx-font-size: 28;
     -fx-text-fill: white;
@@ -18,10 +20,13 @@
     -fx-background-image: url("../elements/title.png");
     -fx-background-repeat: no-repeat;
 }
+/*-----------------------------------------------------*/
+/* Default Avatar */
 .avatar-button-default {
-    -fx-background-image: url("../elements/avatarDefault.png");
+    -fx-background-image: url("../elements/defaultMainWindowAvatar.png");
     -fx-background-radius: 35;
 }
+/*-----------------------------------------------------*/
 .name-label {
     -fx-font-size: 15;
     -fx-text-fill: white;

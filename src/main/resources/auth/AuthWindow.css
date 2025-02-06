@@ -21,6 +21,7 @@
     -fx-border-radius: 10;
     -fx-background-radius: 10;
     -fx-padding: 13;
+    -fx-cursor: text;
 }
 .input-field:focused {
     -fx-border-color: #7217E7;
