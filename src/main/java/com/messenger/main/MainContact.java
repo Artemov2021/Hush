@@ -56,14 +56,14 @@ public class MainContact {
             assert blobBytes != null;
             ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
             ImageView imageView = new ImageView(new Image(byteStream));
-            imageView.setFitHeight(38);
-            imageView.setFitWidth(38);
+            imageView.setFitHeight(45);
+            imageView.setFitWidth(45);
             imageView.setSmooth(true);
             mainContactAvatarLabel.setGraphic(imageView);
             Circle clip = new Circle();
-            clip.setLayoutX(19);
-            clip.setLayoutY(19);
-            clip.setRadius(19);
+            clip.setLayoutX(22.5);
+            clip.setLayoutY(22.5);
+            clip.setRadius(22.5);
             mainContactAvatarLabel.setClip(clip);
         }
     }

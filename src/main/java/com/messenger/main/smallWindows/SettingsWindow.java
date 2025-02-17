@@ -66,6 +66,9 @@ public class SettingsWindow {
 
 
     public void initializeWithValue() throws SQLException {
+        settingsNameField.setFocusTraversable(false);
+        settingsEmailField.setFocusTraversable(false);
+
         setDataBaseAvatarPicture();
         setNameInField();
         setEmailInField();
@@ -85,6 +88,26 @@ public class SettingsWindow {
         // Set event handler for avatar label
         settingsAvatarLabel.setOnMouseClicked(this::checkEvent);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public void setMainUserId(int id) throws SQLException {
         this.mainUserId = id;
@@ -114,17 +137,17 @@ public class SettingsWindow {
             assert blobBytes != null;
             ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
             ImageView imageView = new ImageView(new Image(byteStream));
-            imageView.setFitHeight(90);
-            imageView.setFitWidth(90);
+            imageView.setFitHeight(155);
+            imageView.setFitWidth(155);
             imageView.setSmooth(true);
             settingsAvatarLabel.setGraphic(imageView);
             Circle clip = new Circle();
-            clip.setLayoutX(45);
-            clip.setLayoutY(45);
-            clip.setRadius(45);
+            clip.setLayoutX(77.5);
+            clip.setLayoutY(77.5);
+            clip.setRadius(77.5);
             settingsAvatarLabel.setClip(clip);
         } else {
-            settingsAvatarLabel.getStyleClass().add("settings-avatar-default");
+            settingsAvatarLabel.getStyleClass().add("settings-avatar");
         }
     }
     private void setNameInField() throws SQLException {
@@ -199,20 +222,20 @@ public class SettingsWindow {
     }
     private void setAvatarPicture(String path) {
         ImageView imageView = new ImageView(new Image(new File(path).toURI().toString()));
-        imageView.setFitHeight(100);
-        imageView.setFitWidth(100);
+        imageView.setFitHeight(155);
+        imageView.setFitWidth(155);
         imageView.setSmooth(true);
         settingsAvatarLabel.setGraphic(imageView);
         Circle clip = new Circle();
-        clip.setLayoutX(50);
-        clip.setLayoutY(50);
-        clip.setRadius(50);
+        clip.setLayoutX(77.5);
+        clip.setLayoutY(77.5);
+        clip.setRadius(77.5);
         settingsAvatarLabel.setClip(clip);
     }
     private void setDefaultAvatar() {
         settingsAvatarLabel.setGraphic(null);
         settingsAvatarLabel.getStyleClass().clear();
-        settingsAvatarLabel.getStyleClass().add("settings-avatar-default");
+        settingsAvatarLabel.getStyleClass().add("settings-avatar");
     }
     private String sanitize(String input) {
         return (input == null) ? "" : input.trim();
@@ -318,14 +341,14 @@ public class SettingsWindow {
             assert blobBytes != null;
             ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
             ImageView imageView = new ImageView(new Image(byteStream));
-            imageView.setFitHeight(34);
-            imageView.setFitWidth(34);
+            imageView.setFitHeight(50);
+            imageView.setFitWidth(50);
             imageView.setSmooth(true);
             mainAvatarLabel.setGraphic(imageView);
             Circle clip = new Circle();
-            clip.setLayoutX(17);
-            clip.setLayoutY(17);
-            clip.setRadius(17);
+            clip.setLayoutX(25);
+            clip.setLayoutY(25);
+            clip.setRadius(25);
             mainAvatarLabel.setClip(clip);
         } else {
             mainAvatarLabel.setGraphic(null);
@@ -340,7 +363,7 @@ public class SettingsWindow {
         mainNameLabel.setText(UsersDataBase.getNameWithId(mainUserId));
         mainEmailLabel.setText(UsersDataBase.getEmailWithId(mainUserId));
         mainEmailLabel.setVisible(true);
-        mainNameLabel.setLayoutY(22);
+        mainNameLabel.setLayoutY(23);
 
         if (UsersDataBase.getEmailWithId(mainUserId) == null) {
             mainEmailLabel.setVisible(false);

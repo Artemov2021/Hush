@@ -1,103 +1,152 @@
+/*--------------------------------------------*/
+/*  Background  */
 .settings-window {
     -fx-background-color: #161518;
-    -fx-background-radius: 14;
+    -fx-background-radius: 15;
 }
+/*--------------------------------------------*/
+/*  "Settings" Title  */
 .settings-title {
-    -fx-font-size: 21;
+    -fx-font-size: 30;
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
-.settings-avatar-default {
-    -fx-background-image: url("../elements/avatarDefaultSettings.png");
-    -fx-backgroung-repeat: no-repeat;
-}
-.settings-identifier-label {
-    -fx-font-size: 12;
-    -fx-text-fill: white;
-}
-.settings-identifier-field {
-    -fx-background-color: #1D1C1F;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-border-color: #2C2A2F;
-    -fx-text-fill: white;
-    -fx-font-size: 12;
-    -fx-padding: 5 5 5 13;
-    -fx-prompt-text-fill: #6E687A;
-}
-.settings-identifier-field:focused {
-    -fx-border-color: #672DF0;
-}
-.settings-identifier-field-error {
-    -fx-background-color: #1D1C1F;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-border-color: #F04343;
-    -fx-text-fill: white;
-    -fx-font-size: 12;
-    -fx-padding: 5 5 5 13;
-    -fx-prompt-text-fill: #6E687A;
-}
-.settings-save-button {
-    -fx-background-image: url("../elements/saveButtonDefault.png");
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-border-color: transparent;
-    -fx-background-repeat: no-repeat;
-    -fx-background-color: transparent;
-}
-.settings-save-button:pressed {
-    -fx-background-image: url("../elements/saveButtonFocused.png");
-}
-.settings-cancel-button {
-    -fx-background-image: url("../elements/cancelButtonDefault.png");
-    -fx-background-color: transparent;
-}
-.settings-cancel-button:hover {
-    -fx-background-image: url("../elements/cancelButtonHovered.png");
-}
-.settings-cancel-button:pressed {
-    -fx-background-image: url("../elements/cancelButtonFocused.png");
-}
-.settings-error-label {
-    -fx-font-size: 11;
-    -fx-text-fill: #F04343;
-}
-.settings-avatar-buttons-background {
-    -fx-background-color: #1D1C20;
-    -fx-background-radius: 4;
-}
-.settings-avatar-button {
-    -fx-background-color: #1D1C20;
-    -fx-background-radius: 3;
-}
-.settings-avatar-button:hover {
-    -fx-background-color: #242326;
-}
-.settings-avatar-button:pressed {
-    -fx-background-color: #323036;
-}
-
-.settings-avatar-button-change-symbol {
-    -fx-background-image: url("../elements/settingsChange.png");
-    -fx-background-repeat: no-repeat;
-}
-.settings-avatar-button-change-text {
-    -fx-font-size: 9;
-    -fx-text-fill: white;
-}
-.settings-avatar-button-delete-symbol {
-    -fx-background-image: url("../elements/settingsDelete.png");
-    -fx-background-repeat: no-repeat;
-}
-.settings-avatar-button-delete-text {
-    -fx-font-size: 9;
-    -fx-text-fill: white;
-}
+/*--------------------------------------------*/
+/*  Exit  */
 .exit-button {
     -fx-background-image: url("../elements/exitDefault.png");
     -fx-background-color: transparent;
 }
 .exit-button:hover {
-    -fx-background-image: url("../elements/exitFocused.png");
+    -fx-background-image: url("../elements/exitPressed.png");
 }
+/*--------------------------------------------*/
+/*  Avatar  ( Default ) */
+.settings-avatar {
+    -fx-background-image: url("../elements/settingsDefaultAvatar.png");
+    -fx-backgroung-repeat: no-repeat;
+}
+/*--------------------------------------------*/
+/*  Avatar Buttons Background */
+.settings-avatar-buttons-background {
+    -fx-background-color: #1D1C20;
+    -fx-background-radius: 6;
+}
+/*--------------------------------------------*/
+/*  Avatar Buttons Background Button */
+.settings-avatar-buttons-change-background {
+    -fx-background-color: #1D1C20;
+    -fx-background-radius: 4;
+}
+.settings-avatar-buttons-change-background:hover {
+    -fx-background-color: #242326;
+}
+.settings-avatar-buttons-change-background:pressed {
+    -fx-background-color: #323036;
+}
+/*--------------------------------------------*/
+/*  Avatar Buttons text */
+.settings-avatar-buttons-text {
+    -fx-font-size: 11;
+    -fx-text-fill: white;
+}
+/*--------------------------------------------*/
+/*  Avatar Buttons Edit Symbol */
+.settings-avatar-buttons-edit-symbol {
+    -fx-background-image: url("../elements/settingsEditSymbol.png");
+    -fx-backgroung-repeat: no-repeat;
+}
+/*--------------------------------------------*/
+/*  Avatar Buttons Delete Symbol */
+.settings-avatar-buttons-delete-symbol {
+    -fx-background-image: url("../elements/settingsDeleteSymbol.png");
+    -fx-backgroung-repeat: no-repeat;
+}
+/*--------------------------------------------*/
+/*  Text Field Labels ( Your name, your email )  */
+.settings-text-field-title {
+    -fx-font-size: 16;
+    -fx-text-fill: white;
+}
+/*--------------------------------------------*/
+/*  Name Field */
+.settings-name-field {
+    -fx-background-image: url("../elements/settingsNameFieldDefault.png");
+    -fx-backgroung-repeat: no-repeat;
+    -fx-background-color: transparent;
+    -fx-font-size: 17;
+    -fx-text-fill: white;
+    -fx-padding: 0 0 0 57;
+    -fx-prompt-text-fill: #6E687A;
+}
+.settings-name-field:focused {
+    -fx-background-image: url("../elements/settingsNameFieldFocused.png");
+}
+/*--------------------------------------------*/
+/*  Email Field */
+.settings-email-field {
+    -fx-background-image: url("../elements/settingsEmailFieldDefault.png");
+    -fx-backgroung-repeat: no-repeat;
+    -fx-background-color: transparent;
+    -fx-font-size: 17;
+    -fx-text-fill: white;
+    -fx-padding: 0 0 0 57;
+    -fx-prompt-text-fill: #6E687A;
+}
+.settings-email-field:focused {
+    -fx-background-image: url("../elements/settingsEmailFieldFocused.png");
+}
+/*--------------------------------------------*/
+/*  Error Labels */
+.settings-error-label {
+    -fx-font-size: 14;
+    -fx-text-fill: #E12E2E;
+}
+/*--------------------------------------------*/
+/*  Save Button */
+.settings-save-button {
+    -fx-background-image: url("../elements/settingsSaveButtonDefault.png");
+    -fx-backgroung-repeat: no-repeat;
+    -fx-background-color: transparent;
+}
+.settings-save-button:hover {
+    -fx-background-image: url("../elements/settingsSaveButtonHovered.png");
+    -fx-backgroung-repeat: no-repeat;
+}
+.settings-save-button:pressed {
+    -fx-background-image: url("../elements/settingsSaveButtonPressed.png");
+    -fx-backgroung-repeat: no-repeat;
+}
+/*--------------------------------------------*/
+/*  Cancel Button */
+.settings-cancel-button {
+    -fx-background-image: url("../elements/settingsCancelButtonDefault.png");
+    -fx-backgroung-repeat: no-repeat;
+    -fx-background-color: transparent;
+}
+.settings-cancel-button:hover {
+    -fx-background-image: url("../elements/settingsCancelButtonHovered.png");
+    -fx-backgroung-repeat: no-repeat;
+}
+.settings-cancel-button:pressed {
+    -fx-background-image: url("../elements/settingsCancelButtonPressed.png");
+    -fx-backgroung-repeat: no-repeat;
+}
+/*--------------------------------------------*/
+/*  Log Out Button */
+.settings-logout-button {
+    -fx-background-image: url("../elements/settingsLogOutButtonDefault.png");
+    -fx-backgroung-repeat: no-repeat;
+    -fx-background-color: transparent;
+}
+.settings-logout-button:hover {
+    -fx-background-image: url("../elements/settingsLogOutButtonHovered.png");
+    -fx-backgroung-repeat: no-repeat;
+}
+
+
+
+
+
+
+

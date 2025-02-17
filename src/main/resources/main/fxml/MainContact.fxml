@@ -5,14 +5,14 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
 
-<AnchorPane fx:id="mainContactAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="55.0" prefWidth="279.0" style="-fx-background-color: transparent;;" stylesheets="@../css/MainContact.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainContact">
+<AnchorPane fx:id="mainContactAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="70.0" prefWidth="425.0" style="-fx-background-color: transparent;;" stylesheets="@../css/MainContact.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainContact">
    <children>
-      <Pane fx:id="mainContactPane" onMouseClicked="#showChat" prefHeight="55.0" prefWidth="279.0" styleClass="contact-background-pane">
+      <Pane fx:id="mainContactPane" onMouseClicked="#showChat" prefHeight="70.0" prefWidth="425.0" styleClass="contact-background-pane">
          <children>
-            <Label fx:id="mainContactAvatarLabel" layoutX="10.0" layoutY="10.0" prefHeight="38.0" prefWidth="38.0" styleClass="contact-avatar-label" />
-            <Label fx:id="mainContactNameLabel" layoutX="58.0" layoutY="9.0" prefHeight="17.0" prefWidth="174.0" styleClass="contact-name-label" text="Simple Text" />
-            <Label fx:id="mainContactMessageLabel" layoutX="58.0" layoutY="29.0" prefHeight="17.0" prefWidth="180.0" styleClass="contact-last-message-label" text="Label" />
-            <Label fx:id="mainContactTimeLabel" layoutX="240.0" layoutY="10.0" styleClass="contact-time-label" text="10:57" />
+            <Label fx:id="mainContactAvatarLabel" layoutX="17.0" layoutY="13.0" prefHeight="45.0" prefWidth="45.0" styleClass="contact-avatar-label" />
+            <Label fx:id="mainContactNameLabel" layoutX="75.0" layoutY="11.0" prefHeight="17.0" prefWidth="174.0" styleClass="contact-name-label" text="Simple Text" />
+            <Label fx:id="mainContactMessageLabel" layoutX="75.0" layoutY="38.0" prefHeight="17.0" prefWidth="180.0" styleClass="contact-last-message-label" text="Label" />
+            <Label fx:id="mainContactTimeLabel" layoutX="377.0" layoutY="13.0" styleClass="contact-time-label" text="10:57" />
          </children>
          <cursor>
             <Cursor fx:constant="HAND" />

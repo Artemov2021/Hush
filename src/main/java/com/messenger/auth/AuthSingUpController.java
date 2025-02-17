@@ -123,7 +123,7 @@ public class AuthSingUpController {
             return "Email or name is empty";
         if (identifierType.equals("-"))
             return "Email or name is invalid";
-        if ((identifierType.equals("email") && identifier.length() > 37) || (identifierType.equals("name") && identifier.length() > 23))
+        if ((identifierType.equals("email") && identifier.length() > 44) || (identifierType.equals("name") && identifier.length() > 30))
             return "Email or name is too long";
         if (UsersDataBase.getUserPresence(identifier))
             return "Email or name already exists";
