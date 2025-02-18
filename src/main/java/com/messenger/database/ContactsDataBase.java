@@ -60,6 +60,7 @@ public class ContactsDataBase {
     private static boolean getNameMatchingWithId(int id,String namePiece) {
         try {
             String[] nameSplited = UsersDataBase.getNameWithId(id).split("\\s+");
+            System.out.println(nameSplited[0]);
             return Arrays.stream(nameSplited).anyMatch(name -> getNameMatching(name.toLowerCase(),namePiece));
         } catch (Exception e) {
             throw new RuntimeException();

@@ -78,9 +78,20 @@
     -fx-text-fill: white;
     -fx-padding: 0 0 0 57;
     -fx-prompt-text-fill: #6E687A;
+    -fx-cursor: text;
 }
 .settings-name-field:focused {
     -fx-background-image: url("../elements/settingsNameFieldFocused.png");
+}
+.settings-name-field-error {
+    -fx-background-image: url("../elements/settingsNameFieldError.png");
+    -fx-backgroung-repeat: no-repeat;
+    -fx-background-color: transparent;
+    -fx-font-size: 17;
+    -fx-text-fill: white;
+    -fx-padding: 0 0 0 57;
+    -fx-prompt-text-fill: #6E687A;
+    -fx-cursor: text;
 }
 /*--------------------------------------------*/
 /*  Email Field */
@@ -92,9 +103,20 @@
     -fx-text-fill: white;
     -fx-padding: 0 0 0 57;
     -fx-prompt-text-fill: #6E687A;
+    -fx-cursor: text;
 }
 .settings-email-field:focused {
     -fx-background-image: url("../elements/settingsEmailFieldFocused.png");
+}
+.settings-email-field-error {
+    -fx-background-image: url("../elements/settingsEmailFieldError.png");
+    -fx-backgroung-repeat: no-repeat;
+    -fx-background-color: transparent;
+    -fx-font-size: 17;
+    -fx-text-fill: white;
+    -fx-padding: 0 0 0 57;
+    -fx-prompt-text-fill: #6E687A;
+    -fx-cursor: text;
 }
 /*--------------------------------------------*/
 /*  Error Labels */

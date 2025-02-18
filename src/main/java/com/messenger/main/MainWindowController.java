@@ -25,6 +25,9 @@ import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 public class MainWindowController {
     @FXML
@@ -110,20 +113,20 @@ public class MainWindowController {
 
 
     private void addSearchFieldListener() {
-        mainSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                if (newValue.trim().length() > 0) {
-                    mainContactsVBox.getChildren().clear();
-                    int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(id,newValue.trim());
-                    MainContactList.loadCustomContacts(id,foundedUsersId,mainContactsVBox,anchorPane);
-                } else {
-                    mainContactsVBox.getChildren().clear();
-                    MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
-                }
-            } catch (Exception e) {
-                throw new RuntimeException();
-            }
-        });
+//        mainSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
+//            try {
+//                if (newValue.trim().length() > 0) {
+//                    mainContactsVBox.getChildren().clear();
+//                    int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(id,newValue.trim());
+//                    MainContactList.loadCustomContacts(id,foundedUsersId,mainContactsVBox,anchorPane);
+//                } else {
+//                    mainContactsVBox.getChildren().clear();
+//                    MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
+//                }
+//            } catch (Exception e) {
+//                throw new RuntimeException();
+//            }
+//        });
     }
 
 

@@ -15,6 +15,7 @@ import java.util.List;
 
 public class MainContactList {
     public static void loadContacts(int mainUserId,VBox mainContactsVBox,AnchorPane mainAnchorPane) throws SQLException, IOException {
+        mainContactsVBox.getChildren().clear();
         mainContactsVBox.setSpacing(4.0);
         int[] contactsId = ContactsDataBase.getContactsIdList(mainUserId);
         for (int contactId: contactsId) {

@@ -1,12 +1,16 @@
 package com.messenger.main.smallWindows;
 
 import com.messenger.database.UsersDataBase;
+import com.messenger.main.MainContactList;
 import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.animation.TranslateTransition;
 import javafx.event.Event;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
-import javafx.scene.control.Button;
+import javafx.scene.Group;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -15,8 +19,10 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.ByteArrayInputStream;
@@ -39,6 +45,8 @@ public class SettingsWindow {
     @FXML
     private Label settingsNameExceptionLabel;
     @FXML
+    private Label emailLabel;
+    @FXML
     private TextField settingsEmailField;
     @FXML
     private Label settingsEmailExceptionLabel;
@@ -59,24 +67,56 @@ public class SettingsWindow {
     @FXML
     private Label deleteSymbol;
 
+
     private int mainUserId;
     private AnchorPane mainAnchorPane;
+    private Group emailGroup;
 
     private String newAvatarPath = "";
 
 
-    public void initializeWithValue() throws SQLException {
-        settingsNameField.setFocusTraversable(false);
-        settingsEmailField.setFocusTraversable(false);
+    public void setMainUserId(int id) throws SQLException {
+        this.mainUserId = id;
+    }
+    public void setMainAnchorPane(AnchorPane mainAnchorPane) {
+        this.mainAnchorPane = mainAnchorPane;
+    }
 
+
+    public void initializeWithValue() throws SQLException {
+        initializeInterface();
+        showOpeningEffect();
+        setupClickHandlers();
+    }
+
+
+    public void initializeInterface() throws SQLException {
+        createEmailGroup();
+        defocusTextFields();
         setDataBaseAvatarPicture();
         setNameInField();
         setEmailInField();
         hideErrorLabels();
         hideAvatarButtonsElements();
+    }
+    public void createEmailGroup() {
+        emailGroup = new Group(emailLabel,settingsEmailField,settingsEmailExceptionLabel);
+        settingsPane.getChildren().add(emailGroup);
+    }
+    private void showOpeningEffect() {
+        // Appearing time
+        FadeTransition FadeIn = new FadeTransition(Duration.millis(180),settingsBackgroundPane);
+        FadeIn.setFromValue(0);
+        FadeIn.setToValue(1);
+        FadeIn.play();
 
-        showOpeningEffect();
-
+        // Appearing move to left
+        TranslateTransition translateIn = new TranslateTransition(Duration.millis(180), settingsPane);
+        translateIn.setFromX(0);
+        translateIn.setToX(-35);
+        translateIn.play();
+    }
+    public void setupClickHandlers() {
         // Consume the event to prevent it from affecting backgroundPane
         settingsPane.setOnMouseClicked(Event::consume);
 
@@ -90,45 +130,9 @@ public class SettingsWindow {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public void setMainUserId(int id) throws SQLException {
-        this.mainUserId = id;
-    }
-    public void setMainAnchorPane(AnchorPane mainAnchorPane) {
-        this.mainAnchorPane = mainAnchorPane;
-    }
-
-
-    private void showOpeningEffect() {
-        // Appearing time
-        FadeTransition FadeIn = new FadeTransition(Duration.millis(180),settingsBackgroundPane);
-        FadeIn.setFromValue(0);
-        FadeIn.setToValue(1);
-        FadeIn.play();
-
-        // Appearing move to left
-        TranslateTransition translateIn = new TranslateTransition(Duration.millis(180), settingsPane);
-        translateIn.setFromX(0);
-        translateIn.setToX(-35);
-        translateIn.play();
+    public void defocusTextFields() {
+        settingsNameField.setFocusTraversable(false);
+        settingsEmailField.setFocusTraversable(false);
     }
     private void setDataBaseAvatarPicture() throws SQLException {
         settingsAvatarLabel.getStyleClass().clear();
@@ -168,6 +172,8 @@ public class SettingsWindow {
         buttonsBackgroundPane.setVisible(false);
         buttonsBackgroundOverlay.setVisible(false);
     }
+
+
     private void checkEvent(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.SECONDARY) {
             Point2D paneCoordinates = settingsAvatarLabel.localToParent(mouseEvent.getX(), mouseEvent.getY());
@@ -177,17 +183,11 @@ public class SettingsWindow {
         }
     }
     private void showAvatarsButton(double x,double y) {
-        // Setting change and delete button on the right position, creating background pane
+        // Setting buttons visibility, creating background pane
         buttonsBackgroundOverlay.setVisible(true);
         buttonsBackgroundPane.setVisible(true);
         buttonsBackgroundOverlay.setLayoutX(x);
         buttonsBackgroundOverlay.setLayoutY(y);
-
-        // Making text and symbol invisible for mouse
-        changeText.setMouseTransparent(true);
-        changeSymbol.setMouseTransparent(true);
-        deleteText.setMouseTransparent(true);
-        deleteSymbol.setMouseTransparent(true);
 
         // When you click away, buttons disappear
         buttonsBackgroundPane.setOnMouseClicked(event -> {
@@ -214,6 +214,8 @@ public class SettingsWindow {
             buttonsBackgroundPane.setVisible(false);
         });
     }
+
+
     private File getFileFromFileChooser() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select an image");
@@ -264,32 +266,44 @@ public class SettingsWindow {
         }
         return matcher.find();
     }
-    private void setErrorFieldStyle(TextField textField,Label messageLabel,String message) {
+    private void setErrorNameFieldStyle(TextField textField,Label messageLabel,String message) {
         textField.getStyleClass().clear();
-        textField.getStyleClass().add("settings-identifier-field-error");
+        textField.getStyleClass().add("settings-name-field-error");
         messageLabel.setVisible(true);
         messageLabel.setText(message);
     }
-    private void setDefaultFieldStyle(TextField textField,Label messageLabel) {
+    private void setDefaultNameFieldStyle(TextField textField,Label messageLabel) {
         textField.getStyleClass().clear();
-        textField.getStyleClass().add("settings-identifier-field");
+        textField.getStyleClass().add("settings-name-field");
+        messageLabel.setVisible(false);
+    }
+    private void setErrorEmailFieldStyle(TextField textField,Label messageLabel,String message) {
+        textField.getStyleClass().clear();
+        textField.getStyleClass().add("settings-email-field-error");
+        messageLabel.setVisible(true);
+        messageLabel.setText(message);
+    }
+    private void setDefaultEmailFieldStyle(TextField textField,Label messageLabel) {
+        textField.getStyleClass().clear();
+        textField.getStyleClass().add("settings-email-field");
         messageLabel.setVisible(false);
     }
     private boolean nameIsValid(String name) throws SQLException {
         if (name.isEmpty() || !isNameFormatValid(name)) {
-            setErrorFieldStyle(settingsNameField,settingsNameExceptionLabel,"Invalid information");
+            setErrorNameFieldStyle(settingsNameField,settingsNameExceptionLabel,"Invalid information");
+            emailGroup.setTranslateY(20);
             return false;
         }
 
-        if (name.length() > 25) {
-            setErrorFieldStyle(settingsNameField,settingsNameExceptionLabel,"Name is too long! ( max. 25 character )");
+        if (name.length() > 24) {
+            setErrorNameFieldStyle(settingsNameField,settingsNameExceptionLabel,"Name is too long! ( max. 25 character )");
             return false;
         }
 
         boolean userPresenceInDataBase = UsersDataBase.getUserPresence(name);
         String mainUserOldName = UsersDataBase.getNameWithId(mainUserId);
         if (userPresenceInDataBase && !name.equals(mainUserOldName)) {
-            setErrorFieldStyle(settingsNameField,settingsNameExceptionLabel,"Name is already taken!");
+            setErrorNameFieldStyle(settingsNameField,settingsNameExceptionLabel,"Name is already taken!");
             return false;
         }
 
@@ -297,19 +311,19 @@ public class SettingsWindow {
     }
     private boolean emailIsValid(String email) throws SQLException {
         if (!email.isEmpty() && !isEmailFormatValid(email)) {
-            setErrorFieldStyle(settingsEmailField,settingsEmailExceptionLabel,"Invalid information");
+            setErrorEmailFieldStyle(settingsEmailField,settingsEmailExceptionLabel,"Invalid information");
             return false;
         }
 
-        if (email.length() > 25) {
-            setErrorFieldStyle(settingsNameField,settingsNameExceptionLabel,"Name is too long! ( max. 25 character )");
+        if (email.length() > 38) {
+            setErrorEmailFieldStyle(settingsNameField,settingsNameExceptionLabel,"Name is too long! ( max. 25 character )");
             return false;
         }
 
         boolean userPresenceInDataBase = UsersDataBase.getUserPresence(email);
         String mainUserOldEmail = UsersDataBase.getEmailWithId(mainUserId);
         if (userPresenceInDataBase && !email.equals(mainUserOldEmail)) {
-            setErrorFieldStyle(settingsEmailField,settingsEmailExceptionLabel,"Email is already taken!");
+            setErrorEmailFieldStyle(settingsEmailField,settingsEmailExceptionLabel,"Email is already taken!");
             return false;
         }
 
@@ -376,10 +390,13 @@ public class SettingsWindow {
         String name = sanitize(settingsNameField.getText());
         String email = sanitize(settingsEmailField.getText());
 
-        setDefaultFieldStyle(settingsNameField,settingsNameExceptionLabel);
-        setDefaultFieldStyle(settingsEmailField,settingsEmailExceptionLabel);
+        setDefaultNameFieldStyle(settingsNameField,settingsNameExceptionLabel);
+        setDefaultEmailFieldStyle(settingsEmailField,settingsEmailExceptionLabel);
+        emailGroup.setTranslateY(0);
 
-        if (nameIsValid(name) && emailIsValid(email)) {
+        boolean nameIsValid = nameIsValid(name);
+        boolean emailIsValid = emailIsValid(email);
+        if (nameIsValid && emailIsValid) {
             updateDataBaseAvatar();
             updateDataBaseName(name);
             updateDataBaseEmail(email);
@@ -399,6 +416,29 @@ public class SettingsWindow {
         });
         fadeOut.play();
     }
+
+    @FXML
+    public void logout() {
+        try {
+            Stage mainStage = (Stage) mainAnchorPane.getScene().getWindow();
+            mainStage.close();  // Close the main window
+            // Now open the login window
+            Stage newLoginStage = new Stage();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/auth/AuthLogIn.fxml"));
+            Scene scene = new Scene(loader.load());
+            newLoginStage.setResizable(false);
+            newLoginStage.setScene(scene);
+            newLoginStage.setTitle("Log In");
+            newLoginStage.show();  // Show the login window
+        } catch (Exception e) {
+            // Handle any exceptions (like FXML loading issues)
+            settingsEmailExceptionLabel.setText(e.getMessage());
+        }
+    }
+
+
+
+
 
 }
 

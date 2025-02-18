@@ -12,7 +12,7 @@
          <children>
             <Label layoutX="256.0" layoutY="90.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your name" />
             <TextField fx:id="settingsNameField" layoutX="244.0" layoutY="127.0" prefHeight="57.0" prefWidth="316.0" promptText="Enter your name" styleClass="settings-name-field" />
-            <Label layoutX="256.0" layoutY="194.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your email" />
+            <Label fx:id="emailLabel" layoutX="256.0" layoutY="194.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your email" />
             <TextField fx:id="settingsEmailField" layoutX="244.0" layoutY="231.0" prefHeight="57.0" prefWidth="313.0" promptText="Enter your email" styleClass="settings-email-field" />
             <Label fx:id="settingsAvatarLabel" layoutX="54.0" layoutY="107.0" prefHeight="155.0" prefWidth="155.0" styleClass="settings-avatar" />
             <Pane fx:id="buttonsBackgroundPane" layoutY="4.0" prefHeight="426.0" prefWidth="602.0">
@@ -50,7 +50,7 @@
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Button>
-            <Button layoutX="44.0" layoutY="353.0" mnemonicParsing="false" prefHeight="44.0" prefWidth="124.0" styleClass="settings-logout-button">
+            <Button layoutX="44.0" layoutY="353.0" mnemonicParsing="false" onAction="#logout" prefHeight="44.0" prefWidth="124.0" styleClass="settings-logout-button">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor>
