@@ -8,7 +8,7 @@
 
 <Pane fx:id="settingsBackgroundPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1009.0" prefWidth="1920.0" style="-fx-background-color: rgba(0, 0, 0, 0.5);" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.smallWindows.SettingsWindow">
    <children>
-      <Pane fx:id="settingsPane" layoutX="754.0" layoutY="285.0" prefHeight="426.0" prefWidth="602.0" styleClass="settings-window" stylesheets="@../css/MainSettingsWindow.css">
+      <Pane fx:id="settingsPane" layoutX="660.0" layoutY="285.0" prefHeight="426.0" prefWidth="602.0" styleClass="settings-window" stylesheets="@../css/MainSettingsWindow.css">
          <children>
             <Label layoutX="256.0" layoutY="90.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your name" />
             <TextField fx:id="settingsNameField" layoutX="244.0" layoutY="127.0" prefHeight="57.0" prefWidth="316.0" promptText="Enter your name" styleClass="settings-name-field" />

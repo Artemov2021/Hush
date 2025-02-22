@@ -5,6 +5,7 @@ import com.messenger.database.UsersDataBase;
 import com.messenger.main.MainContactList;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -47,7 +48,6 @@ public class NewContactWindow {
 
         // debugging closing window by clicking on the new contact window pane
         newContactOverlayPane.setOnMouseClicked(Event::consume);
-
     }
     private void showOpeningEffect() {
         FadeTransition FadeIn = new FadeTransition(Duration.millis(180),newContactBackgroundPane);

@@ -6,27 +6,27 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.Pane?>
 
-<Pane fx:id="newContactBackgroundPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="658.0" prefWidth="1156.0" style="-fx-background-color: rgba(0, 0, 0, 0.5);" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.smallWindows.NewContactWindow">
+<Pane fx:id="newContactBackgroundPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1009.0" prefWidth="1920.0" style="-fx-background-color: rgba(0, 0, 0, 0.5);" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.smallWindows.NewContactWindow">
    <children>
-      <Pane fx:id="newContactOverlayPane" layoutX="475.0" layoutY="160.0" prefHeight="283.0" prefWidth="337.0" styleClass="add-contact-window" stylesheets="@../css/MainNewContactWindow.css">
+      <Pane fx:id="newContactOverlayPane" layoutX="810.0" layoutY="304.0" prefHeight="340.0" prefWidth="418.0" styleClass="add-contact-window" stylesheets="@../css/MainNewContactWindow.css">
          <children>
-            <Label layoutX="25.0" layoutY="15.0" prefHeight="34.0" prefWidth="127.0" styleClass="add-contact-main-label" text="Add a contact" />
-            <Label layoutX="25.0" layoutY="44.0" prefHeight="24.0" prefWidth="241.0" styleClass="add-contact-secondary-label" text="Fill the following field to add a new contact" />
-            <Button fx:id="newContactExitButton" layoutX="287.0" layoutY="18.0" mnemonicParsing="false" onAction="#hideWindow" prefHeight="34.0" prefWidth="34.0" styleClass="exit-button">
+            <Label layoutX="31.0" layoutY="17.0" prefHeight="45.0" prefWidth="214.0" styleClass="add-contact-main-label" text="Add a contact" />
+            <Label layoutX="31.0" layoutY="58.0" prefHeight="24.0" prefWidth="303.0" styleClass="add-contact-secondary-label" text="Fill the following field to add a new contact" />
+            <Button fx:id="newContactExitButton" layoutX="358.0" layoutY="13.0" mnemonicParsing="false" onAction="#hideWindow" prefHeight="34.0" prefWidth="34.0" styleClass="exit-button">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Button>
-            <Label layoutX="26.0" layoutY="110.0" prefHeight="15.0" prefWidth="119.0" styleClass="add-contact-small-label" text="Contact info" />
-            <TextField fx:id="newContactInfoField" layoutX="25.0" layoutY="135.0" onAction="#checkInformation" prefHeight="40.0" prefWidth="289.0" promptText="Name or email address" styleClass="add-contact-field" />
-            <Button fx:id="newContactAddButton" layoutX="235.0" layoutY="230.0" mnemonicParsing="false" onAction="#checkInformation" prefHeight="30.0" prefWidth="72.0" styleClass="add-contact-add-button">
+            <Label layoutX="43.0" layoutY="117.0" prefHeight="15.0" prefWidth="119.0" styleClass="add-contact-small-label" text="Contact info" />
+            <TextField fx:id="newContactInfoField" layoutX="31.0" layoutY="148.0" onAction="#checkInformation" prefHeight="57.0" prefWidth="343.0" promptText="Name or email address" styleClass="add-contact-field" />
+            <Button fx:id="newContactAddButton" layoutX="271.0" layoutY="269.0" mnemonicParsing="false" onAction="#checkInformation" prefHeight="44.0" prefWidth="113.0" styleClass="add-contact-add-button">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Button>
-            <Button fx:id="newContactCancelButton" layoutX="148.0" layoutY="230.0" mnemonicParsing="false" onAction="#hideWindow" prefHeight="29.0" prefWidth="78.0" styleClass="add-contact-cancel-button">
+            <Button fx:id="newContactCancelButton" layoutX="131.0" layoutY="269.0" mnemonicParsing="false" onAction="#hideWindow" prefHeight="44.0" prefWidth="131.0" styleClass="add-contact-cancel-button">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Button>
-            <Label fx:id="newContactExceptionLabel" layoutX="26.0" layoutY="179.0" prefHeight="17.0" prefWidth="289.0" styleClass="add-contact-error-label" text="Exception Label" />
+            <Label fx:id="newContactExceptionLabel" layoutX="44.0" layoutY="210.0" prefHeight="17.0" prefWidth="289.0" styleClass="add-contact-error-label" text="Exception Label" />
          </children>
       </Pane>
    </children>

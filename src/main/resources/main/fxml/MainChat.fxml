@@ -9,11 +9,11 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane fx:id="chatAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="658.0" prefWidth="846.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainChatController">
+<AnchorPane fx:id="chatAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1009.0" prefWidth="1476.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainChatController">
    <children>
-      <Pane fx:id="chatBackgroundPane" prefHeight="658.0" prefWidth="846.0" styleClass="root" stylesheets="@../css/MainChat.css">
+      <Pane fx:id="chatBackgroundPane" prefHeight="1009.0" prefWidth="1476.0" styleClass="root" stylesheets="@../css/MainChat.css">
          <children>
-            <ScrollPane fx:id="chatScrollPane" fitToWidth="true" hbarPolicy="NEVER" layoutX="1.0" layoutY="64.0" prefHeight="543.0" prefWidth="846.0" styleClass="chat-scroll-pane">
+            <ScrollPane fx:id="chatScrollPane" fitToWidth="true" hbarPolicy="NEVER" layoutX="1.0" layoutY="80.0" prefHeight="864.0" prefWidth="1469.0" styleClass="chat-scroll-pane">
                <content>
                   <VBox fx:id="chatVBox" alignment="BOTTOM_CENTER" maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefWidth="844.0" styleClass="chat-scroll-pane" />
                </content>
@@ -21,22 +21,23 @@
                   <Insets bottom="8.0" />
                </padding>
             </ScrollPane>
-            <Label layoutX="1.0" layoutY="-5.0" prefHeight="70.0" prefWidth="846.0" styleClass="chat-upper-background" />
-            <TextField fx:id="chatTextField" layoutY="610.0" onAction="#sendMessage" prefHeight="49.0" prefWidth="846.0" promptText="Write a message...." styleClass="chat-message-text-field" />
-            <Label fx:id="chatMainAvatarLabel" layoutX="27.0" layoutY="18.0" prefHeight="36.0" prefWidth="36.0" styleClass="chat-avatar-label" />
-            <Label fx:id="chatMainNameLabel" layoutX="71.0" layoutY="23.0" prefHeight="20.0" prefWidth="253.0" styleClass="chat-name-label" text="Name label" />
-            <Label fx:id="chatAddPictureLabel" layoutX="10.0" layoutY="619.0" onMouseClicked="#sendPicture" prefHeight="26.0" prefWidth="42.0" styleClass="chat-add-picture-label">
+            <Label layoutX="1.0" layoutY="-5.0" prefHeight="78.0" prefWidth="1476.0" styleClass="chat-upper-background" />
+            <TextField fx:id="chatTextField" layoutX="1.0" layoutY="947.0" onAction="#sendMessage" prefHeight="60.0" prefWidth="1477.0" promptText="Write a message...." styleClass="chat-text-field" />
+            <Label fx:id="chatMainAvatarLabel" layoutX="26.0" layoutY="19.0" prefHeight="45.0" prefWidth="45.0" styleClass="chat-avatar-label" />
+            <Label fx:id="chatMainNameLabel" layoutX="80.0" layoutY="21.0" prefHeight="35.0" prefWidth="466.0" styleClass="chat-name-label" text="Name label" />
+            <Label fx:id="chatAddPictureLabel" layoutX="13.0" layoutY="958.0" onMouseClicked="#sendPicture" prefHeight="45.0" prefWidth="54.0" styleClass="chat-add-file-label">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Label>
-            <Label fx:id="chatSendLabel" layoutX="799.0" layoutY="618.0" onMouseClicked="#sendMessage" prefHeight="26.0" prefWidth="42.0" styleClass="chat-send-label">
+            <Label layoutX="1401.0" layoutY="19.0" prefHeight="39.0" prefWidth="46.0" styleClass="chat-search-lupe">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Label>
-            <Label layoutX="800.0" layoutY="19.0" prefHeight="26.0" prefWidth="36.0" styleClass="chat-message-lupe">
+            <Label layoutX="1396.0" layoutY="959.0" prefHeight="43.0" prefWidth="54.0" styleClass="chat-send-message-label">
                <cursor>
                   <Cursor fx:constant="HAND" />
-               </cursor></Label>
+               </cursor>
+            </Label>
          </children>
       </Pane>
    </children>

@@ -1,42 +1,77 @@
+/*-----------------------------------------------------------------------------*/
+/* Chat Background */
 .root {
     -fx-background-color: #161518;
 }
-.chat-message-text-field {
-    -fx-background-color: #1D1C20;
-    -fx-border-color: #1D1C20;
-    -fx-font-size: 13;
-    -fx-prompt-text-fill: #5A5959;
-    -fx-text-fill: white;
-    -fx-padding: 0 55 5 53;
-}
-
-.chat-add-photo-label {
-    -fx-background-image: url("../elements/paperClipDefault.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-add-photo-label:hover {
-    -fx-background-image: url("../elements/paperClipFocused.png");
-
-}
-.chat-send-label {
-    -fx-background-image: url("../elements/sendDefault.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-send-label:hover {
-    -fx-background-image: url("../elements/sendFocused.png");
-}
+/*-----------------------------------------------------------------------------*/
+/* Chat Upper Background */
 .chat-upper-background {
     -fx-background-color: #1D1C20;
 }
+/*-----------------------------------------------------------------------------*/
+/* Avatar Default Label */
 .chat-avatar-label {
-    -fx-background-image: url("../elements/avatarDialogDefault.png");
+    -fx-background-image: url("../elements/chatAvatarDefault.png");
     -fx-background-repeat: no-repeat;
 }
+/*-----------------------------------------------------------------------------*/
+/* Name Label */
 .chat-name-label {
-    -fx-font-size: 14;
+    -fx-font-size: 20;
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
+/*-----------------------------------------------------------------------------*/
+/* Text Field */
+.chat-text-field {
+    -fx-background-color: #1D1C20;
+    -fx-border-color: #1D1C20;
+    -fx-font-size: 16;
+    -fx-prompt-text-fill: #5A5959;
+    -fx-text-fill: white;
+    -fx-padding: 5 55 5 68;
+}
+/*-----------------------------------------------------------------------------*/
+/* Add Picture Button */
+.chat-add-file-label {
+    -fx-background-image: url("../elements/addPictureDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-add-file-label:hover {
+    -fx-background-image: url("../elements/addPictureHovered.png");
+
+}
+/*-----------------------------------------------------------------------------*/
+/* Send Message Button */
+.chat-send-message-label {
+    -fx-background-image: url("../elements/sendMessageDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-send-message-label:hover {
+    -fx-background-image: url("../elements/sendMessageHovered.png");
+    -fx-background-repeat: no-repeat;
+}
+/*-----------------------------------------------------------------------------*/
+/* Search for a message Button */
+.chat-search-lupe {
+    -fx-background-image: url("../elements/searchLupeDefault.png");
+}
+.chat-search-lupe:hover {
+    -fx-background-image: url("../elements/searchLupeHovered.png");
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 .chat-date-label {
     -fx-background-color: #2F2C39;
     -fx-background-radius: 7;

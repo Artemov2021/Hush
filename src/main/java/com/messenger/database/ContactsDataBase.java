@@ -28,11 +28,18 @@ public class ContactsDataBase {
         return contactsIdList.stream().mapToInt(Integer::intValue).toArray();
     }
     public static int[] getMatchedUsersId(int mainUserId,String userNamePiece) throws SQLException {
-        /* For example: user enters "Ar" and that method gives all users id, which name
+        /* For example: user enters "Ar" and that method gives all user's id, which name
            beginns with "Ar" ( e.g. Artur,Ariana )  */
+
         int[] contactsId = getContactsIdList(mainUserId);
         return Arrays.stream(contactsId)
-                .filter(contactId -> getNameMatchingWithId(contactId,userNamePiece.toLowerCase())).toArray();
+                .filter(contactId -> {
+                    try {
+                        return checkUserMatching(userNamePiece,contactId);
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).toArray();
     }
     public static void addContact(int mainUserId,int contactId) throws SQLException {
         String statement = "INSERT INTO contacts (user_id,contact_id) VALUES (?,?)";
@@ -49,22 +56,13 @@ public class ContactsDataBase {
 
 
 
+    private static boolean checkUserMatching(String enteredName,int userId) throws SQLException {
+        String userName = UsersDataBase.getNameWithId(userId);
 
-    private static boolean getNameMatching(String name,String namePiece) {
-        String pattern = String.format("^%s",namePiece);
+        String pattern = String.format("^%s",enteredName);
         Pattern patternObject = Pattern.compile(pattern);
-
-        Matcher matcher = patternObject.matcher(name);
+        Matcher matcher = patternObject.matcher(userName);
         return matcher.find();
-    }
-    private static boolean getNameMatchingWithId(int id,String namePiece) {
-        try {
-            String[] nameSplited = UsersDataBase.getNameWithId(id).split("\\s+");
-            System.out.println(nameSplited[0]);
-            return Arrays.stream(nameSplited).anyMatch(name -> getNameMatching(name.toLowerCase(),namePiece));
-        } catch (Exception e) {
-            throw new RuntimeException();
-        }
     }
 
 }

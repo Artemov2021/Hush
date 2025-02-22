@@ -1,72 +1,92 @@
+/*-----------------------------------------------------------------------------*/
+/* Add Contact Background  */
 .add-contact-window {
     -fx-background-color: #161518;
-    -fx-background-radius: 14;
+    -fx-background-radius: 15;
 }
+/*-----------------------------------------------------------------------------*/
+/* Title Labels */
 .add-contact-main-label {
-    -fx-font-size: 18;
+    -fx-font-size: 28;
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
 .add-contact-secondary-label {
-    -fx-font-size: 12;
+    -fx-font-size: 15;
     -fx-text-fill: #69686D;
 }
+/*-----------------------------------------------------------------------------*/
+/* "Contact info" label */
 .add-contact-small-label {
-    -fx-font-size: 13;
+    -fx-font-size: 16;
     -fx-text-fill: white;
 }
+/*-----------------------------------------------------------------------------*/
+/* Text Field */
 .add-contact-field {
-    -fx-font-size: 13;
-    -fx-background-color: #1D1C1F;
-    -fx-background-radius: 8;
+    -fx-font-size: 17;
+    -fx-background-color: transparent;
+    -fx-border-radius: 12;
     -fx-border-color: #2C2A2F;
-    -fx-border-radius: 8;
     -fx-text-fill: white;
     -fx-prompt-text-fill: #595664;
-    -fx-padding: 0 0 0 13;
+    -fx-padding: 0 0 0 20;
+    -fx-cursor: text;
 }
 .add-contact-field:focused {
     -fx-border-color: #672DF0;
+    -fx-cursor: text;
 }
+
 .add-contact-field-error {
     -fx-border-color: #F04343;
-    -fx-font-size: 13;
-    -fx-background-color: #1D1C1F;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
+    -fx-font-size: 17;
+    -fx-background-color: transparent;
+    -fx-border-radius: 12;
     -fx-text-fill: white;
     -fx-prompt-text-fill: #595664;
-    -fx-padding: 0 0 0 13;
+    -fx-padding: 0 0 0 20;
+    -fx-cursor: text;
 }
+/*-----------------------------------------------------------------------------*/
+/* Add Button */
 .add-contact-add-button {
-    -fx-background-image: url("../elements/addButtonDefault.png");
+    -fx-background-image: url("../elements/newContactSaveButtonDefault.png");
     -fx-background-radius: 8;
     -fx-border-radius: 8;
     -fx-border-color: transparent;
     -fx-background-repeat: no-repeat;
     -fx-background-color: transparent;
 }
-.add-contact-add-button:pressed {
-    -fx-background-image: url("../elements/addButtonFocused.png");
+.add-contact-add-button:hover {
+    -fx-background-image: url("../elements/newContactSaveButtonHovered.png");
 }
+.add-contact-add-button:pressed {
+    -fx-background-image: url("../elements/newContactSaveButtonPressed.png");
+}
+/*-----------------------------------------------------------------------------*/
+/* Cancel Button */
 .add-contact-cancel-button {
-    -fx-background-image: url("../elements/cancelButtonDefault.png");
+    -fx-background-image: url("../elements/newContactCancelButtonDefault.png");
     -fx-background-color: transparent;
 }
 .add-contact-cancel-button:hover {
-    -fx-background-image: url("../elements/cancelButtonHovered.png");
+    -fx-background-image: url("../elements/newContactCancelButtonHovered.png");
 }
 .add-contact-cancel-button:pressed {
-    -fx-background-image: url("../elements/cancelButtonFocused.png");
+    -fx-background-image: url("../elements/newContactCancelButtonPressed.png");
 }
+/*-----------------------------------------------------------------------------*/
+/* Error Label */
 .add-contact-error-label {
-    -fx-font-size: 12;
+    -fx-font-size: 14;
     -fx-text-fill: #F04343;
 }
+/*-----------------------------------------------------------------------------*/
 .exit-button {
     -fx-background-image: url("../elements/exitDefault.png");
     -fx-background-color: transparent;
 }
 .exit-button:hover {
-    -fx-background-image: url("../elements/exitFocused.png");
+    -fx-background-image: url("../elements/exitPressed.png");
 }

@@ -57,15 +57,7 @@ public class SettingsWindow {
     @FXML
     private Label changeButton;
     @FXML
-    private Label changeText;
-    @FXML
-    private Label changeSymbol;
-    @FXML
     private Label deleteButton;
-    @FXML
-    private Label deleteText;
-    @FXML
-    private Label deleteSymbol;
 
 
     private int mainUserId;

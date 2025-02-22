@@ -132,7 +132,7 @@ public class MainChatController {
         mainAnchorPane.getChildren().removeAll(titles);
     }
     private void setChatPosition() {
-        chatBackgroundPane.setLayoutX(310);
+        chatBackgroundPane.setLayoutX(461);
     }
     private void checkForWrappers() {
         Pane replyPane = (Pane) mainAnchorPane.lookup("#reply-wrapper");

@@ -6,8 +6,10 @@ import com.messenger.design.ScrollPaneEffect;
 import com.messenger.design.ToastMessage;
 import com.messenger.main.smallWindows.NewContactWindow;
 import com.messenger.main.smallWindows.SettingsWindow;
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.CacheHint;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
@@ -18,6 +20,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -57,18 +60,20 @@ public class MainWindowController {
 
 
     public void initializeWithValue () throws SQLException, IOException {
-        setMainTitle();
+        setMainLogInTitle();
         setProfileInfo();
         setAppropriateAvatar();
-        mainSearchField.setFocusTraversable(false);
-        ScrollPaneEffect.addScrollBarEffect(mainContactsScrollPane);
-
-        MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
+        defocusSearchField();
+        setScrollPaneEffect();
+        loadContacts();
         addSearchFieldListener();
+
+
+
     }
 
 
-    private void setMainTitle() throws SQLException {
+    private void setMainLogInTitle() throws SQLException {
         /* set main title on the right side. If the person has no contacts,
            there is going to be the default title ( pointing how to add a new contact ). If the person
            has already at least one contact, there is going to be "login-title"
@@ -109,25 +114,52 @@ public class MainWindowController {
             mainAvatarLabel.getStyleClass().add("avatar-button-default");
         }
     }
-
-
-
-    private void addSearchFieldListener() {
-//        mainSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
-//            try {
-//                if (newValue.trim().length() > 0) {
-//                    mainContactsVBox.getChildren().clear();
-//                    int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(id,newValue.trim());
-//                    MainContactList.loadCustomContacts(id,foundedUsersId,mainContactsVBox,anchorPane);
-//                } else {
-//                    mainContactsVBox.getChildren().clear();
-//                    MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
-//                }
-//            } catch (Exception e) {
-//                throw new RuntimeException();
-//            }
-//        });
+    private void defocusSearchField() {
+        mainSearchField.setFocusTraversable(false);
     }
+    private void setScrollPaneEffect() {
+        mainContactsScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        mainContactsScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        ScrollPaneEffect.addScrollBarEffect(mainContactsScrollPane);
+    }
+    private void loadContacts() throws SQLException, IOException {
+        MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
+    }
+    private void addSearchFieldListener() {
+        PauseTransition pause = new PauseTransition(Duration.millis(200));
+        pause.setOnFinished(event -> showFoundedContacts(mainSearchField.getText()));
+
+
+        mainSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                if (newValue.trim().length() == 0) {
+                    mainContactsVBox.getChildren().clear();
+                    MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException();
+            }
+            pause.playFromStart();
+        });
+    }
+
+
+    private void showFoundedContacts(String enteredName) {
+        System.out.println(enteredName);
+        try {
+            if (enteredName.trim().length() > 0) {
+                mainContactsVBox.getChildren().clear();
+                int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(id,enteredName.trim());
+                MainContactList.loadCustomContacts(id,foundedUsersId,mainContactsVBox,anchorPane);
+            } else {
+                mainContactsVBox.getChildren().clear();
+                MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException();
+        }
+    }
+
 
 
     @FXML
@@ -170,9 +202,13 @@ public class MainWindowController {
         this.id = id;
         initializeWithValue();
     }
-
     public void initialize() throws SQLException, IOException {
         this.id = 1;
         initializeWithValue();
     }
+
+
+
+
+
 }
