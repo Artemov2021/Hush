@@ -66,8 +66,8 @@ public class MainWindowController {
         defocusSearchField();
         setScrollPaneEffect();
         loadContacts();
+        setContactsLazyLoading();
         addSearchFieldListener();
-
 
 
     }
@@ -125,6 +125,23 @@ public class MainWindowController {
     private void loadContacts() throws SQLException, IOException {
         MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
     }
+    private void setContactsLazyLoading() {
+        // Once scroll pane was triggered:
+        // 1) load messages on visible area ( loading beginns 12 elements from the uppermost element downward )
+        // 2) making the invisible messages empty, as placeholders
+        // 3) limiting overall messages amount into 20, then 20 more messages are going to be added dynamically
+
+        mainContactsScrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
+            loadVisibleMessages(getUppermostElementIndex(mainContactsVBox,mainContactsScrollPane),getBottommostElement(mainContactsVBox,mainContactsScrollPane));
+
+
+        });
+
+
+
+
+
+    }
     private void addSearchFieldListener() {
         PauseTransition pause = new PauseTransition(Duration.millis(200));
         pause.setOnFinished(event -> showFoundedContacts(mainSearchField.getText()));
@@ -159,7 +176,59 @@ public class MainWindowController {
             throw new RuntimeException();
         }
     }
+    private void loadVisibleMessages(int beginningIndex,int endingIndex) {
+        for (int i = beginningIndex;i <= endingIndex;i++) {
+            System.out.println(i);
+        }
+    }
+    public int getUppermostElementIndex(VBox vbox, ScrollPane scrollPane) {
+        int index = -1;
+        // Get the height of the viewport
+        double viewportHeight = scrollPane.getViewportBounds().getHeight();
+        double scrollPosition = scrollPane.getVvalue() * (vbox.getHeight() - viewportHeight);
 
+        // Iterate through VBox children to find the uppermost visible element
+        for (int i = 0; i < vbox.getChildren().size(); i++) {
+            // Get the current child of the VBox
+            AnchorPane anchorPane = (AnchorPane) vbox.getChildren().get(i);
+            double elementTop = anchorPane.getLayoutY();
+            double elementBottom = elementTop + anchorPane.getHeight();
+            index = i;
+
+            // Check if the element is visible in the viewport
+            // The element is considered visible if the top is above the viewport and the bottom is below the viewport
+            if (elementTop < (scrollPosition + viewportHeight) && elementBottom > scrollPosition) {
+                // If the element is visible, print its ID
+                return index;
+
+            }
+        }
+        return index;
+    }
+    public int getBottommostElement(VBox vbox, ScrollPane scrollPane) {
+        int index = -1;
+        // Get the height of the viewport
+        double viewportHeight = scrollPane.getViewportBounds().getHeight();
+        double scrollPosition = scrollPane.getVvalue() * (vbox.getHeight() - viewportHeight);
+
+        // Iterate through VBox children to find the bottommost visible element
+        AnchorPane bottommostElement = null; // Store the bottommost element
+        for (int i = 0; i < vbox.getChildren().size(); i++) {
+            // Get the current child of the VBox
+            AnchorPane anchorPane = (AnchorPane) vbox.getChildren().get(i);
+            double elementTop = anchorPane.getLayoutY();
+            double elementBottom = elementTop + anchorPane.getHeight();
+
+            // Check if the element is visible in the viewport
+            // The element is considered visible if its top is above the viewport and its bottom is below the viewport
+            if (elementTop < (scrollPosition + viewportHeight) && elementBottom > scrollPosition) {
+                bottommostElement = anchorPane;  // Update the bottommost visible element
+                index = i;
+            }
+        }
+
+        return index;
+    }
 
 
     @FXML

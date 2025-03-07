@@ -63,24 +63,28 @@
 
 
 
-
-
-
-
-
-
-
-
-
+/*-----------------------------------------------------------------------------*/
+/* Date Label */
 .chat-date-label {
     -fx-background-color: #2F2C39;
-    -fx-background-radius: 7;
+    -fx-background-radius: 12;
     -fx-text-fill: white;
-    -fx-font-size: 11;
+    -fx-font-size: 15;
     -fx-font-weight: bold;
     -fx-alignment: center;
-    -fx-padding: 2 12 2 12;
+    -fx-padding: 3 15 3 15;
 }
+/*-----------------------------------------------------------------------------*/
+
+
+
+
+
+
+
+
+
+
 
 .chat-dialog-vbox {
     -fx-background-color: #161518;

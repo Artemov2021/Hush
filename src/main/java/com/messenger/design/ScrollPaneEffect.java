@@ -10,38 +10,47 @@ public class ScrollPaneEffect {
         scrollPane.skinProperty().addListener((obs, oldSkin, newSkin) -> {
             ScrollBar vBar = (ScrollBar) scrollPane.lookup(".scroll-bar:vertical");
 
-            // Initially set vertical scrollbar policy to NEVER (hidden)
-            scrollPane.setVbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
+            if (vBar == null) return; // Prevent crashes if the scrollbar is not found
 
+            // Make the scrollbar almost invisible but still interactive
+            vBar.setOpacity(0.01);
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
-            // Create a FadeTransition for smooth disappearing
-            FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.6),vBar);
-            fadeOut.setFromValue(1.0);  // Fully visible
-            fadeOut.setToValue(0.0);    // Fully transparent
+            // Fade effects
+            FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.6), vBar);
+            fadeOut.setFromValue(1.0);
+            fadeOut.setToValue(0.01); // Keep it slightly visible so events still work
 
-            FadeTransition fadeIn = new FadeTransition(Duration.seconds(0.2),vBar);
-            fadeIn.setFromValue(0.0);   // Start from transparent
-            fadeIn.setToValue(1.0);     // Fully visible
+            FadeTransition fadeIn = new FadeTransition(Duration.seconds(0.2), vBar);
+            fadeIn.setFromValue(0.01);
+            fadeIn.setToValue(1.0);
 
-            // Create a PauseTransition for the 5-second delay before hiding the scrollbar
-//            PauseTransition hideScrollBar = new PauseTransition(Duration.seconds(5));
-
-            // Set the action to hide the scrollbar after 5 seconds using fade-out
-//            hideScrollBar.setOnFinished(event -> {
-//                fadeOut.play();  // Start the fade-out animation
-//            });
-
-            // Show the scrollbar when the mouse enters the ScrollPane
+            // Show scrollbar when mouse enters the ScrollPane
             scrollPane.setOnMouseEntered(event -> {
-                scrollPane.setVbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.AS_NEEDED);  // Show scrollbar
-                fadeIn.play();  // Smooth fade-in when mouse enters// Stop the hide timer if it's running
+                fadeOut.stop(); // Stop hiding animation if it's running
+                fadeIn.play();  // Play fade-in animation
             });
 
-            // Start the hide timer and smooth fade-out when mouse exits the ScrollPane
+            // Also trigger when hovering over the scrollbar itself
+            vBar.setOnMouseEntered(event -> {
+                fadeOut.stop();
+                fadeIn.play();
+            });
+
+            // Hide scrollbar when mouse exits both the ScrollPane and the ScrollBar
             scrollPane.setOnMouseExited(event -> {
-                fadeOut.play();  // Start the 5-second timer to hide the scrollbar
+                if (!vBar.isHover()) { // Ensure we are not still hovering the scrollbar
+                    fadeIn.stop();
+                    fadeOut.play();
+                }
             });
 
+            vBar.setOnMouseExited(event -> {
+                if (!scrollPane.isHover()) { // Ensure we are not still hovering the ScrollPane
+                    fadeIn.stop();
+                    fadeOut.play();
+                }
+            });
         });
     }
 }

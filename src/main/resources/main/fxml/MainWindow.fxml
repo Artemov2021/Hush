@@ -30,9 +30,9 @@
                   <Cursor fx:constant="HAND" />
                </cursor></Label>
             <Label layoutX="18.0" layoutY="106.0" prefHeight="31.0" prefWidth="65.0" styleClass="chats-title-label" text="Chats" />
-            <ScrollPane fx:id="mainContactsScrollPane" layoutY="203.0" prefHeight="806.0" prefWidth="460.0" styleClass="scroll-pane-contacts">
+            <ScrollPane fx:id="mainContactsScrollPane" layoutY="203.0" prefHeight="793.0" prefWidth="460.0" styleClass="scroll-pane-contacts">
                <content>
-                  <VBox fx:id="mainContactsVBox" layoutX="18.0" prefHeight="801.0" prefWidth="423.0" />
+                  <VBox fx:id="mainContactsVBox" layoutX="18.0" prefHeight="793.0" prefWidth="423.0" />
                </content>
                <padding>
                   <Insets left="18.0" />

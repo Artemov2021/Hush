@@ -113,8 +113,8 @@ public class ChatsDataBase {
         }
 
     }
-    public static ArrayList<List<Object>> getAllMessages(int mainUserId,int contactId) throws SQLException {
-        ArrayList<List<Object>> messages = new ArrayList<>();
+    public static List<ArrayList<Object>> getAllMessages(int mainUserId,int contactId) throws SQLException {
+        List<ArrayList<Object>> messages = new ArrayList<>();
         String statement = "SELECT * FROM chats WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
@@ -125,7 +125,7 @@ public class ChatsDataBase {
             preparedStatement.setInt(4,mainUserId);
             ResultSet result = preparedStatement.executeQuery();
             while (result.next()) {
-                List<Object> message = new ArrayList<>();
+                ArrayList<Object> message = new ArrayList<>();
                 message.add(result.getInt("message_id"));
                 message.add(result.getInt("sender_id"));
                 message.add(result.getInt("receiver_id"));

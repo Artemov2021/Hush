@@ -15,7 +15,7 @@
          <children>
             <ScrollPane fx:id="chatScrollPane" fitToWidth="true" hbarPolicy="NEVER" layoutX="1.0" layoutY="80.0" prefHeight="864.0" prefWidth="1469.0" styleClass="chat-scroll-pane">
                <content>
-                  <VBox fx:id="chatVBox" alignment="BOTTOM_CENTER" maxHeight="1.7976931348623157E308" minHeight="-Infinity" prefWidth="844.0" styleClass="chat-scroll-pane" />
+                  <VBox fx:id="chatVBox" alignment="BOTTOM_CENTER" maxHeight="1.7976931348623157E308" minHeight="856.0" prefWidth="844.0" styleClass="chat-scroll-pane" />
                </content>
                <padding>
                   <Insets bottom="8.0" />
