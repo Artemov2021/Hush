@@ -7,9 +7,11 @@ import com.messenger.design.ToastMessage;
 import com.messenger.main.smallWindows.NewContactWindow;
 import com.messenger.main.smallWindows.SettingsWindow;
 import javafx.animation.PauseTransition;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.CacheHint;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
@@ -18,6 +20,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
@@ -29,8 +32,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
 
 public class MainWindowController {
     @FXML
@@ -66,7 +74,7 @@ public class MainWindowController {
         defocusSearchField();
         setScrollPaneEffect();
         loadContacts();
-        setContactsLazyLoading();
+        setLazyLoading();
         addSearchFieldListener();
 
 
@@ -125,22 +133,19 @@ public class MainWindowController {
     private void loadContacts() throws SQLException, IOException {
         MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
     }
-    private void setContactsLazyLoading() {
-        // Once scroll pane was triggered:
-        // 1) load messages on visible area ( loading beginns 12 elements from the uppermost element downward )
-        // 2) making the invisible messages empty, as placeholders
-        // 3) limiting overall messages amount into 20, then 20 more messages are going to be added dynamically
-
-        mainContactsScrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
-            loadVisibleMessages(getUppermostElementIndex(mainContactsVBox,mainContactsScrollPane),getBottommostElement(mainContactsVBox,mainContactsScrollPane));
-
-
+    private void setLazyLoading() {
+        mainContactsScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.doubleValue() == 1.0) {
+                int bottomContactId = getBottomContactId();
+                try {
+                    if (hasMoreContacts(id, bottomContactId)) {
+                        MainContactList.loadMoreContacts(id,mainContactsVBox,anchorPane,bottomContactId);
+                    }
+                } catch (SQLException | RuntimeException | IOException e) {
+                    throw new RuntimeException("Error fetching more contacts", e);
+                }
+            }
         });
-
-
-
-
-
     }
     private void addSearchFieldListener() {
         PauseTransition pause = new PauseTransition(Duration.millis(200));
@@ -176,58 +181,15 @@ public class MainWindowController {
             throw new RuntimeException();
         }
     }
-    private void loadVisibleMessages(int beginningIndex,int endingIndex) {
-        for (int i = beginningIndex;i <= endingIndex;i++) {
-            System.out.println(i);
-        }
+    private int getBottomContactId() {
+        // Get the last child in the VBox and extract its ID
+        AnchorPane lastContactPane = (AnchorPane) mainContactsVBox.getChildren().get(mainContactsVBox.getChildren().size() - 1);
+        String contactIdString = lastContactPane.getChildren().get(0).getId().split("mainContactPane")[1];
+        return Integer.parseInt(contactIdString);
     }
-    public int getUppermostElementIndex(VBox vbox, ScrollPane scrollPane) {
-        int index = -1;
-        // Get the height of the viewport
-        double viewportHeight = scrollPane.getViewportBounds().getHeight();
-        double scrollPosition = scrollPane.getVvalue() * (vbox.getHeight() - viewportHeight);
-
-        // Iterate through VBox children to find the uppermost visible element
-        for (int i = 0; i < vbox.getChildren().size(); i++) {
-            // Get the current child of the VBox
-            AnchorPane anchorPane = (AnchorPane) vbox.getChildren().get(i);
-            double elementTop = anchorPane.getLayoutY();
-            double elementBottom = elementTop + anchorPane.getHeight();
-            index = i;
-
-            // Check if the element is visible in the viewport
-            // The element is considered visible if the top is above the viewport and the bottom is below the viewport
-            if (elementTop < (scrollPosition + viewportHeight) && elementBottom > scrollPosition) {
-                // If the element is visible, print its ID
-                return index;
-
-            }
-        }
-        return index;
-    }
-    public int getBottommostElement(VBox vbox, ScrollPane scrollPane) {
-        int index = -1;
-        // Get the height of the viewport
-        double viewportHeight = scrollPane.getViewportBounds().getHeight();
-        double scrollPosition = scrollPane.getVvalue() * (vbox.getHeight() - viewportHeight);
-
-        // Iterate through VBox children to find the bottommost visible element
-        AnchorPane bottommostElement = null; // Store the bottommost element
-        for (int i = 0; i < vbox.getChildren().size(); i++) {
-            // Get the current child of the VBox
-            AnchorPane anchorPane = (AnchorPane) vbox.getChildren().get(i);
-            double elementTop = anchorPane.getLayoutY();
-            double elementBottom = elementTop + anchorPane.getHeight();
-
-            // Check if the element is visible in the viewport
-            // The element is considered visible if its top is above the viewport and its bottom is below the viewport
-            if (elementTop < (scrollPosition + viewportHeight) && elementBottom > scrollPosition) {
-                bottommostElement = anchorPane;  // Update the bottommost visible element
-                index = i;
-            }
-        }
-
-        return index;
+    public boolean hasMoreContacts(int mainUserId,int lastContactId) throws SQLException {
+        int[] allContactsIds = ContactsDataBase.getContactsIdList(mainUserId);
+        return allContactsIds[0] != lastContactId;    // 3,5,15   15 != 3
     }
 
 

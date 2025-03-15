@@ -10,10 +10,10 @@
    <children>
       <Pane fx:id="settingsPane" layoutX="660.0" layoutY="285.0" prefHeight="426.0" prefWidth="602.0" styleClass="settings-window" stylesheets="@../css/MainSettingsWindow.css">
          <children>
-            <Label layoutX="256.0" layoutY="90.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your name" />
-            <TextField fx:id="settingsNameField" layoutX="244.0" layoutY="127.0" prefHeight="57.0" prefWidth="316.0" promptText="Enter your name" styleClass="settings-name-field" />
-            <Label fx:id="emailLabel" layoutX="256.0" layoutY="194.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your email" />
             <TextField fx:id="settingsEmailField" layoutX="244.0" layoutY="231.0" prefHeight="57.0" prefWidth="313.0" promptText="Enter your email" styleClass="settings-email-field" />
+            <Label fx:id="emailLabel" layoutX="256.0" layoutY="194.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your email" />
+            <TextField fx:id="settingsNameField" layoutX="244.0" layoutY="127.0" prefHeight="57.0" prefWidth="316.0" promptText="Enter your name" styleClass="settings-name-field" />
+            <Label layoutX="256.0" layoutY="90.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your name" />
             <Label fx:id="settingsAvatarLabel" layoutX="54.0" layoutY="107.0" prefHeight="155.0" prefWidth="155.0" styleClass="settings-avatar" />
             <Pane fx:id="buttonsBackgroundPane" layoutY="4.0" prefHeight="426.0" prefWidth="602.0">
                <children>
@@ -31,8 +31,8 @@
                         </Label>
                         <Label fx:id="changeText" layoutX="39.0" layoutY="10.0" mouseTransparent="true" prefHeight="17.0" prefWidth="43.0" styleClass="settings-avatar-buttons-text" text="Change" />
                         <Label fx:id="changeSymbol" layoutX="12.0" layoutY="10.0" mouseTransparent="true" prefHeight="19.0" prefWidth="19.0" styleClass="settings-avatar-buttons-edit-symbol" />
-                        <Label fx:id="deleteText" layoutX="40.0" layoutY="37.0" mouseTransparent="true" prefHeight="31.0" prefWidth="38.0" styleClass="settings-avatar-buttons-text" text="Delete" />
                         <Label fx:id="deleteSymbol" layoutX="12.0" layoutY="43.0" mouseTransparent="true" prefHeight="19.0" prefWidth="19.0" styleClass="settings-avatar-buttons-delete-symbol" />
+                        <Label fx:id="deleteText" layoutX="40.0" layoutY="37.0" mouseTransparent="true" prefHeight="31.0" prefWidth="38.0" styleClass="settings-avatar-buttons-text" text="Delete" />
                      </children>
                   </Pane>
                </children></Pane>

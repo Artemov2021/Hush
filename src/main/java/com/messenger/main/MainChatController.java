@@ -119,7 +119,7 @@ public class MainChatController {
         setProfilePicture();
         setName();
         applyScrollBarEffect(chatScrollPane);
-        setMessageSpacing(3);
+        setMessageSpacing(5);
         setChatTextFieldFocus();
     }
     private void removeTitle() {
@@ -178,30 +178,12 @@ public class MainChatController {
 
     // chat message history
     private void loadChatHistory() throws SQLException, ExecutionException, InterruptedException {
-        ChatHistory currentChatHistory = new ChatHistory(mainUserId,contactId,chatBackgroundPane,chatVBox);
+        ChatHistory currentChatHistory = new ChatHistory(mainUserId,contactId,chatBackgroundPane,chatVBox,mainAnchorPane);
         currentChatHistory.load();
 
 
 
-//        List<Object> lastMessage = ChatsDataBase.getLastMessageWithId(mainUserId,contactId);
-//        boolean chatIsEmpty = (lastMessage.get(0) == null) && ((int)lastMessage.get(1) == -1);
-//        if (chatIsEmpty) {
-//            setChatCurrentDateLabel();
-//        } else {
-//            List<List<Object>> allMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
-//            HashMap<String,List<List<Object>>> splitMessagesByDate = getSplitByDayMessages(allMessages);
-//            for (List<List<Object>> messagesBySameDay : splitMessagesByDate.values()) {
-//                String messagesLongDate = getMessageLongDate(messagesBySameDay.get(0).get(6).toString());
-//                setChatDateLabel(messagesLongDate);
-//                loadMessages(messagesBySameDay);
-//            }
-//            // Introduce a small delay before scrolling to the bottom
-//            PauseTransition pause = new PauseTransition(Duration.millis(150)); // Adjust the duration as necessary
-//            pause.setOnFinished(event -> chatScrollPane.setVvalue(1.0));
-//            pause.play();
-//
-//            setBottomButtonListener();
-//        }
+
 
     }
 
@@ -1151,21 +1133,7 @@ public class MainChatController {
 //
 //
 //    // small functions
-//    private void sendAvatar(Label avatar,int senderId) throws SQLException {
-//        byte[] blobBytes = UsersDataBase.getAvatarWithId(senderId);
-//        assert blobBytes != null;
-//        ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
-//        ImageView imageView = new ImageView(new Image(byteStream));
-//        imageView.setFitHeight(30);
-//        imageView.setFitWidth(30);
-//        imageView.setSmooth(true);
-//        avatar.setGraphic(imageView);
-//        Circle clip = new Circle();
-//        clip.setLayoutX(15);
-//        clip.setLayoutY(15);
-//        clip.setRadius(15);
-//        avatar.setClip(clip);
-//    }
+//
 //    private int addMessageToDB(String message,byte[] picture,int replyMessageId,String time,boolean received) throws SQLException {
 //        return ChatsDataBase.addMessage(mainUserId,contactId,message,picture,replyMessageId,time,received);
 //    }

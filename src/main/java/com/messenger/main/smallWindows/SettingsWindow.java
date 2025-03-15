@@ -89,11 +89,13 @@ public class SettingsWindow {
         setNameInField();
         setEmailInField();
         hideErrorLabels();
+        putAvatarButtonsToFront();
         hideAvatarButtonsElements();
     }
     public void createEmailGroup() {
         emailGroup = new Group(emailLabel,settingsEmailField,settingsEmailExceptionLabel);
         settingsPane.getChildren().add(emailGroup);
+        emailGroup.toBack();
     }
     private void showOpeningEffect() {
         // Appearing time
@@ -158,6 +160,9 @@ public class SettingsWindow {
         // Setting all error label to "invisible" mode
         settingsNameExceptionLabel.setVisible(false);
         settingsEmailExceptionLabel.setVisible(false);
+    }
+    private void putAvatarButtonsToFront() {
+        buttonsBackgroundOverlay.toFront();
     }
     private void hideAvatarButtonsElements() {
         // Hiding change and delete avatar buttons
@@ -408,7 +413,6 @@ public class SettingsWindow {
         });
         fadeOut.play();
     }
-
     @FXML
     public void logout() {
         try {
@@ -427,8 +431,6 @@ public class SettingsWindow {
             settingsEmailExceptionLabel.setText(e.getMessage());
         }
     }
-
-
 
 
 

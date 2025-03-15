@@ -103,14 +103,10 @@ public class MainContact {
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
     }
-    public void deleteAllElements() {
-        mainContactPane.getChildren().clear();
-    }
 
     @FXML
     public void showChat() throws IOException, SQLException, ExecutionException, InterruptedException {
         int currentUserId = Integer.parseInt(mainContactPane.getId().split("mainContactPane")[1]);
-        System.out.println(currentUserId);
 
         setPanesNormalStyle();
         setCurrentPaneFocusedStyle();

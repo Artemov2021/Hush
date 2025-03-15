@@ -1,8 +1,11 @@
 package com.messenger.database;
 
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,7 +18,7 @@ public class ContactsDataBase {
 
     public static int[] getContactsIdList(int mainUserId) throws SQLException {
         List<Integer> contactsIdList = new ArrayList<>();
-        String statement = "SELECT contact_id FROM contacts WHERE user_id = ?";
+        String statement = "SELECT contact_id FROM contacts WHERE user_id = ? ORDER BY last_interaction ASC;";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
@@ -42,17 +45,34 @@ public class ContactsDataBase {
                 }).toArray();
     }
     public static void addContact(int mainUserId,int contactId) throws SQLException {
-        String statement = "INSERT INTO contacts (user_id,contact_id) VALUES (?,?)";
+        String statement = "INSERT INTO contacts (user_id,contact_id,last_interaction) VALUES (?,?,?)";
+
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        String formattedDateTimeNow = now.format(formatter1);
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1, mainUserId);
             preparedStatement.setInt(2, contactId);
+            preparedStatement.setTimestamp(3, Timestamp.valueOf(formattedDateTimeNow)); // Insert the Timestamp
             preparedStatement.executeUpdate();
         }
     }
+    public static int[] getContactsIdListAfterContact(int mainUserId,int lastContactId) throws SQLException {
+        List<Integer> contactsIdList = new ArrayList<>();
+        String statement = "SELECT * FROM contacts WHERE last_interaction < ? ORDER BY last_interaction ASC;";
 
-
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setTimestamp(1,getContactLastInteractionTime(mainUserId,lastContactId));
+            ResultSet result = preparedStatement.executeQuery();
+            while (result.next()) {
+                contactsIdList.add(result.getInt("contact_id"));
+            }
+        }
+        return contactsIdList.stream().mapToInt(Integer::intValue).toArray();
+    }
 
 
 
@@ -64,5 +84,19 @@ public class ContactsDataBase {
         Matcher matcher = patternObject.matcher(userName);
         return matcher.find();
     }
+    private static Timestamp getContactLastInteractionTime(int mainUserId,int lastContactId) throws SQLException {
+        String statement = "SELECT last_interaction FROM contacts WHERE user_id = ? AND contact_id = ?";
 
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,mainUserId);
+            preparedStatement.setInt(2,lastContactId);
+            ResultSet result = preparedStatement.executeQuery();
+            while (result.next()) {
+                return result.getTimestamp("last_interaction");
+            }
+        }
+        return null;
+
+    }
 }

@@ -59,10 +59,6 @@
 .chat-search-lupe:hover {
     -fx-background-image: url("../elements/searchLupeHovered.png");
 }
-
-
-
-
 /*-----------------------------------------------------------------------------*/
 /* Date Label */
 .chat-date-label {
@@ -75,264 +71,40 @@
     -fx-padding: 3 15 3 15;
 }
 /*-----------------------------------------------------------------------------*/
-
-
-
-
-
-
-
-
-
-
-
-.chat-dialog-vbox {
-    -fx-background-color: #161518;
-    -fx-padding: 50 20 20 20;
-}
-
-.chat-add-picture-label {
-    -fx-background-image: url("../elements/chatAddPictureDefault.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-add-picture-label:hover {
-    -fx-background-image: url("../elements/chatAddPictureFocused.png");
-    -fx-background-repeat: no-repeat;
-}
-
-.chat-send-label {
-    -fx-background-image: url("../elements/chatSendDefault.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-send-label:hover {
-    -fx-background-image: url("../elements/chatSendFocused.png");
-    -fx-background-repeat: no-repeat;
-}
-
-.chat-message-lupe {
-    -fx-background-image: url("../elements/chatSearchLupeDefault.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-message-lupe:hover {
-    -fx-background-image: url("../elements/chatSearchLupeFocused.png");
-    -fx-background-repeat: no-repeat;
-}
-/*-----------------------------------------------------------------------------*/
-/* Scroll pane style of contacts list */
-.chat-scroll-pane {
-    -fx-background-color: transparent;
-}
-.chat-scroll-pane .viewport{
-    -fx-background-color: transparent;
-}
-.chat-scroll-pane .scroll-bar {
-    -fx-background-color: transparent;
-    -fx-pref-width: 8px;
-}
-.chat-scroll-pane .scroll-bar .thumb {
-    -fx-background-color: #3E3C44;
-}
-.chat-scroll-pane .scroll-bar .increment-button,
-.chat-scroll-pane .scroll-bar .decrement-button {
-    -fx-opacity: 0;
-}
-/*-----------------------------------------------------------------------------*/
 /* Message */
-.chat-message-user-pane {
+.chat-message-user-stackpane {
     -fx-background-color: #2C2B30;
-    -fx-background-radius: 7;
+    -fx-background-radius: 11;
 }
 .chat-message-contact-pane {
     -fx-background-color: #1D1C20;
-    -fx-background-radius: 7;
+    -fx-background-radius: 11;
 }
-.chat-message-label {
-    -fx-background-color: transparent;
-    -fx-font-size: 13;
+.chat-message-text-label {
     -fx-text-fill: white;
+    -fx-font-size: 15;
 }
 .chat-time-label {
-    -fx-font-size: 9;
+    -fx-font-size: 11;
     -fx-text-fill: #85818F;
 }
-.chat-message-reply-user-pane {
-    -fx-background-color: #3C3B43;
-    -fx-background-radius: 4;
+.chat-message-default-avatar {
+    -fx-background-image: url("../elements/chatMessageAvatarDefault.png");
+    -fx-background-repeat: no-repeat;
 }
-.chat-message-reply-contact-pane {
-    -fx-background-color: #2C2B30;
-    -fx-background-radius: 4;
-}
-.chat-message-reply-name {
-    -fx-text-fill: white;
-    -fx-font-size: 10;
-}
-.chat-message-reply-message {
-    -fx-text-fill: #7E7D82;
-    -fx-font-size: 10;
-}
-.chat-message-reply-deleted {
-    -fx-text-fill: #7E7D82;
-    -fx-font-size: 12;
-}
-.chat-message-buttons-background-pane {
+.chat-message-buttons-background {
     -fx-background-color: #211F26;
-    -fx-background-radius: 3;
-}
-.chat-message-buttons-background-button-pane {
-    -fx-background-color: #211F26;
-    -fx-background-radius: 3;
-}
-.chat-message-buttons-background-button-pane:hover {
-    -fx-background-color: #323036;
-    -fx-background-radius: 3;
-}
-.chat-message-buttons-text {
-    -fx-text-fill: white;
-    -fx-font-size: 12;
-}
-.chat-message-buttons-reply-symbol {
-    -fx-background-image: url("../elements/messageReply.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-message-buttons-edit-symbol {
-    -fx-background-image: url("../elements/messageEdit.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-message-buttons-delete-symbol {
-    -fx-background-image: url("../elements/messageDelete.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-photo-symbol-wrapper {
-    -fx-background-image: url("../elements/photoWrapperSymbol.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-reply-photo-symbol {
-    -fx-background-image: url("../elements/photoReplySymbol.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-picture-time {
-    -fx-background-image: url("../elements/pictureTimeBackground.png");
-    -fx-background-repeat: no-repeat;
-    -fx-font-size: 10;
-    -fx-text-fill: white;
-    -fx-padding: 2 5 2 5;
-}
-/*-----------------------------------------------------------------------------*/
-/* Reply Wrapper */
-.chat-wrapper {
-    -fx-background-color: #1D1C20;
-}
-.chat-wrapper-exit-label {
-    -fx-background-image: url("../elements/replyWrapperExitDefault.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-wrapper-exit-label:hover {
-    -fx-background-image: url("../elements/replyWrapperExitFocused.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-reply-wrapper-row-label {
-    -fx-background-image: url("../elements/replyRow.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-wrapper-edit-label {
-    -fx-background-image: url("../elements/edit.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-wrapper-name-label {
-    -fx-text-fill: #95B1E8;
-    -fx-font-size: 12;
-}
-.chat-wrapper-message-label {
-    -fx-text-fill: #CBCBCB;
-    -fx-font-size: 11;
-}
-.chat-delete-message-background {
-    -fx-background-color: #1D1C20;
-    -fx-background-radius: 6;
-}
-.chat-delete-message-text {
-    -fx-text-fill: white;
-    -fx-font-size: 14;
-}
-.chat-delete-button {
-    -fx-background-color: #C12727;
-    -fx-background-radius: 6;
-    -fx-font-size: 12;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-}
-.chat-delete-button:hover {
-    -fx-background-color: #D83A3A;
-}
-.chat-delete-button:pressed {
-    -fx-background-color: #C12727;
-    -fx-text-fill: #F8C1C1;
-}
-.chat-cancel-button {
-    -fx-background-color: #2C2B30;
-    -fx-background-radius: 6;
-    -fx-font-size: 12;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-}
-.chat-cancel-button:hover {
-    -fx-background-color: #413F49;
-}
-.chat-cancel.button:pressed {
-    -fx-background-color: #2C2B30;
-    -fx-text-fill: #909090;
-}
-/*-----------------------------------------------------------------------------*/
-/* Scroll Down Button */
-.chat-scroll-down-background {
-    -fx-background-color: #1D1C20;
     -fx-background-radius: 5;
 }
-.chat-scroll-down-arrow {
-    -fx-background-image: url("../elements/arrowDefault.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-scroll-down-arrow-focused {
-    -fx-background-image: url("../elements/arrowFocused.png");
-    -fx-background-repeat: no-repeat;
-}
-/*-----------------------------------------------------------------------------*/
-/* Send Picture */
-.chat-send-picture {
-    -fx-background-image: url("../elements/sendPictureDefault.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-send-picture:pressed {
-    -fx-background-image: url("../elements/sendPictureFocused.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-send-picture-cancel {
-    -fx-background-image: url("../elements/sendPictureCancelDefault.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-send-picture-cancel:hover {
-    -fx-background-image: url("../elements/sendPictureCancelHover.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-send-picture-cancel:pressed {
-    -fx-background-image: url("../elements/sendPictureCancelFocused.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-send-picture-field {
-    -fx-background-color: #2C2B30;
-    -fx-background-radius: 5;
-    -fx-border-color: transparent;
-    -fx-prompt-text-fill: #8A8893;
-    -fx-text-fill: white;
-}
-.chat-send-picture-edite {
-    -fx-background-image: url("../elements/sendPictureEdite.png");
-    -fx-background-repeat: no-repeat;
-}
-.chat-send-picture-edite:pressed {
-    -fx-background-image: url("../elements/sendPictureEditeFocused.png");
-    -fx-background-repeat: no-repeat;
-}
+
+
+
+
+
+
+
+
+
+
 
 

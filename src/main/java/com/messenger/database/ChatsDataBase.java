@@ -115,7 +115,7 @@ public class ChatsDataBase {
     }
     public static List<ArrayList<Object>> getAllMessages(int mainUserId,int contactId) throws SQLException {
         List<ArrayList<Object>> messages = new ArrayList<>();
-        String statement = "SELECT * FROM chats WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)";
+        String statement = "SELECT * FROM chats WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY message_time ASC;";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
@@ -133,13 +133,14 @@ public class ChatsDataBase {
                 message.add(result.getBytes("picture"));
                 message.add(result.getInt("reply_message_id"));
                 message.add(result.getString("message_time"));
-                message.add(result.getString("received"));
+                message.add(result.getString("message_type"));
+                message.add(result.getBoolean("received"));
                 messages.add(message);
             }
         }
         return messages;
     }
-    public static List<Object> getMessageWithId(int messageId) throws SQLException {
+    public static List<Object> getMessage(int messageId) throws SQLException {
         List<Object> message = new ArrayList<>();
         String statement = "SELECT * FROM chats WHERE message_id = ?";
 
@@ -226,5 +227,28 @@ public class ChatsDataBase {
             }
         }
         return ids;
+    }
+    public static int getPreviousMessageId(int messageId,int senderId,int receiverId) throws SQLException {
+        String statement = "SELECT MAX(message_id) FROM chats " +
+                "WHERE ((sender_id = ? AND receiver_id = ?) " +
+                "OR (sender_id = ? AND receiver_id = ?)) " +
+                "AND message_id < ?";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,senderId);
+            preparedStatement.setInt(2,receiverId);
+            preparedStatement.setInt(3,receiverId);
+            preparedStatement.setInt(4,senderId);
+            preparedStatement.setInt(5,messageId);
+            ResultSet result = preparedStatement.executeQuery();
+            if (result.next()) {
+                int previousMessageId = result.getInt(1);
+                if (!result.wasNull()) {
+                    return previousMessageId;
+                }
+            }
+        }
+        return -1;
     }
 }
