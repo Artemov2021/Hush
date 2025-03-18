@@ -12,12 +12,12 @@
    <children>
       <Pane fx:id="chatBackgroundPane" prefHeight="1009.0" prefWidth="1476.0" styleClass="root" stylesheets="@../css/MainChat.css">
          <children>
-            <ScrollPane fx:id="chatScrollPane" fitToWidth="true" hbarPolicy="NEVER" layoutX="1.0" layoutY="80.0" prefHeight="864.0" prefWidth="1469.0" styleClass="chat-scroll-pane">
+            <ScrollPane fx:id="chatScrollPane" hbarPolicy="NEVER" layoutX="-5.0" layoutY="80.0" prefHeight="862.0" prefWidth="1466.0" styleClass="chat-scroll-pane">
                <content>
-                  <VBox fx:id="chatVBox" alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" minHeight="856.0" prefWidth="844.0" styleClass="chat-scroll-pane" />
+                  <VBox fx:id="chatVBox" alignment="TOP_CENTER" prefWidth="1456.0" />
                </content>
             </ScrollPane>
-            <Label layoutX="1.0" layoutY="-5.0" prefHeight="78.0" prefWidth="1476.0" styleClass="chat-upper-background" />
+            <Label layoutX="1.0" layoutY="3.0" prefHeight="78.0" prefWidth="1476.0" styleClass="chat-upper-background" />
             <TextField fx:id="chatTextField" layoutX="1.0" layoutY="948.0" prefHeight="59.0" prefWidth="1477.0" promptText="Write a message...." styleClass="chat-text-field" />
             <Label fx:id="chatMainAvatarLabel" layoutX="26.0" layoutY="19.0" prefHeight="45.0" prefWidth="45.0" styleClass="chat-avatar-label" />
             <Label fx:id="chatMainNameLabel" layoutX="80.0" layoutY="21.0" prefHeight="35.0" prefWidth="466.0" styleClass="chat-name-label" text="Name label" />

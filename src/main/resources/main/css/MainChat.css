@@ -9,6 +9,25 @@
     -fx-background-color: #1D1C20;
 }
 /*-----------------------------------------------------------------------------*/
+/* Chat Scroll Pane */
+.chat-scroll-pane{
+    -fx-background-color: transparent;
+}
+.chat-scroll-pane .viewport{
+    -fx-background-color: transparent;
+}
+.chat-scroll-pane .scroll-bar {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+.chat-scroll-pane .scroll-bar .thumb {
+    -fx-background-color: #55535C;
+}
+.chat-scroll-pane .scroll-bar .increment-button,
+.chat-scroll-pane .scroll-bar .decrement-button {
+    -fx-opacity: 0;
+}
+/*-----------------------------------------------------------------------------*/
 /* Avatar Default Label */
 .chat-avatar-label {
     -fx-background-image: url("../elements/chatAvatarDefault.png");
@@ -76,12 +95,12 @@
     -fx-background-color: #2C2B30;
     -fx-background-radius: 11;
 }
-.chat-message-contact-pane {
+.chat-message-contact-stackpane {
     -fx-background-color: #1D1C20;
     -fx-background-radius: 11;
 }
 .chat-message-text-label {
-    -fx-text-fill: white;
+    -fx-text-fill: #DBDBDB;
     -fx-font-size: 15;
 }
 .chat-time-label {
@@ -92,13 +111,55 @@
     -fx-background-image: url("../elements/chatMessageAvatarDefault.png");
     -fx-background-repeat: no-repeat;
 }
+/* Message Buttons */
 .chat-message-buttons-background {
     -fx-background-color: #211F26;
     -fx-background-radius: 5;
 }
-
-
-
+.chat-message-buttons-small-pane {
+    -fx-background-color: #211F26;
+    -fx-background-radius: 3;
+}
+.chat-message-buttons-small-pane:hover {
+    -fx-background-color: #323036;
+}
+.chat-message-buttons-text {
+    -fx-font-size: 13;
+    -fx-text-fill: white;
+}
+.chat-message-buttons-reply-symbol {
+    -fx-background-image: url("../elements/messageReplySymbol.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-message-buttons-edit-symbol {
+    -fx-background-image: url("../elements/messageEditSymbol.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-message-buttons-delete-symbol {
+    -fx-background-image: url("../elements/messageDeleteSymbol.png");
+    -fx-background-repeat: no-repeat;
+}
+/* Reply Message */
+.chat-message-user-reply-pane {
+    -fx-background-color: #3C3B43;
+    -fx-background-radius: 5;
+}
+.chat-message-contact-reply-pane {
+    -fx-background-color: #2C2B30;
+    -fx-background-radius: 5;
+}
+.chat-message-reply-name {
+    -fx-font-size: 11;
+    -fx-text-fill: white;
+}
+.chat-message-user-reply-message {
+    -fx-font-size: 11;
+    -fx-text-fill: #9B9AA3;
+}
+.chat-message-contact-reply-message {
+    -fx-font-size: 11;
+    -fx-text-fill: #7E7D82;
+}
 
 
 

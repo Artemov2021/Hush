@@ -167,7 +167,6 @@ public class MainWindowController {
 
 
     private void showFoundedContacts(String enteredName) {
-        System.out.println(enteredName);
         try {
             if (enteredName.trim().length() > 0) {
                 mainContactsVBox.getChildren().clear();

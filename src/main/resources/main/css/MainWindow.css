@@ -95,22 +95,6 @@
 .add-contact:pressed {
     -fx-background-image: url("../elements/pressedMainWindowAddContact.png");
 }
-/*-----------------------------------------------------*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*-----------------------------------------------------------------------------*/
 /* Scroll pane style of contacts list */
 
