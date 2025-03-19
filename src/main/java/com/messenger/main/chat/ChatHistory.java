@@ -3,16 +3,22 @@ package com.messenger.main.chat;
 import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
+import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 
 import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
@@ -27,16 +33,21 @@ public class ChatHistory {
 
     private int mainUserId;
     private int contactId;
-    private Pane backgroundPane;
+    private ScrollPane chatScrollPane;
     private VBox chatVBox;
     private AnchorPane mainAnchorPane;
 
-    public ChatHistory(int mainUserId, int contactId,Pane backgroundPane,VBox chatVBox,AnchorPane mainAnchorPane) {
+    private Timeline currentFadeTimeline = null;
+
+
+
+
+    public ChatHistory(int mainUserId, int contactId,ScrollPane chatScrollPane,VBox chatVBox,AnchorPane mainAnchorPane) {
         this.mainUserId = mainUserId;
         this.contactId = contactId;
-        this.backgroundPane = backgroundPane;
         this.chatVBox = chatVBox;
         this.mainAnchorPane = mainAnchorPane;
+        this.chatScrollPane = chatScrollPane;
     }
 
 
@@ -160,6 +171,7 @@ public class ChatHistory {
         int senderId = (int) message.get(1);
         int receiverId = (int) message.get(2);
         String messageText = (String) message.get(3);
+        int repliedMessageId = (int) message.get(5);
         String messageTime = getMessageTime((String) message.get(6));
 
         HBox messageHBox = new HBox();
@@ -193,14 +205,22 @@ public class ChatHistory {
         StackPane.setAlignment(messageReplyPane,Pos.TOP_LEFT);
         StackPane.setMargin(messageReplyPane,new Insets(7,7,0,7));
         messageStackPane.getChildren().add(messageReplyPane);
+        messageReplyPane.setOnMouseClicked(clickEvent -> {
+            HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+repliedMessageId);
+            double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
+            smoothScrollTo(hboxPosition,0.4);
+            fadeOutBackgroundColor(repliedmessageHBox);
+        });
 
-        Label messageReplyNameLabel = new Label("Tymur");
+        String repliedMessageName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessage(repliedMessageId).get(1));
+        Label messageReplyNameLabel = new Label(repliedMessageName);
         messageReplyNameLabel.getStyleClass().add("chat-message-reply-name");
         StackPane.setAlignment(messageReplyNameLabel,Pos.TOP_LEFT);
-        StackPane.setMargin(messageReplyNameLabel,new Insets(4,0,0,8));
+        StackPane.setMargin(messageReplyNameLabel,new Insets(4,8,0,8));
         messageReplyPane.getChildren().add(messageReplyNameLabel);
 
-        Label messageReplyMessageLabel = new Label("hallo wie gehts es dir");
+        String repliedMessageText = (String) (ChatsDataBase.getMessage(repliedMessageId)).get(3);
+        Label messageReplyMessageLabel = new Label(repliedMessageText);
         messageReplyMessageLabel.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-reply-message" : "chat-message-contact-reply-message");
         StackPane.setAlignment(messageReplyMessageLabel,Pos.TOP_LEFT);
         StackPane.setMargin(messageReplyMessageLabel,new Insets(18,8,0,8));
@@ -310,7 +330,6 @@ public class ChatHistory {
         for (ArrayList<Object> message: allMessages) {
             if (!splitIntoDaysMessages.containsKey(getShortDateFromFullDate((String) message.get(6)))) {
                 splitIntoDaysMessages.put(getShortDateFromFullDate((String) message.get(6)), new ArrayList<>());
-                System.out.println(splitIntoDaysMessages.keySet());
             }
             splitIntoDaysMessages.get(getShortDateFromFullDate((String) message.get(6))).add(message);
 
@@ -379,6 +398,65 @@ public class ChatHistory {
 
         // Continue traversing up the parent hierarchy
         return convertToTopLevelAnchorPaneCoordinates(node.getParent(), pointInParent.getX(), pointInParent.getY());
+    }
+    private double getCenteredScrollPosition(HBox targetHBox) {
+        double hboxY = targetHBox.localToScene(0, 0).getY(); // Y position of HBox in scene
+        double vboxY = chatVBox.localToScene(0, 0).getY(); // Y position of VBox in scene
+        double viewportHeight = chatScrollPane.getViewportBounds().getHeight(); // Viewport height
+        double totalHeight = chatVBox.getBoundsInLocal().getHeight(); // Total VBox height
+
+        // Compute scroll position to center the HBox
+        double position = (hboxY - vboxY - (viewportHeight / 2) + (targetHBox.getBoundsInLocal().getHeight() / 2))
+                / (totalHeight - viewportHeight);
+
+        // Ensure the value is between 0 and 1
+        return Math.max(0, Math.min(1, position));
+    }
+    private void smoothScrollTo(double targetValue, double durationInSeconds) {
+        double startValue = chatScrollPane.getVvalue(); // Current scroll position
+        double distance = targetValue - startValue; // How much to scroll
+
+        Timeline timeline = new Timeline();
+        int frames = (int) (durationInSeconds * 60); // 60 FPS
+        for (int i = 0; i <= frames; i++) {
+            double progress = (double) i / frames; // Progress from 0 to 1
+            double interpolatedValue = startValue + distance * progress; // Linear interpolation
+
+            timeline.getKeyFrames().add(new KeyFrame(Duration.millis(i * (1000.0 / 60)),
+                    event -> chatScrollPane.setVvalue(interpolatedValue)));
+        }
+
+        timeline.setCycleCount(1);
+        timeline.play();
+    }
+    private void fadeOutBackgroundColor(HBox hbox) {
+        // Create a new Timeline specific to this HBox
+        Timeline fadeTimeline = new Timeline();
+
+        // Set the initial background color to #333138
+        BackgroundFill initialBackgroundFill = new BackgroundFill(Color.web("#333138"), CornerRadii.EMPTY, null);
+        hbox.setBackground(new Background(initialBackgroundFill));
+
+        // Interpolate the background color from #333138 to transparent
+        for (int i = 0; i <= 100; i++) {
+            final double progress = i / 100.0; // Progress between 0 and 1
+
+            KeyFrame keyFrame = new KeyFrame(
+                    Duration.seconds(3 * progress), // Time duration for each step
+                    event -> {
+                        // Interpolating the color from #333138 to transparent
+                        Color interpolatedColor = Color.web("#333138").deriveColor(0, 1, 1, 1 - progress);
+                        hbox.setBackground(new Background(
+                                new BackgroundFill(interpolatedColor, CornerRadii.EMPTY, null)
+                        ));
+                    }
+            );
+            fadeTimeline.getKeyFrames().add(keyFrame);
+        }
+
+        // Start the timeline
+        fadeTimeline.setCycleCount(1);
+        fadeTimeline.play();
     }
 
 
