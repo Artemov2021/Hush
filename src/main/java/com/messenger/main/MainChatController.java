@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -71,21 +72,10 @@ public class MainChatController {
     public Pane mainContactPane;
     public Label mainContactMessageLabel;
     public Label mainContactTimeLabel;
+    public Label scrollDownButton;
 
 
-    private String sendingMessageType = "text"; // the default type of the message is always text
-    private int editedMessageId = -1;
-    private int repliedMessageId = -1;
-
-
-    private String pathToPicture = "";
-    private String messageToThePicture = "";
-
-
-    private boolean initializedWithValue = false;
-
-
-    // set main value
+    // Setting Main Values
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
     }
@@ -102,14 +92,14 @@ public class MainChatController {
     }
 
 
-    // initialization of the chat window
+    // Chat Interface Initialization, Chat Loading
     public void initializeWithValue() throws SQLException, ExecutionException, InterruptedException {
         initializeChatInterface();
         loadChatHistory();
     }
 
 
-    // chat interface
+    // Chat Interface Initialization
     private void initializeChatInterface() throws SQLException {
         removeTitle();
         setChatPosition();
@@ -119,6 +109,8 @@ public class MainChatController {
         applyScrollBarEffect(chatScrollPane);
         setMessageSpacing(5);
         setChatTextFieldFocus();
+        scrollToTheBottom();
+        setScrollDownButtonListener();
     }
     private void removeTitle() {
         Set<String> titlesToRemove = new HashSet<>(Arrays.asList("mainTitle", "mainSmallTitle", "logInTitle"));
@@ -140,6 +132,7 @@ public class MainChatController {
     }
     private void setProfilePicture() throws SQLException {
         if (UsersDataBase.getAvatarWithId(contactId) != null) {
+            chatMainAvatarLabel.setCursor(Cursor.HAND);
             byte[] blobBytes = UsersDataBase.getAvatarWithId(contactId);
             assert blobBytes != null;
             ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
@@ -171,20 +164,136 @@ public class MainChatController {
             }
         });
     }
+    public void scrollToTheBottom() {
+        chatScrollPane.setVvalue(1);
+    }
+    public void smoothScrollToTheBottom() {
+        double durationInSeconds = 0.2;
+        double startValue = chatScrollPane.getVvalue(); // Current scroll position
+        double distance = 1 - startValue; // How much to scroll
+
+        Timeline timeline = new Timeline();
+        int frames = (int) (durationInSeconds * 60); // 60 FPS
+        for (int i = 0; i <= frames; i++) {
+            double progress = (double) i / frames; // Progress from 0 to 1
+            double interpolatedValue = startValue + distance * progress; // Linear interpolation
+
+            timeline.getKeyFrames().add(new KeyFrame(Duration.millis(i * (1000.0 / 60)),
+                    event -> chatScrollPane.setVvalue(interpolatedValue)));
+        }
+
+        timeline.setCycleCount(1);
+        timeline.play();
+    }
+    private void setScrollDownButtonListener() {
+        // Fade-in Transition (0.3 seconds)
+        FadeTransition fadeIn = new FadeTransition(Duration.seconds(0.3), scrollDownButton);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.setCycleCount(1);
+
+        // Fade-out Transition (0.3 seconds)
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.3), scrollDownButton);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+        fadeOut.setCycleCount(1);
+        fadeOut.setOnFinished(event -> scrollDownButton.setVisible(false)); // Hide after fading out
+
+        chatScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.doubleValue() < 1.0) {
+                if (scrollDownButton.getOpacity() == 0) {
+                    scrollDownButton.setVisible(true); // Ensure button is visible before fading in
+                    fadeIn.playFromStart(); // Play the fade-in animation
+                }
+            } else {
+                if (scrollDownButton.getOpacity() == 1) { // Only fade out if fully visible
+                    fadeOut.playFromStart(); // Play the fade-out animation
+                }
+            }
+        });
+    }
+    @FXML
+    public void showContactFullAvatar() throws SQLException {
+        if ((UsersDataBase.getAvatarWithId(contactId)) != null) {
+            Pane backgroundPane = new Pane();
+            backgroundPane.setPrefWidth(1920);
+            backgroundPane.setPrefHeight(1009);
+            backgroundPane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.68)");
+            mainAnchorPane.getChildren().add(backgroundPane);
+            backgroundPane.setOnMouseClicked(clickEvent -> {
+                mainAnchorPane.getChildren().remove(backgroundPane);
+            });
+
+            Label pictureLabel = new Label();
+            byte[] blobBytes = UsersDataBase.getAvatarWithId(contactId);
+            assert blobBytes != null;
+            ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
+            ImageView imageView = new ImageView(new Image(byteStream));
+            imageView.setSmooth(true);
+            pictureLabel.setGraphic(imageView);
+            pictureLabel.setLayoutX((1920 / 2) - (imageView.getImage().getWidth() / 2));
+            pictureLabel.setLayoutY((1009 / 2) - (imageView.getImage().getHeight() / 2));
+            backgroundPane.getChildren().add(pictureLabel);
+        }
+    }
 
 
-    // chat message history
+    // Chat Loading
     private void loadChatHistory() throws SQLException, ExecutionException, InterruptedException {
         ChatHistory currentChatHistory = new ChatHistory(mainUserId,contactId,chatScrollPane,chatVBox,mainAnchorPane);
         currentChatHistory.load();
+    }
 
 
+    // Message Sending
+    @FXML
+    public void sendMessage() {
+        if (chatTextField.getText().trim().isEmpty()) return;
 
+        int senderId = mainUserId;
+        int receiverId = contactId;
+        String message = chatTextField.getText().trim();
+        byte[] picture = null;
+        Integer replyId = mainAnchorPane.getChildren().stream()
+                .map(Node::getId)
+                .filter(id -> id != null && id.startsWith("replyWrapper"))
+                .map(id -> id.replaceAll("\\D+", "")) // Nur Zahlen extrahieren
+                .map(num -> num.isEmpty() ? null : Integer.parseInt(num)) // Falls leer, setze null
+                .findFirst()
+                .orElse(null); // Falls kein passendes Element existiert, wird null zurückgegeben
+        String messageTime = getCurrentFullTime();
+        String messageType = getCurrentMessageType();
+        boolean received = false;
 
+        if (messageType.equals("change_with_text")) {
+            // change message
+        } else if (messageType.equals("text")){
+            insertMessageIntoDB();
+            loadMessage();
+            ChatHistory currentChat = new ChatHistory(mainUserId,contactId,chatScrollPane,chatVBox,mainAnchorPane);
+            currentChat.loadTextMessage();
+        }
+    }
+    private void loadMessage(String messageType) {
 
     }
 
 
+
+    // Small Functions
+    private String getCurrentFullTime() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        return LocalDateTime.now().format(formatter);
+    }
+    private String getCurrentMessageType() {
+        if (mainAnchorPane.getChildren().stream().anyMatch(node -> node.getId() != null && node.getId().startsWith("replyWrapper"))) {
+            return "reply_with_text";
+        } else if (mainAnchorPane.getChildren().stream().anyMatch(node -> node.getId() != null && node.getId().startsWith("changeWrapper"))) {
+            return "change_with_text";
+        } else {
+            return "text";
+        }
+    }
 
 
 

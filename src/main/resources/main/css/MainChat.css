@@ -160,7 +160,17 @@
     -fx-font-size: 11;
     -fx-text-fill: #7E7D82;
 }
-
+/*-----------------------------------------------------------------------------*/
+/* Scroll Down Button */
+.chat-scroll-down-button {
+    -fx-background-image: url("../elements/scrollDownButtonDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-scroll-down-button:hover {
+    -fx-background-image: url("../elements/scrollDownButtonHovered.png");
+    -fx-background-repeat: no-repeat;
+}
+/*-----------------------------------------------------------------------------*/
 
 
 

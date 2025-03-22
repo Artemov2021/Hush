@@ -19,8 +19,11 @@
             </ScrollPane>
             <Label layoutX="1.0" layoutY="3.0" prefHeight="78.0" prefWidth="1476.0" styleClass="chat-upper-background" />
             <TextField fx:id="chatTextField" layoutX="1.0" layoutY="948.0" prefHeight="59.0" prefWidth="1477.0" promptText="Write a message...." styleClass="chat-text-field" />
-            <Label fx:id="chatMainAvatarLabel" layoutX="26.0" layoutY="19.0" prefHeight="45.0" prefWidth="45.0" styleClass="chat-avatar-label" />
-            <Label fx:id="chatMainNameLabel" layoutX="80.0" layoutY="21.0" prefHeight="35.0" prefWidth="466.0" styleClass="chat-name-label" text="Name label" />
+            <Label fx:id="chatMainAvatarLabel" layoutX="26.0" layoutY="20.0" onMouseClicked="#showContactFullAvatar" prefHeight="45.0" prefWidth="45.0" styleClass="chat-avatar-label">
+               <cursor>
+                  <Cursor fx:constant="DEFAULT" />
+               </cursor></Label>
+            <Label fx:id="chatMainNameLabel" layoutX="80.0" layoutY="23.0" prefHeight="35.0" prefWidth="466.0" styleClass="chat-name-label" text="Name label" />
             <Label fx:id="chatAddPicturLabel" layoutX="17.0" layoutY="961.0" prefHeight="35.0" prefWidth="38.0" styleClass="chat-add-file-label">
                <cursor>
                   <Cursor fx:constant="HAND" />
@@ -29,7 +32,12 @@
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Label>
-            <Label layoutX="1397.0" layoutY="960.0" prefHeight="35.0" prefWidth="46.0" styleClass="chat-send-message-label">
+            <Label layoutX="1397.0" layoutY="960.0" onMouseClicked="#sendMessage" prefHeight="35.0" prefWidth="46.0" styleClass="chat-send-message-label">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+            </Label>
+            <Label fx:id="scrollDownButton" layoutX="1384.0" layoutY="871.0" onMouseClicked="#smoothScrollToTheBottom" opacity="0.0" prefHeight="57.0" prefWidth="53.0" styleClass="chat-scroll-down-button">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor>

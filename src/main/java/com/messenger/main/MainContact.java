@@ -1,18 +1,13 @@
 package com.messenger.main;
 
-import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
-import com.messenger.main.smallWindows.NewContactWindow;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Bounds;
-import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -21,13 +16,10 @@ import javafx.scene.shape.Circle;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class MainContact {
     @FXML
@@ -103,8 +95,18 @@ public class MainContact {
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
     }
+    public void initialize() {
+        mainContactPane.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                try {
+                    showChat();
+                } catch (IOException | SQLException | ExecutionException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
 
-    @FXML
     public void showChat() throws IOException, SQLException, ExecutionException, InterruptedException {
         int currentUserId = Integer.parseInt(mainContactPane.getId().split("mainContactPane")[1]);
 
@@ -124,7 +126,6 @@ public class MainContact {
         mainAnchorPane.getChildren().removeIf(child -> Objects.equals(child.getId(), "chatAnchorPane"));
         mainAnchorPane.getChildren().add(0,chatRoot);
     }
-
 
     private void setPanesNormalStyle() {
         VBox mainVBox = (VBox) mainAnchorPane.lookup("#mainContactsVBox");

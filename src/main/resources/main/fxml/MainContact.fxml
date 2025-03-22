@@ -7,7 +7,7 @@
 
 <AnchorPane fx:id="mainContactAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="70.0" prefWidth="425.0" style="-fx-background-color: transparent;;" stylesheets="@../css/MainContact.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainContact">
    <children>
-      <Pane fx:id="mainContactPane" onMouseClicked="#showChat" prefHeight="70.0" prefWidth="425.0" styleClass="contact-background-pane">
+      <Pane fx:id="mainContactPane" prefHeight="70.0" prefWidth="425.0" styleClass="contact-background-pane">
          <children>
             <Label fx:id="mainContactAvatarLabel" layoutX="17.0" layoutY="13.0" prefHeight="45.0" prefWidth="45.0" styleClass="contact-avatar-label" />
             <Label fx:id="mainContactNameLabel" layoutX="75.0" layoutY="11.0" prefHeight="17.0" prefWidth="174.0" styleClass="contact-name-label" text="Simple Text" />

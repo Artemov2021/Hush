@@ -9,6 +9,7 @@ import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -37,10 +38,6 @@ public class ChatHistory {
     private VBox chatVBox;
     private AnchorPane mainAnchorPane;
 
-    private Timeline currentFadeTimeline = null;
-
-
-
 
     public ChatHistory(int mainUserId, int contactId,ScrollPane chatScrollPane,VBox chatVBox,AnchorPane mainAnchorPane) {
         this.mainUserId = mainUserId;
@@ -51,6 +48,7 @@ public class ChatHistory {
     }
 
 
+    // Chat Loading
     public void load() throws SQLException {
         boolean chatIsEmpty = ChatsDataBase.getAllMessages(mainUserId,contactId).isEmpty();
 
@@ -198,6 +196,7 @@ public class ChatHistory {
         messageHBox.getChildren().add(messageStackPane);
 
         StackPane messageReplyPane = new StackPane();
+        messageReplyPane.setCursor(Cursor.HAND);
         messageReplyPane.setMinWidth(80);
         messageReplyPane.setPrefHeight(37);
         messageReplyPane.setMaxHeight(37);
@@ -206,10 +205,12 @@ public class ChatHistory {
         StackPane.setMargin(messageReplyPane,new Insets(7,7,0,7));
         messageStackPane.getChildren().add(messageReplyPane);
         messageReplyPane.setOnMouseClicked(clickEvent -> {
-            HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+repliedMessageId);
-            double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
-            smoothScrollTo(hboxPosition,0.4);
-            fadeOutBackgroundColor(repliedmessageHBox);
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+repliedMessageId);
+                double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
+                smoothScrollTo(hboxPosition,0.4);
+                fadeOutBackgroundColor(repliedmessageHBox);
+            }
         });
 
         String repliedMessageName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessage(repliedMessageId).get(1));
@@ -290,7 +291,7 @@ public class ChatHistory {
 
 
     // Date Operations
-    private String getMessageTime(String fullDate) {
+    private static String getMessageTime(String fullDate) {
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
         LocalDateTime dateTime = LocalDateTime.parse(fullDate, inputFormatter);
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("HH:mm");
