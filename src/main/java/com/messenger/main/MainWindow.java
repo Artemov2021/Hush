@@ -20,7 +20,6 @@ public class MainWindow extends Application {
         stage.setMaximized(true);
         stage.setScene(scene);
         stage.setTitle("Main");
-        //stage.setResizable(false);
         stage.show();
     }
 }

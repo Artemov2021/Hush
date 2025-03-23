@@ -115,8 +115,10 @@ public class SettingsWindow {
         settingsPane.setOnMouseClicked(Event::consume);
 
         // Set event handler for backgroundPane
-        settingsBackgroundPane.setOnMouseClicked(event -> {
-            hideWindow();
+        settingsBackgroundPane.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                hideWindow();
+            }
         });
 
         // Set event handler for avatar label

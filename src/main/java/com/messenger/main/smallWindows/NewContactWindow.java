@@ -11,6 +11,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -44,7 +45,11 @@ public class NewContactWindow {
         hideExceptionsLabel();
 
         // close window by clicking away ( on the transparent background pane )
-        newContactBackgroundPane.setOnMouseClicked(event -> hideWindow());
+        newContactBackgroundPane.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                hideWindow();
+            }
+        });
 
         // debugging closing window by clicking on the new contact window pane
         newContactOverlayPane.setOnMouseClicked(Event::consume);

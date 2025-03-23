@@ -73,7 +73,21 @@ public class ContactsDataBase {
         }
         return contactsIdList.stream().mapToInt(Integer::intValue).toArray();
     }
+    public static void updateInteractionTime(int mainUserId,int contactId,String newTime) throws SQLException {
+        String statement = "UPDATE contacts SET last_interaction = ? " +
+                "WHERE (user_id = ? AND contact_id = ?) " +
+                "OR (user_id = ? AND contact_id = ?)";
 
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setString(1,newTime);
+            preparedStatement.setInt(2,mainUserId);
+            preparedStatement.setInt(3,contactId);
+            preparedStatement.setInt(4,contactId);
+            preparedStatement.setInt(5,mainUserId);
+            preparedStatement.executeUpdate();
+        }
+    }
 
 
     private static boolean checkUserMatching(String enteredName,int userId) throws SQLException {

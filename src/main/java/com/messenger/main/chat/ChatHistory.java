@@ -92,6 +92,7 @@ public class ChatHistory {
         String messageTime = getMessageTime((String) message.get(6));
 
         HBox messageHBox = new HBox();
+        messageHBox.setMinHeight(40);
         messageHBox.setAlignment(senderId == mainUserId ? Pos.BOTTOM_RIGHT : Pos.BOTTOM_LEFT);
         if (ChatsDataBase.getLastMessageId(mainUserId,contactId) == messageId) VBox.setMargin(messageHBox,new Insets(0,0,20,0));
         messageHBox.setId("messageHBox"+messageId);
@@ -157,10 +158,6 @@ public class ChatHistory {
                 HBox.setMargin(newAvatarLabel,(senderId == mainUserId) ? new Insets(0,110, 0, 0) : new Insets(0,0,0,110));
                 HBox.setMargin(messageStackPane,(senderId == mainUserId) ? new Insets(0,13, 0,0) : new Insets(0,0,0,13));
             }
-
-
-
-
         }
 
     }

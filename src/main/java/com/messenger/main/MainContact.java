@@ -1,8 +1,13 @@
 package com.messenger.main;
 
 import com.messenger.database.UsersDataBase;
+import javafx.application.Platform;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -103,6 +108,14 @@ public class MainContact {
                 } catch (IOException | SQLException | ExecutionException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
+            } else if (clickEvent.getButton() == MouseButton.SECONDARY) {
+                int x = (int) convertToTopLevelAnchorPaneCoordinates(mainContactPane,clickEvent.getX(),clickEvent.getY()).getX();
+                int y = (int) convertToTopLevelAnchorPaneCoordinates(mainContactPane,clickEvent.getX(),clickEvent.getY()).getY();
+                if (!mainContactPane.getStyleClass().get(0).equals("contact-background-pane-focused")) {
+                    mainContactPane.getStyleClass().clear();
+                    setPaneHoveredStyle();
+                }
+                showDeleteContactButton(x,y);
             }
         });
     }
@@ -144,6 +157,75 @@ public class MainContact {
         mainContactPane.getStyleClass().clear();
         mainContactPane.getStyleClass().add("contact-background-pane-focused");
     }
+    private void showDeleteContactButton(int clickPlaceX,int clickPlaceY) {
+        Pane messageButtonsOverlay = new Pane();
+        messageButtonsOverlay.setPrefWidth(mainAnchorPane.getPrefWidth());
+        messageButtonsOverlay.setPrefHeight(mainAnchorPane.getPrefHeight());
+        messageButtonsOverlay.setLayoutX(0);
+        messageButtonsOverlay.setLayoutY(0);
+        messageButtonsOverlay.setStyle("-fx-background-color: transparent");
+        mainAnchorPane.getChildren().add(messageButtonsOverlay);
+        messageButtonsOverlay.setOnMouseClicked(clickEvent -> {
+            mainAnchorPane.getChildren().remove(messageButtonsOverlay);
+            if (!mainContactPane.getStyleClass().get(0).equals("contact-background-pane-focused")) {
+                mainContactPane.getStyleClass().clear();
+                mainContactPane.getStyleClass().add("contact-background-pane");
+            }
+        });
+        Platform.runLater(() -> {
+            messageButtonsOverlay.getScene().getStylesheets().add(getClass().getResource("/main/css/MainContact.css").toExternalForm());
+        });
 
+        Pane messageButtonsBackground = new Pane();
+        messageButtonsBackground.setCursor(Cursor.HAND);
+        messageButtonsBackground.setPrefWidth(153);
+        messageButtonsBackground.setPrefHeight(44);
+        messageButtonsBackground.setLayoutX(clickPlaceX);
+        messageButtonsBackground.setLayoutY((clickPlaceY >= 900) ? (clickPlaceY - 42) : clickPlaceY);
+        messageButtonsBackground.getStyleClass().add("contact-delete-button-background");
+        messageButtonsOverlay.getChildren().add(messageButtonsBackground);
+
+        Pane deletePane = new Pane();
+        deletePane.setPrefWidth(144);
+        deletePane.setPrefHeight(34);
+        deletePane.setLayoutX(5);
+        deletePane.setLayoutY(5);
+        deletePane.getStyleClass().add("contact-delete-button-small-pane");
+        deletePane.setOnMouseClicked(Event::consume);
+        messageButtonsBackground.getChildren().add(deletePane);
+
+        Label deleteSymbol = new Label();
+        deleteSymbol.setPrefWidth(18);
+        deleteSymbol.setPrefHeight(18);
+        deleteSymbol.setLayoutX(7);
+        deleteSymbol.setLayoutY(8);
+        deleteSymbol.getStyleClass().add("contact-delete-button-symbol");
+        deletePane.getChildren().add(deleteSymbol);
+
+        Label deleteText = new Label("Delete contact");
+        deleteText.setLayoutX(34);
+        deleteText.setLayoutY(8);
+        deleteText.getStyleClass().add("contact-delete-button-text");
+        deletePane.getChildren().add(deleteText);
+    }
+    private Point2D convertToTopLevelAnchorPaneCoordinates(Node node, double x, double y) {
+        if (node == null) {
+            return new Point2D(x, y);  // If no parent, return the current coordinates.
+        }
+
+        // If this node is an AnchorPane, return the coordinates directly
+        if (Objects.equals(node.getId(),"#anchorPane")) {
+            return node.localToParent(x, y); // Convert the coordinates relative to the AnchorPane
+        }
+
+        // Otherwise, recursively move up the parent hierarchy
+        Point2D pointInParent = node.localToParent(x, y);
+
+        // Continue traversing up the parent hierarchy
+        return convertToTopLevelAnchorPaneCoordinates(node.getParent(), pointInParent.getX(), pointInParent.getY());
+    }
+    private void setPaneHoveredStyle() {
+        mainContactPane.getStyleClass().add("contact-background-pane-hovered");
+    }
 
 }

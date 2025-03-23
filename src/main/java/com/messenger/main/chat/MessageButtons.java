@@ -1,6 +1,7 @@
 package com.messenger.main.chat;
 
 import javafx.application.Platform;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -38,6 +39,7 @@ public class MessageButtons {
 
 
         Pane replyPane = new Pane();
+        replyPane.setCursor(Cursor.HAND);
         replyPane.setPrefWidth(96);
         replyPane.setPrefHeight(33);
         replyPane.setLayoutX(5);
@@ -60,6 +62,7 @@ public class MessageButtons {
         replyPane.getChildren().add(replyText);
 
         Pane editPane = new Pane();
+        editPane.setCursor(Cursor.HAND);
         editPane.setPrefWidth(96);
         editPane.setPrefHeight(33);
         editPane.setLayoutX(5);
@@ -82,6 +85,7 @@ public class MessageButtons {
         editPane.getChildren().add(editText);
 
         Pane deletePane = new Pane();
+        deletePane.setCursor(Cursor.HAND);
         deletePane.setPrefWidth(96);
         deletePane.setPrefHeight(33);
         deletePane.setLayoutX(5);
@@ -121,6 +125,7 @@ public class MessageButtons {
 
 
         Pane messageButtonsBackground = new Pane();
+        messageButtonsBackground.setCursor(Cursor.HAND);
         messageButtonsBackground.setPrefWidth(105);
         messageButtonsBackground.setPrefHeight(42);
         messageButtonsBackground.setLayoutX(clickPlaceX);

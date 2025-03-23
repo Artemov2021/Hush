@@ -86,8 +86,8 @@ public class ChatsDataBase {
         }
         return -1;
     }
-    public static int addMessage(int senderId,int receiverId, String message,byte[] picture,int replyMessageId,String messageTime,boolean received) throws SQLException {
-        String statement = "INSERT INTO chats (sender_id,receiver_id,message,picture,reply_message_id,message_time,received) VALUES (?,?,?,?,?,?,?)";
+    public static int addMessage(int senderId,int receiverId, String message,byte[] picture,int replyMessageId,String messageTime,String messageType,boolean received) throws SQLException {
+        String statement = "INSERT INTO chats (sender_id,receiver_id,message,picture,reply_message_id,message_time,message_type,received) VALUES (?,?,?,?,?,?,?,?)";
         InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
@@ -98,7 +98,8 @@ public class ChatsDataBase {
             preparedStatement.setBlob(4,inputStreamPicture);
             preparedStatement.setObject(5,replyMessageId);
             preparedStatement.setString(6,messageTime);
-            preparedStatement.setBoolean(7,received);
+            preparedStatement.setString(7,messageType);
+            preparedStatement.setBoolean(8,received);
 
             preparedStatement.executeUpdate();
 
@@ -140,8 +141,8 @@ public class ChatsDataBase {
         }
         return messages;
     }
-    public static List<Object> getMessage(int messageId) throws SQLException {
-        List<Object> message = new ArrayList<>();
+    public static ArrayList<Object> getMessage(int messageId) throws SQLException {
+        ArrayList<Object> message = new ArrayList<>();
         String statement = "SELECT * FROM chats WHERE message_id = ?";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {

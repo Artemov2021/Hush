@@ -14,6 +14,10 @@
     -fx-background-color: #3A3941;
     -fx-background-radius: 8;
 }
+.contact-background-pane-hovered {
+    -fx-background-color: #262529;
+    -fx-background-radius: 8;
+}
 /*-----------------------------------------------------------------------------*/
 /* avatar */
 .contact-avatar-label {
@@ -39,3 +43,23 @@
     -fx-text-fill: #8A8A8A;
 }
 /*-----------------------------------------------------------------------------*/
+/* Delete Contact Button */
+.contact-delete-button-background {
+    -fx-background-color: #211F26;
+    -fx-background-radius: 5;
+}
+.contact-delete-button-small-pane {
+    -fx-background-color: #211F26;
+    -fx-background-radius: 3;
+}
+.contact-delete-button-small-pane:hover {
+    -fx-background-color: #323036;
+}
+.contact-delete-button-symbol {
+    -fx-background-image: url("../elements/messageDeleteSymbol.png");
+    -fx-background-repeat: no-repeat;
+}
+.contact-delete-button-text {
+    -fx-font-size: 13;
+    -fx-text-fill: white;
+}

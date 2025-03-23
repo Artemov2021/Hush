@@ -19,6 +19,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -52,7 +53,11 @@ public class MainWindowController {
     @FXML
     private Label toastCopiedMessage;
     @FXML
+    private Label settingsButton;
+    @FXML
     private TextField mainSearchField;
+    @FXML
+    private Label addContactButton;
     @FXML
     private Label mainTitle;
     @FXML
@@ -76,8 +81,10 @@ public class MainWindowController {
         loadContacts();
         setLazyLoading();
         addSearchFieldListener();
-
-
+        setAddContactButtonListener();
+        setSettingsButtonListener();
+        setEmailLabelListener();
+        removeTextFieldContextMenu();
     }
 
 
@@ -164,6 +171,38 @@ public class MainWindowController {
             pause.playFromStart();
         });
     }
+    private void setAddContactButtonListener(){
+        addContactButton.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                try {
+                    addContactWindow();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+    private void setSettingsButtonListener(){
+        settingsButton.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                try {
+                    settingsWindow();
+                } catch (IOException | SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+    private void setEmailLabelListener() {
+        mainEmailLabel.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                saveToClipboard();
+            }
+        });
+    }
+    private void removeTextFieldContextMenu() {
+        mainSearchField.setContextMenu(new ContextMenu());
+    }
 
 
     private void showFoundedContacts(String enteredName) {
@@ -192,7 +231,6 @@ public class MainWindowController {
     }
 
 
-    @FXML
     public void saveToClipboard() {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         StringSelection selection = new StringSelection(mainEmailLabel.getText());
@@ -200,7 +238,6 @@ public class MainWindowController {
         toastCopiedMessage.setLayoutX(mainEmailLabel.getLayoutX() + mainEmailLabel.getWidth()/5);
         ToastMessage.applyFadeEffect(toastCopiedMessage);
     }
-    @FXML
     public void addContactWindow () throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainNewContactWindow.fxml"));
         Parent newContactRoot = fxmlLoader.load();
@@ -213,7 +250,6 @@ public class MainWindowController {
 
         anchorPane.getChildren().add(newContactRoot);
     }
-    @FXML
     public void settingsWindow() throws IOException, SQLException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/fxml/MainSettingsWindow.fxml"));
         Parent settingsWindowRoot = loader.load();
