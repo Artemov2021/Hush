@@ -1,6 +1,8 @@
 package com.messenger.main;
 
 import com.messenger.database.UsersDataBase;
+import javafx.animation.FadeTransition;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -17,6 +19,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -191,7 +194,9 @@ public class MainContact {
         deletePane.setLayoutX(5);
         deletePane.setLayoutY(5);
         deletePane.getStyleClass().add("contact-delete-button-small-pane");
-        deletePane.setOnMouseClicked(Event::consume);
+        deletePane.setOnMouseClicked(clickEvent -> {
+            showDeleteContactConfirmation();
+        });
         messageButtonsBackground.getChildren().add(deletePane);
 
         Label deleteSymbol = new Label();
@@ -226,6 +231,41 @@ public class MainContact {
     }
     private void setPaneHoveredStyle() {
         mainContactPane.getStyleClass().add("contact-background-pane-hovered");
+    }
+    private void showDeleteContactConfirmation() {
+        Pane confirmationOverlay = new Pane();
+        confirmationOverlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.68)");
+        confirmationOverlay.setLayoutX(0);
+        confirmationOverlay.setLayoutY(0);
+        confirmationOverlay.setPrefWidth(mainAnchorPane.getWidth());
+        confirmationOverlay.setPrefHeight(mainAnchorPane.getHeight());
+        confirmationOverlay.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                mainAnchorPane.getChildren().remove(confirmationOverlay);
+            }
+        });
+        mainAnchorPane.getChildren().add(confirmationOverlay);
+
+        Pane confirmationBackground = new Pane();
+        confirmationBackground.getStyleClass().add("contact-delete-confirmation-window-background");
+        confirmationBackground.setLayoutX(778);
+        confirmationBackground.setLayoutY(401);
+        confirmationBackground.setPrefWidth(409);
+        confirmationBackground.setPrefHeight(149);
+        confirmationBackground.setOnMouseClicked(Event::consume);
+        confirmationOverlay.getChildren().add(confirmationBackground);
+
+        // Appearing time
+        FadeTransition FadeIn = new FadeTransition(Duration.millis(180),confirmationOverlay);
+        FadeIn.setFromValue(0);
+        FadeIn.setToValue(1);
+        FadeIn.play();
+
+        // Appearing move to left
+        TranslateTransition translateIn = new TranslateTransition(Duration.millis(180), confirmationBackground);
+        translateIn.setFromX(0);
+        translateIn.setToX(-35);
+        translateIn.play();
     }
 
 }

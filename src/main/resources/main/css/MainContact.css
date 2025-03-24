@@ -63,3 +63,8 @@
     -fx-font-size: 13;
     -fx-text-fill: white;
 }
+/* Delete Contact Confirmation Window */
+.contact-delete-confirmation-window-background {
+    -fx-background-color: #161518;
+    -fx-background-radius: 15;
+}
