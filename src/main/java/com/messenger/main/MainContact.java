@@ -1,5 +1,6 @@
 package com.messenger.main;
 
+import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
@@ -31,6 +32,8 @@ import java.util.regex.Pattern;
 
 public class MainContact {
     @FXML
+    private AnchorPane mainContactAnchorPane;
+    @FXML
     private Pane mainContactPane;
     @FXML
     private Label mainContactAvatarLabel;
@@ -42,10 +45,15 @@ public class MainContact {
     private Label mainContactTimeLabel;
 
     private AnchorPane mainAnchorPane;
+    private VBox mainContactsVBox;
     private int mainUserId;
+    private int contactId;
 
     public void setMainUserId(int id) {
         this.mainUserId = id;
+    }
+    public void setContactId(int id) {
+        this.contactId = id;
     }
     public void setName(String name) {
         mainContactNameLabel.setText(name);
@@ -102,6 +110,12 @@ public class MainContact {
     }
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
+    }
+    public void setMainAnchorPaneId() {
+        mainContactAnchorPane.setId("mainContactAnchorPane"+contactId);
+    }
+    public void setMainContactVBox(VBox vbox) {
+        this.mainContactsVBox = vbox;
     }
     public void initialize() {
         mainContactPane.setOnMouseClicked(clickEvent -> {
@@ -254,6 +268,40 @@ public class MainContact {
         confirmationBackground.setPrefHeight(149);
         confirmationBackground.setOnMouseClicked(Event::consume);
         confirmationOverlay.getChildren().add(confirmationBackground);
+
+        Label confirmationText = new Label("You want to delete that contact? ");
+        confirmationText.getStyleClass().add("contact-delete-confirmation-window-text");
+        confirmationText.setLayoutX(30);
+        confirmationText.setLayoutY(20);
+        confirmationBackground.getChildren().add(confirmationText);
+
+        Label confirmationDeleteButton = new Label();
+        confirmationDeleteButton.setCursor(Cursor.HAND);
+        confirmationDeleteButton.getStyleClass().add("contact-delete-confirmation-window-delete-button");
+        confirmationDeleteButton.setLayoutX(288);
+        confirmationDeleteButton.setLayoutY(94);
+        confirmationDeleteButton.setPrefWidth(98);
+        confirmationDeleteButton.setPrefHeight(40);
+        confirmationBackground.getChildren().add(confirmationDeleteButton);
+        confirmationDeleteButton.setOnMouseClicked(clickEvent -> {
+            ContactsDataBase.deleteContact(mainUserId,contactId);
+            MainContactList.removeContact(mainContactsVBox,contactId);
+            mainAnchorPane.getChildren().remove(confirmationOverlay);
+        });
+
+        Label confirmationCancelButton = new Label();
+        confirmationCancelButton.setCursor(Cursor.HAND);
+        confirmationCancelButton.getStyleClass().add("contact-delete-confirmation-window-cancel-button");
+        confirmationCancelButton.setLayoutX(175);
+        confirmationCancelButton.setLayoutY(94);
+        confirmationCancelButton.setPrefWidth(104);
+        confirmationCancelButton.setPrefHeight(40);
+        confirmationBackground.getChildren().add(confirmationCancelButton);
+        confirmationCancelButton.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                mainAnchorPane.getChildren().remove(confirmationOverlay);
+            }
+        });
 
         // Appearing time
         FadeTransition FadeIn = new FadeTransition(Duration.millis(180),confirmationOverlay);

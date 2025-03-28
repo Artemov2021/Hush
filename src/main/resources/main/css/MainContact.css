@@ -68,3 +68,27 @@
     -fx-background-color: #161518;
     -fx-background-radius: 15;
 }
+.contact-delete-confirmation-window-text {
+    -fx-font-size: 22;
+    -fx-text-fill: white;
+}
+.contact-delete-confirmation-window-delete-button {
+    -fx-background-image: url("../elements/confirmationDeleteButtonDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.contact-delete-confirmation-window-delete-button:hover {
+    -fx-background-image: url("../elements/confirmationDeleteButtonHovered.png");
+    -fx-background-repeat: no-repeat;
+}
+.contact-delete-confirmation-window-delete-button:pressed {
+    -fx-background-image: url("../elements/confirmationDeleteButtonFocused.png");
+    -fx-background-repeat: no-repeat;
+}
+.contact-delete-confirmation-window-cancel-button {
+    -fx-background-image: url("../elements/confirmationCancelButtonDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.contact-delete-confirmation-window-cancel-button:hover {
+    -fx-background-image: url("../elements/confirmationCancelButtonHovered.png");
+    -fx-background-repeat: no-repeat;
+}

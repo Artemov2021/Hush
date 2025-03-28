@@ -1,5 +1,6 @@
 package com.messenger.database;
 
+import javax.xml.transform.Result;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -86,6 +87,18 @@ public class ContactsDataBase {
             preparedStatement.setInt(4,contactId);
             preparedStatement.setInt(5,mainUserId);
             preparedStatement.executeUpdate();
+        }
+    }
+    public static void deleteContact(int mainUserId, int contactId) {
+        String statement = "DELETE FROM contacts WHERE user_id = ? AND contact_id = ?;";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password);
+             PreparedStatement preparedStatement = connection.prepareStatement(statement)) {
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.executeUpdate();  // Anzahl der gelöschten Zeilen
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 

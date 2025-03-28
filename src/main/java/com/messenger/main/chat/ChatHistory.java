@@ -91,6 +91,16 @@ public class ChatHistory {
         String messageText = (String) message.get(3);
         String messageTime = getMessageTime((String) message.get(6));
 
+        // Date Label ( if necessary )
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,mainUserId,contactId);
+        String messageFullDate = (String) message.get(6);
+        String previousMessageFullDate = (previousMessageId != -1) ? (String) ChatsDataBase.getMessage(previousMessageId).get(6) : null;
+        boolean isDateLabelAlreadyAdded = chatVBox.getChildren().get(chatVBox.getChildren().size()-1).getId().equals("dateLabel");
+        if (previousMessageId != -1 && messagesHaveOneDayDifference(previousMessageFullDate,messageFullDate) && !isDateLabelAlreadyAdded) {
+            String labelDate = getDateForDateLabel((String) message.get(6));     // 2. March
+            setChatDateLabel(labelDate);
+        }
+
         HBox messageHBox = new HBox();
         messageHBox.setMinHeight(40);
         messageHBox.setAlignment(senderId == mainUserId ? Pos.BOTTOM_RIGHT : Pos.BOTTOM_LEFT);
@@ -138,7 +148,6 @@ public class ChatHistory {
             messageHBox.getChildren().add(index, avatarLabel);
             HBox.setMargin(avatarLabel,(senderId == mainUserId) ? new Insets(0,110, 0, 0) : new Insets(0,0,0,110));
         } else {
-            int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId);
             if ((int) ChatsDataBase.getMessage(previousMessageId).get(1) == senderId) {
                 HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+previousMessageId);
                 if (previousMessageHBox != null) {
@@ -168,6 +177,16 @@ public class ChatHistory {
         String messageText = (String) message.get(3);
         int repliedMessageId = (int) message.get(5);
         String messageTime = getMessageTime((String) message.get(6));
+
+        // Date Label ( if necessary )
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,mainUserId,contactId);
+        String messageFullDate = (String) message.get(6);
+        String previousMessageFullDate = (previousMessageId != -1) ? (String) ChatsDataBase.getMessage(previousMessageId).get(6) : null;
+        boolean isDateLabelAlreadyAdded = chatVBox.getChildren().get(chatVBox.getChildren().size()-1).getId().equals("dateLabel");
+        if (previousMessageId != -1 && messagesHaveOneDayDifference(previousMessageFullDate,messageFullDate) && !isDateLabelAlreadyAdded) {
+            String labelDate = getDateForDateLabel((String) message.get(6));     // 2. March
+            setChatDateLabel(labelDate);
+        }
 
         HBox messageHBox = new HBox();
         messageHBox.setAlignment(senderId == mainUserId ? Pos.BOTTOM_RIGHT : Pos.BOTTOM_LEFT);
@@ -247,7 +266,6 @@ public class ChatHistory {
             messageHBox.getChildren().add(index, avatarLabel);
             HBox.setMargin(avatarLabel,(senderId == mainUserId) ? new Insets(0,110, 0, 0) : new Insets(0,0,0,110));
         } else {
-            int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId, senderId, receiverId);
             if ((int) ChatsDataBase.getMessage(previousMessageId).get(1) == senderId) {
                 HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox" + previousMessageId);
                 if (previousMessageHBox != null) {
@@ -281,6 +299,7 @@ public class ChatHistory {
     }
     private void setChatDateLabel(String date) {
         Label chatDateLabel = new Label(date);
+        chatDateLabel.setId("dateLabel");
         chatDateLabel.getStyleClass().add("chat-date-label");
         VBox.setMargin(chatDateLabel,new Insets(8,0,8,0));
         chatVBox.getChildren().add(chatDateLabel);

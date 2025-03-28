@@ -47,6 +47,7 @@ public class MainContactList {
             String lastMessageTime = ChatsDataBase.getLastMessageTime(mainUserId,contactId);
 
             contactPane.setMainUserId(mainUserId);
+            contactPane.setContactId(contactId);
             contactPane.setName(contactName);
             contactPane.setAvatar(contactId);
             contactPane.setMessage((String)lastMessageWithId.get(0),(int)lastMessageWithId.get(1));
@@ -60,6 +61,10 @@ public class MainContactList {
     public static void addContactToList(int mainUserId,int contactId,VBox mainContactsVBox,AnchorPane mainAnchorPane) throws SQLException, IOException {
         loadContactFromFXML(mainUserId,contactId,mainContactsVBox,mainAnchorPane);
     }
+    public static void removeContact(VBox mainContactsVBox,int contactId) {
+        Pane targetContactPane = (Pane) mainContactsVBox.lookup("#mainContactAnchorPane"+contactId);
+        mainContactsVBox.getChildren().remove(targetContactPane);
+    }
 
 
     private static void loadContactFromFXML(int mainUserId, int contactId, VBox mainContactsVBox, AnchorPane mainAnchorPane) throws IOException, SQLException {
@@ -72,12 +77,15 @@ public class MainContactList {
         String lastMessageTime = ChatsDataBase.getLastMessageTime(mainUserId,contactId);
 
         contactPane.setMainUserId(mainUserId);
+        contactPane.setContactId(contactId);
         contactPane.setName(contactName);
         contactPane.setAvatar(contactId);
         contactPane.setMessage((String)lastMessageWithId.get(0),(int)lastMessageWithId.get(1));
         contactPane.setTime(lastMessageTime);
         contactPane.setPaneId(contactId);
         contactPane.setMainAnchorPane(mainAnchorPane);
+        contactPane.setMainAnchorPaneId();
+        contactPane.setMainContactVBox(mainContactsVBox);
 
         mainContactsVBox.getChildren().add(0,contactRoot);
     }

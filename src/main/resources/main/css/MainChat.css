@@ -171,9 +171,22 @@
     -fx-background-repeat: no-repeat;
 }
 /*-----------------------------------------------------------------------------*/
-
-
-
+/* Reply Wrapper */
+.chat-reply-wrapper-background {
+    -fx-background-color: #1D1C20;
+}
+.chat-reply-wrapper-symbol {
+    -fx-background-image: url("../elements/replyWrapperSymbol.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-reply-wrapper-name {
+    -fx-font-size: 18;
+    -fx-text-fill: #95B1E8;
+}
+.chat-reply-wrapper-message {
+    -fx-font-size: 14;
+    -fx-text-fill: #CBCBCB;
+}
 
 
 

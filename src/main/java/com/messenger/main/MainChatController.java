@@ -7,47 +7,28 @@ import com.messenger.design.ScrollPaneEffect;
 import com.messenger.main.chat.ChatHistory;
 import javafx.animation.*;
 import javafx.application.Platform;
-import javafx.beans.property.ObjectProperty;
 import javafx.scene.control.*;
-import javafx.scene.shape.Rectangle;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.image.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.TextAlignment;
-import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import javafx.scene.Cursor;
 
-import javax.swing.*;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Types;
 import java.text.ParseException;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class MainChatController {
@@ -273,15 +254,12 @@ public class MainChatController {
 
     // Message Sending
     @FXML
-    public void sendTextMessage() throws SQLException {
-        String currentTextMessage = chatTextField.getText().trim();
-
-        if (currentTextMessage.isEmpty()) {
-            return;
+    public void sendCurrentTextMessage() throws SQLException {
+        boolean isCurrentTextMessageEmpty = chatTextField.getText().trim().isEmpty();
+        if (!isCurrentTextMessageEmpty) {
+            saveAndDisplayCurrentTextMessage();
+            clearChatInput();
         }
-
-        saveAndDisplayCurrentTextMessage();
-        chatTextField.setText("");
     }
     private void saveAndDisplayCurrentTextMessage() throws SQLException {
         // Message Information
@@ -319,6 +297,9 @@ public class MainChatController {
     }
     private void updateInteractionTime() throws SQLException {
         ContactsDataBase.updateInteractionTime(mainUserId,contactId,getCurrentFullTime());
+    }
+    private void clearChatInput() {
+        chatTextField.setText("");
     }
     private void displayCurrentTextMessage(int messageId) throws SQLException, ParseException {
         String currentTextMessageType = getCurrentMessageType();

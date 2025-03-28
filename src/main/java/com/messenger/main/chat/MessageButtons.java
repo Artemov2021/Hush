@@ -46,6 +46,10 @@ public class MessageButtons {
         replyPane.setLayoutY(5);
         replyPane.getStyleClass().add("chat-message-buttons-small-pane");
         messageButtonsBackground.getChildren().add(replyPane);
+        replyPane.setOnMouseClicked(clickEvent -> {
+            setReplyWrapper();
+        });
+
 
         Label replySymbol = new Label();
         replySymbol.setPrefWidth(18);
@@ -157,5 +161,35 @@ public class MessageButtons {
         replyPane.getChildren().add(replyText);
     }
 
+    private void setReplyWrapper() {
+        Pane replyWrapperBackground = new Pane();
+        replyWrapperBackground.getStyleClass().add("chat-reply-wrapper-background");
+        replyWrapperBackground.setLayoutX(462);
+        replyWrapperBackground.setLayoutY(888);
+        replyWrapperBackground.setPrefWidth(1477);
+        replyWrapperBackground.setPrefHeight(58);
+        mainAnchorPane.getChildren().add(replyWrapperBackground);
 
+        Label replyWrapperSymbol = new Label();
+        replyWrapperSymbol.getStyleClass().add("chat-reply-wrapper-symbol");
+        replyWrapperSymbol.setLayoutX(30);
+        replyWrapperSymbol.setLayoutY(10);
+        replyWrapperSymbol.setPrefWidth(36);
+        replyWrapperSymbol.setPrefHeight(43);
+        replyWrapperBackground.getChildren().add(replyWrapperSymbol);
+
+        Label replyWrapperName = new Label("Tymur Artemov");
+        replyWrapperName.getStyleClass().add("chat-reply-wrapper-name");
+        replyWrapperName.setLayoutX(70);
+        replyWrapperName.setLayoutY(6);
+        replyWrapperBackground.getChildren().add(replyWrapperName);
+
+        Label replyWrapperMessage = new Label("hello how are you");
+        replyWrapperMessage.getStyleClass().add("chat-reply-wrapper-message");
+        replyWrapperMessage.setLayoutX(75);
+        replyWrapperMessage.setLayoutY(30);
+        replyWrapperBackground.getChildren().add(replyWrapperMessage);
+
+
+    }
 }
