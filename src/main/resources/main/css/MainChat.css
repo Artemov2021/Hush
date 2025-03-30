@@ -160,6 +160,14 @@
     -fx-font-size: 11;
     -fx-text-fill: #7E7D82;
 }
+.chat-message-user-deleted-message {
+    -fx-font-siez: 12;
+    -fx-text-fill: #9B9AA3;
+}
+.chat-message-contact-deleted-message {
+    -fx-font-size: 12;
+    -fx-text-fill: #7E7D82;
+}
 /*-----------------------------------------------------------------------------*/
 /* Scroll Down Button */
 .chat-scroll-down-button {
@@ -171,22 +179,38 @@
     -fx-background-repeat: no-repeat;
 }
 /*-----------------------------------------------------------------------------*/
-/* Reply Wrapper */
-.chat-reply-wrapper-background {
+/* Wrapper */
+.chat-wrapper-name {
+    -fx-font-size: 18;
+    -fx-text-fill: #95B1E8;
+}
+.chat-wrapper-message {
+    -fx-font-size: 14;
+    -fx-text-fill: #CBCBCB;
+}
+.chat-wrapper-exit {
+    -fx-background-image: url("../elements/wrapperExitDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-wrapper-exit:hover {
+    -fx-background-image: url("../elements/wrapperExitFocused.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-wrapper-background {
     -fx-background-color: #1D1C20;
 }
+/* Reply Wrapper */
 .chat-reply-wrapper-symbol {
     -fx-background-image: url("../elements/replyWrapperSymbol.png");
     -fx-background-repeat: no-repeat;
 }
-.chat-reply-wrapper-name {
-    -fx-font-size: 18;
-    -fx-text-fill: #95B1E8;
+/* Edit Wrapper */
+.chat-edit-wrapper-symbol {
+    -fx-background-image: url("../elements/editWrapperSymbol.png");
+    -fx-background-repeat: no-repeat;
 }
-.chat-reply-wrapper-message {
-    -fx-font-size: 14;
-    -fx-text-fill: #CBCBCB;
-}
+
+
 
 
 

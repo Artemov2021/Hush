@@ -78,12 +78,12 @@ public class MainContact {
     public void setMessage(String message,int messageId) {
         mainContactMessageLabel.getStyleClass().clear();
 
-        // if there is no last message and its id ( chat is empty )
+        // if there is no last message and its mainUserId ( chat is empty )
         if (message == null && messageId == -1) {
             mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
             mainContactMessageLabel.setText("");
 
-        // if there is no message, but there is message id ( means it is a picture )
+        // if there is no message, but there is message mainUserId ( means it is a picture )
         } else if (message == null && messageId != -1) {
             mainContactMessageLabel.setStyle("-fx-text-fill: white;");
             mainContactMessageLabel.setText("Picture");
@@ -278,7 +278,7 @@ public class MainContact {
         Label confirmationDeleteButton = new Label();
         confirmationDeleteButton.setCursor(Cursor.HAND);
         confirmationDeleteButton.getStyleClass().add("contact-delete-confirmation-window-delete-button");
-        confirmationDeleteButton.setLayoutX(288);
+        confirmationDeleteButton.setLayoutX(290);
         confirmationDeleteButton.setLayoutY(94);
         confirmationDeleteButton.setPrefWidth(98);
         confirmationDeleteButton.setPrefHeight(40);

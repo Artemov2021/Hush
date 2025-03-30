@@ -32,7 +32,7 @@ public class ContactsDataBase {
         return contactsIdList.stream().mapToInt(Integer::intValue).toArray();
     }
     public static int[] getMatchedUsersId(int mainUserId,String userNamePiece) throws SQLException {
-        /* For example: user enters "Ar" and that method gives all user's id, which name
+        /* For example: user enters "Ar" and that method gives all user's mainUserId, which name
            beginns with "Ar" ( e.g. Artur,Ariana )  */
 
         int[] contactsId = getContactsIdList(mainUserId);

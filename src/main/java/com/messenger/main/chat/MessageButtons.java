@@ -1,16 +1,34 @@
 package com.messenger.main.chat;
 
+import com.messenger.database.ChatsDataBase;
+import com.messenger.database.UsersDataBase;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.util.Duration;
+
+import java.sql.SQLException;
 
 public class MessageButtons {
     private AnchorPane mainAnchorPane;
+    private VBox mainChatVBox;
+    private ScrollPane mainChatScrollPane;
 
-    public MessageButtons(AnchorPane mainAnchorPane) {
+    public MessageButtons(AnchorPane mainAnchorPane,VBox mainChatVBox,ScrollPane mainChatScrollPane) {
         this.mainAnchorPane = mainAnchorPane;
+        this.mainChatVBox = mainChatVBox;
+        this.mainChatScrollPane = mainChatScrollPane;
     }
 
     public void showMessageButtons(int clickPlaceX,int clickPlaceY,int messageId) {
@@ -30,7 +48,7 @@ public class MessageButtons {
 
 
         Pane messageButtonsBackground = new Pane();
-        messageButtonsBackground.setPrefWidth(105);
+        messageButtonsBackground.setPrefWidth(107);
         messageButtonsBackground.setPrefHeight(113);
         messageButtonsBackground.setLayoutX(clickPlaceX);
         messageButtonsBackground.setLayoutY(clickPlaceY >= 820 ? (clickPlaceY - 113) : (clickPlaceY));
@@ -47,7 +65,12 @@ public class MessageButtons {
         replyPane.getStyleClass().add("chat-message-buttons-small-pane");
         messageButtonsBackground.getChildren().add(replyPane);
         replyPane.setOnMouseClicked(clickEvent -> {
-            setReplyWrapper();
+            try {
+                int messageSenderId = (int) ChatsDataBase.getMessage(messageId).get(1);
+                setReplyWrapper(messageSenderId,messageId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
 
 
@@ -72,6 +95,14 @@ public class MessageButtons {
         editPane.setLayoutX(5);
         editPane.setLayoutY(40);
         editPane.getStyleClass().add("chat-message-buttons-small-pane");
+        editPane.setOnMouseClicked(clickEvent -> {
+            try {
+                int messageSenderId = (int) ChatsDataBase.getMessage(messageId).get(1);
+                setEditWrapper(messageSenderId,messageId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
         messageButtonsBackground.getChildren().add(editPane);
 
         Label editSymbol = new Label();
@@ -130,7 +161,7 @@ public class MessageButtons {
 
         Pane messageButtonsBackground = new Pane();
         messageButtonsBackground.setCursor(Cursor.HAND);
-        messageButtonsBackground.setPrefWidth(105);
+        messageButtonsBackground.setPrefWidth(107);
         messageButtonsBackground.setPrefHeight(42);
         messageButtonsBackground.setLayoutX(clickPlaceX);
         messageButtonsBackground.setLayoutY((clickPlaceY >= 900) ? (clickPlaceY - 42) : clickPlaceY);
@@ -145,6 +176,14 @@ public class MessageButtons {
         replyPane.setLayoutY(5);
         replyPane.getStyleClass().add("chat-message-buttons-small-pane");
         messageButtonsBackground.getChildren().add(replyPane);
+        replyPane.setOnMouseClicked(clickEvent -> {
+            try {
+                int messageSenderId = (int) ChatsDataBase.getMessage(messageId).get(1);
+                setReplyWrapper(messageSenderId,messageId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
         Label replySymbol = new Label();
         replySymbol.setPrefWidth(18);
@@ -160,10 +199,15 @@ public class MessageButtons {
         replyText.getStyleClass().add("chat-message-buttons-text");
         replyPane.getChildren().add(replyText);
     }
+    private void setReplyWrapper(int senderId, int messageId) throws SQLException {
+        deletePreviousReplyWrapper();
+        setTextFieldFocused();
+        setVBoxBottomPadding(65);
+        raiseScrollDownButton();
 
-    private void setReplyWrapper() {
         Pane replyWrapperBackground = new Pane();
-        replyWrapperBackground.getStyleClass().add("chat-reply-wrapper-background");
+        replyWrapperBackground.setId("replyWrapper"+messageId);
+        replyWrapperBackground.getStyleClass().add("chat-wrapper-background");
         replyWrapperBackground.setLayoutX(462);
         replyWrapperBackground.setLayoutY(888);
         replyWrapperBackground.setPrefWidth(1477);
@@ -172,24 +216,198 @@ public class MessageButtons {
 
         Label replyWrapperSymbol = new Label();
         replyWrapperSymbol.getStyleClass().add("chat-reply-wrapper-symbol");
-        replyWrapperSymbol.setLayoutX(30);
+        replyWrapperSymbol.setLayoutX(27);
         replyWrapperSymbol.setLayoutY(10);
         replyWrapperSymbol.setPrefWidth(36);
         replyWrapperSymbol.setPrefHeight(43);
         replyWrapperBackground.getChildren().add(replyWrapperSymbol);
 
-        Label replyWrapperName = new Label("Tymur Artemov");
-        replyWrapperName.getStyleClass().add("chat-reply-wrapper-name");
-        replyWrapperName.setLayoutX(70);
+        String repliedMessageSenderName = UsersDataBase.getNameWithId(senderId);
+        Label replyWrapperName = new Label(repliedMessageSenderName);
+        replyWrapperName.getStyleClass().add("chat-wrapper-name");
+        replyWrapperName.setLayoutX(79);
         replyWrapperName.setLayoutY(6);
         replyWrapperBackground.getChildren().add(replyWrapperName);
 
-        Label replyWrapperMessage = new Label("hello how are you");
-        replyWrapperMessage.getStyleClass().add("chat-reply-wrapper-message");
-        replyWrapperMessage.setLayoutX(75);
-        replyWrapperMessage.setLayoutY(30);
+        String message = (String) ChatsDataBase.getMessage(messageId).get(3);
+        Label replyWrapperMessage = new Label(message);
+        replyWrapperMessage.setCursor(Cursor.HAND);
+        replyWrapperMessage.getStyleClass().add("chat-wrapper-message");
+        replyWrapperMessage.setLayoutX(80);
+        replyWrapperMessage.setLayoutY(31);
+        replyWrapperMessage.setMaxWidth(400);
+        replyWrapperMessage.setMaxHeight(17);
+        replyWrapperMessage.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                HBox repliedmessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
+                double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
+                smoothScrollTo(hboxPosition,0.4);
+                fadeOutBackgroundColor(repliedmessageHBox);
+            }
+        });
         replyWrapperBackground.getChildren().add(replyWrapperMessage);
 
+        Label wrapperExit = new Label();
+        wrapperExit.setCursor(Cursor.HAND);
+        wrapperExit.getStyleClass().add("chat-wrapper-exit");
+        wrapperExit.setLayoutX(1412);
+        wrapperExit.setLayoutY(24);
+        wrapperExit.setPrefWidth(22);
+        wrapperExit.setPrefHeight(22);
+        wrapperExit.setOnMouseClicked(clickEvent -> {
+            mainAnchorPane.getChildren().remove(
+                    mainAnchorPane.lookupAll("*").stream()
+                            .filter(node -> node instanceof Pane && node.getId() != null && node.getId().startsWith("replyWrapper"))
+                            .findFirst()
+                            .orElse(null)
+            );
+            setVBoxBottomPadding(20);
+            moveBackScrollDownButton();
+        });
+        replyWrapperBackground.getChildren().add(wrapperExit);
 
+    }
+    private void setEditWrapper(int senderId,int messageId) throws SQLException {
+        deletePreviousEditWrapper();
+        setTextFieldFocused();
+        setVBoxBottomPadding(65);
+        raiseScrollDownButton();
+
+        Pane editWrapperBackground = new Pane();
+        editWrapperBackground.setId("editWrapper"+messageId);
+        editWrapperBackground.getStyleClass().add("chat-wrapper-background");
+        editWrapperBackground.setLayoutX(462);
+        editWrapperBackground.setLayoutY(888);
+        editWrapperBackground.setPrefWidth(1477);
+        editWrapperBackground.setPrefHeight(58);
+        mainAnchorPane.getChildren().add(editWrapperBackground);
+
+        Label editWrapperSymbol = new Label();
+        editWrapperSymbol.getStyleClass().add("chat-edit-wrapper-symbol");
+        editWrapperSymbol.setLayoutX(30);
+        editWrapperSymbol.setLayoutY(15);
+        editWrapperSymbol.setPrefWidth(30);
+        editWrapperSymbol.setPrefHeight(30);
+        editWrapperBackground.getChildren().add(editWrapperSymbol);
+
+        String editeMessageSenderName = UsersDataBase.getNameWithId(senderId);
+        Label editWrapperName = new Label(editeMessageSenderName);
+        editWrapperName.getStyleClass().add("chat-wrapper-name");
+        editWrapperName.setLayoutX(80);
+        editWrapperName.setLayoutY(6);
+        editWrapperBackground.getChildren().add(editWrapperName);
+
+        String message = (String) ChatsDataBase.getMessage(messageId).get(3);
+        Label replyWrapperMessage = new Label(message);
+        replyWrapperMessage.setCursor(Cursor.HAND);
+        replyWrapperMessage.getStyleClass().add("chat-wrapper-message");
+        replyWrapperMessage.setLayoutX(81);
+        replyWrapperMessage.setLayoutY(31);
+        replyWrapperMessage.setMaxWidth(400);
+        replyWrapperMessage.setMaxHeight(17);
+        replyWrapperMessage.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                HBox repliedmessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
+                double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
+                smoothScrollTo(hboxPosition,0.4);
+                fadeOutBackgroundColor(repliedmessageHBox);
+            }
+        });
+        editWrapperBackground.getChildren().add(replyWrapperMessage);
+    }
+
+    private void deletePreviousReplyWrapper() {
+        Pane replyWrapper = (Pane) mainAnchorPane.lookupAll("*").stream()
+                .filter(node -> node instanceof Pane && node.getId() != null && node.getId().startsWith("replyWrapper"))
+                .findFirst()
+                .orElse(null);
+
+        mainAnchorPane.getChildren().remove(replyWrapper);
+    }
+    private void deletePreviousEditWrapper() {
+        Pane replyWrapper = (Pane) mainAnchorPane.lookupAll("*").stream()
+                .filter(node -> node instanceof Pane && node.getId() != null && node.getId().startsWith("editWrapper"))
+                .findFirst()
+                .orElse(null);
+
+        mainAnchorPane.getChildren().remove(replyWrapper);
+    }
+    private void setVBoxBottomPadding(int bottomPadding) {
+        mainChatVBox.setPadding(new Insets(0, 0, bottomPadding, 0));
+    }
+    private void raiseScrollDownButton() {
+        Label scrollDownButton = (Label) mainAnchorPane.lookup("#scrollDownButton");
+        scrollDownButton.setLayoutY(815);
+    }
+    private void moveBackScrollDownButton() {
+        Label scrollDownButton = (Label) mainAnchorPane.lookup("#scrollDownButton");
+        scrollDownButton.setLayoutY(871);
+    }
+    private double getCenteredScrollPosition(HBox targetHBox) {
+        double hboxY = targetHBox.localToScene(0, 0).getY(); // Y position of HBox in scene
+        double vboxY = mainChatVBox.localToScene(0, 0).getY(); // Y position of VBox in scene
+        double viewportHeight = mainChatScrollPane.getViewportBounds().getHeight(); // Viewport height
+        double totalHeight = mainChatVBox.getBoundsInLocal().getHeight(); // Total VBox height
+
+        // Compute scroll position to center the HBox
+        double position = (hboxY - vboxY - (viewportHeight / 2) + (targetHBox.getBoundsInLocal().getHeight() / 2))
+                / (totalHeight - viewportHeight);
+
+        // Ensure the value is between 0 and 1
+        return Math.max(0, Math.min(1, position));
+    }
+    private void smoothScrollTo(double targetValue, double durationInSeconds) {
+        double startValue = mainChatScrollPane.getVvalue(); // Current scroll position
+        double distance = targetValue - startValue; // How much to scroll
+
+        Timeline timeline = new Timeline();
+        int frames = (int) (durationInSeconds * 60); // 60 FPS
+        for (int i = 0; i <= frames; i++) {
+            double progress = (double) i / frames; // Progress from 0 to 1
+            double interpolatedValue = startValue + distance * progress; // Linear interpolation
+
+            timeline.getKeyFrames().add(new KeyFrame(Duration.millis(i * (1000.0 / 60)),
+                    event -> mainChatScrollPane.setVvalue(interpolatedValue)));
+        }
+
+        timeline.setCycleCount(1);
+        timeline.play();
+    }
+    private void fadeOutBackgroundColor(HBox hbox) {
+        // Stop any existing animation on this HBox
+        if (hbox.getUserData() instanceof Timeline) {
+            ((Timeline) hbox.getUserData()).stop();
+        }
+
+        // Create a new Timeline
+        Timeline fadeTimeline = new Timeline();
+        hbox.setUserData(fadeTimeline); // Store animation in the HBox itself
+
+        // Base color #333138
+        Color startColor = Color.web("#333138");
+
+        // Opacity property to interpolate alpha
+        ObjectProperty<Color> colorProperty = new SimpleObjectProperty<>(startColor);
+        colorProperty.addListener((obs, oldColor, newColor) -> {
+            hbox.setBackground(new Background(new BackgroundFill(newColor, CornerRadii.EMPTY, Insets.EMPTY)));
+        });
+
+        // Animate the alpha from 1.0 (solid) to 0.0 (transparent)
+        KeyFrame keyFrame = new KeyFrame(
+                Duration.seconds(2),
+                new KeyValue(colorProperty, Color.web("#333138", 0)) // Transparent version of the color
+        );
+
+        fadeTimeline.getKeyFrames().add(keyFrame);
+        fadeTimeline.setCycleCount(1);
+
+        // Clear animation reference on completion
+        fadeTimeline.setOnFinished(event -> hbox.setUserData(null));
+
+        fadeTimeline.play();
+    }
+    private void setTextFieldFocused() {
+        TextField chatTextField = (TextField) mainAnchorPane.lookup("#chatTextField");
+        chatTextField.requestFocus();
     }
 }

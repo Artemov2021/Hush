@@ -66,7 +66,7 @@
         <version>0.0.8</version>
         <executions>
           <execution>
-            <id>default-cli</id>
+            <mainUserId>default-cli</mainUserId>
             <configuration>
               <mainClass>com.main.messenger/com.main.messenger.HelloApplication</mainClass>
               <launcher>app</launcher>

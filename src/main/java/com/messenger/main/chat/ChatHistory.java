@@ -5,7 +5,10 @@ import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -104,7 +107,6 @@ public class ChatHistory {
         HBox messageHBox = new HBox();
         messageHBox.setMinHeight(40);
         messageHBox.setAlignment(senderId == mainUserId ? Pos.BOTTOM_RIGHT : Pos.BOTTOM_LEFT);
-        if (ChatsDataBase.getLastMessageId(mainUserId,contactId) == messageId) VBox.setMargin(messageHBox,new Insets(0,0,20,0));
         messageHBox.setId("messageHBox"+messageId);
         chatVBox.getChildren().add(messageHBox);
 
@@ -116,7 +118,7 @@ public class ChatHistory {
             if (clickEvent.getButton() == MouseButton.SECONDARY) {
                 int x = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getX();
                 int y = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getY();
-                MessageButtons messageButtons = new MessageButtons(mainAnchorPane);
+                MessageButtons messageButtons = new MessageButtons(mainAnchorPane,chatVBox,chatScrollPane);
                 if (senderId == mainUserId) {
                     messageButtons.showMessageButtons(x, y, messageId);
                 } else {
@@ -148,7 +150,8 @@ public class ChatHistory {
             messageHBox.getChildren().add(index, avatarLabel);
             HBox.setMargin(avatarLabel,(senderId == mainUserId) ? new Insets(0,110, 0, 0) : new Insets(0,0,0,110));
         } else {
-            if ((int) ChatsDataBase.getMessage(previousMessageId).get(1) == senderId) {
+            if (messageId == 12) System.out.println(messagesHaveOneDayDifference(previousMessageFullDate,messageFullDate));
+            if ((int) ChatsDataBase.getMessage(previousMessageId).get(1) == senderId && !messagesHaveOneDayDifference(previousMessageFullDate,messageFullDate)) {
                 HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+previousMessageId);
                 if (previousMessageHBox != null) {
                     Node previousAvatarLabel = previousMessageHBox.lookup("#messageAvatarLabel" + previousMessageId);
@@ -190,18 +193,18 @@ public class ChatHistory {
 
         HBox messageHBox = new HBox();
         messageHBox.setAlignment(senderId == mainUserId ? Pos.BOTTOM_RIGHT : Pos.BOTTOM_LEFT);
-        if (ChatsDataBase.getLastMessageId(mainUserId,contactId) == messageId) VBox.setMargin(messageHBox,new Insets(0,0,20,0));
         messageHBox.setId("messageHBox"+messageId);
         chatVBox.getChildren().add(messageHBox);
 
         StackPane messageStackPane = new StackPane();
+        messageStackPane.setId("messageStackPane"+messageId);
         messageStackPane.setMaxWidth(408);
         messageStackPane.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-stackpane" : "chat-message-contact-stackpane");
         messageStackPane.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.SECONDARY) {
                 int x = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getX();
                 int y = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getY();
-                MessageButtons messageButtons = new MessageButtons(mainAnchorPane);
+                MessageButtons messageButtons = new MessageButtons(mainAnchorPane,chatVBox,chatScrollPane);
                 if (senderId == mainUserId) {
                     messageButtons.showMessageButtons(x, y, messageId);
                 } else {
@@ -211,8 +214,9 @@ public class ChatHistory {
         });
         messageHBox.getChildren().add(messageStackPane);
 
+        boolean repliedMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,repliedMessageId);
         StackPane messageReplyPane = new StackPane();
-        messageReplyPane.setCursor(Cursor.HAND);
+        messageReplyPane.setCursor(repliedMessageExists ? Cursor.HAND : Cursor.DEFAULT);
         messageReplyPane.setMinWidth(80);
         messageReplyPane.setPrefHeight(37);
         messageReplyPane.setMaxHeight(37);
@@ -220,7 +224,7 @@ public class ChatHistory {
         StackPane.setAlignment(messageReplyPane,Pos.TOP_LEFT);
         StackPane.setMargin(messageReplyPane,new Insets(7,7,0,7));
         messageStackPane.getChildren().add(messageReplyPane);
-        messageReplyPane.setOnMouseClicked(clickEvent -> {
+        if (repliedMessageExists) messageReplyPane.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
                 HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+repliedMessageId);
                 double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
@@ -229,19 +233,29 @@ public class ChatHistory {
             }
         });
 
-        String repliedMessageName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessage(repliedMessageId).get(1));
-        Label messageReplyNameLabel = new Label(repliedMessageName);
-        messageReplyNameLabel.getStyleClass().add("chat-message-reply-name");
-        StackPane.setAlignment(messageReplyNameLabel,Pos.TOP_LEFT);
-        StackPane.setMargin(messageReplyNameLabel,new Insets(4,8,0,8));
-        messageReplyPane.getChildren().add(messageReplyNameLabel);
+        // TODO ( reply on picture.. )
+        if (repliedMessageExists && ChatsDataBase.getMessage(repliedMessageId).get(7).equals("text")) {
+            String repliedMessageName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessage(repliedMessageId).get(1));
+            Label messageReplyNameLabel = new Label(repliedMessageName);
+            messageReplyNameLabel.getStyleClass().add("chat-message-reply-name");
+            StackPane.setAlignment(messageReplyNameLabel,Pos.TOP_LEFT);
+            StackPane.setMargin(messageReplyNameLabel,new Insets(4,8,0,8));
+            messageReplyPane.getChildren().add(messageReplyNameLabel);
 
-        String repliedMessageText = (String) (ChatsDataBase.getMessage(repliedMessageId)).get(3);
-        Label messageReplyMessageLabel = new Label(repliedMessageText);
-        messageReplyMessageLabel.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-reply-message" : "chat-message-contact-reply-message");
-        StackPane.setAlignment(messageReplyMessageLabel,Pos.TOP_LEFT);
-        StackPane.setMargin(messageReplyMessageLabel,new Insets(18,8,0,8));
-        messageReplyPane.getChildren().add(messageReplyMessageLabel);
+            String repliedMessageText = (String) (ChatsDataBase.getMessage(repliedMessageId)).get(3);
+            Label messageReplyMessageLabel = new Label(repliedMessageText);
+            messageReplyMessageLabel.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-reply-message" : "chat-message-contact-reply-message");
+            StackPane.setAlignment(messageReplyMessageLabel,Pos.TOP_LEFT);
+            StackPane.setMargin(messageReplyMessageLabel,new Insets(18,8,0,8));
+            messageReplyPane.getChildren().add(messageReplyMessageLabel);
+        } else {
+            Label repliedMessageDeletedMessage = new Label("(deleted message)");
+            repliedMessageDeletedMessage.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-deleted-message" : "chat-message-contact-deleted-message");
+            StackPane.setAlignment(repliedMessageDeletedMessage,Pos.TOP_LEFT);
+            StackPane.setMargin(repliedMessageDeletedMessage,new Insets(10,8,5,8));
+            messageReplyPane.getChildren().add(repliedMessageDeletedMessage);
+        }
+
 
         Label messageTextLabel = new Label(messageText);
         messageTextLabel.setId("messageTextLabel"+messageId);
@@ -359,25 +373,21 @@ public class ChatHistory {
         boolean firstMessageInChat = (previousMessageId == -1);
         boolean previousMessageIsFromDifferentSender = !firstMessageInChat && ((int) ChatsDataBase.getMessage(previousMessageId).get(1)) != ((int) ChatsDataBase.getMessage(messageId).get(1));
         boolean previousMessageIsAfterDay = !firstMessageInChat && messagesHaveOneDayDifference((String) ChatsDataBase.getMessage(previousMessageId).get(6),(String) ChatsDataBase.getMessage(messageId).get(6));
-        boolean previousMessageIsAfterHour = !firstMessageInChat && messagesHaveOneHourDifference((String) ChatsDataBase.getMessage(previousMessageId).get(6),(String) ChatsDataBase.getMessage(messageId).get(6));
 
-        return firstMessageInChat || previousMessageIsFromDifferentSender || previousMessageIsAfterDay || previousMessageIsAfterHour;
+        return firstMessageInChat || previousMessageIsFromDifferentSender || previousMessageIsAfterDay;
     }
-    private boolean messagesHaveOneHourDifference(String previousMessageFullDate,String currentMessageFullDater) throws ParseException {
+    private boolean messagesHaveOneDayDifference(String previousMessageFullDate, String currentMessageFullDate) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-MM-dd"); // Only extracts the date
+
         Date date1 = dateFormat.parse(previousMessageFullDate);
-        Date date2 = dateFormat.parse(currentMessageFullDater);
-        long diffInMillis = Math.abs(date2.getTime() - date1.getTime());
-        long diffInHours = diffInMillis / (60 * 60 * 1000);
-        return diffInHours >= 1;
-    }
-    private boolean messagesHaveOneDayDifference(String previousMessageFullDate,String currentMessageFullDater) throws ParseException {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        Date date1 = dateFormat.parse(previousMessageFullDate);
-        Date date2 = dateFormat.parse(currentMessageFullDater);
-        long diffInMillis = Math.abs(date2.getTime() - date1.getTime());
-        long diffInHours = diffInMillis / (24 * 60 * 60 * 1000);
-        return diffInHours >= 1;
+        Date date2 = dateFormat.parse(currentMessageFullDate);
+
+        // Extract only the day part (YYYY-MM-DD)
+        String day1 = dayFormat.format(date1);
+        String day2 = dayFormat.format(date2);
+
+        return !day1.equals(day2); // True if the dates are different
     }
     private void setMessageAvatar(Label avatar,int senderId) throws SQLException {
         byte[] blobBytes = UsersDataBase.getAvatarWithId(senderId);
@@ -447,32 +457,36 @@ public class ChatHistory {
         timeline.play();
     }
     private void fadeOutBackgroundColor(HBox hbox) {
-        // Create a new Timeline specific to this HBox
-        Timeline fadeTimeline = new Timeline();
-
-        // Set the initial background color to #333138
-        BackgroundFill initialBackgroundFill = new BackgroundFill(Color.web("#333138"), CornerRadii.EMPTY, null);
-        hbox.setBackground(new Background(initialBackgroundFill));
-
-        // Interpolate the background color from #333138 to transparent
-        for (int i = 0; i <= 100; i++) {
-            final double progress = i / 100.0; // Progress between 0 and 1
-
-            KeyFrame keyFrame = new KeyFrame(
-                    Duration.seconds(3 * progress), // Time duration for each step
-                    event -> {
-                        // Interpolating the color from #333138 to transparent
-                        Color interpolatedColor = Color.web("#333138").deriveColor(0, 1, 1, 1 - progress);
-                        hbox.setBackground(new Background(
-                                new BackgroundFill(interpolatedColor, CornerRadii.EMPTY, null)
-                        ));
-                    }
-            );
-            fadeTimeline.getKeyFrames().add(keyFrame);
+        // Stop any existing animation on this HBox
+        if (hbox.getUserData() instanceof Timeline) {
+            ((Timeline) hbox.getUserData()).stop();
         }
 
-        // Start the timeline
+        // Create a new Timeline
+        Timeline fadeTimeline = new Timeline();
+        hbox.setUserData(fadeTimeline); // Store animation in the HBox itself
+
+        // Base color #333138
+        Color startColor = Color.web("#333138");
+
+        // Opacity property to interpolate alpha
+        ObjectProperty<Color> colorProperty = new SimpleObjectProperty<>(startColor);
+        colorProperty.addListener((obs, oldColor, newColor) -> {
+            hbox.setBackground(new Background(new BackgroundFill(newColor, CornerRadii.EMPTY, Insets.EMPTY)));
+        });
+
+        // Animate the alpha from 1.0 (solid) to 0.0 (transparent)
+        KeyFrame keyFrame = new KeyFrame(
+                Duration.seconds(2),
+                new KeyValue(colorProperty, Color.web("#333138", 0)) // Transparent version of the color
+        );
+
+        fadeTimeline.getKeyFrames().add(keyFrame);
         fadeTimeline.setCycleCount(1);
+
+        // Clear animation reference on completion
+        fadeTimeline.setOnFinished(event -> hbox.setUserData(null));
+
         fadeTimeline.play();
     }
 

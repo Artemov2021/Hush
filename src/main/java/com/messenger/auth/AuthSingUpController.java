@@ -179,7 +179,7 @@ public class AuthSingUpController {
             Parent root = loader.load();
 
             MainWindowController mainWindowController = loader.getController();
-            mainWindowController.setId(identifierType.equals("email") ? UsersDataBase.getIdWithEmail(identifier) : UsersDataBase.getIdWithName(identifier));
+            mainWindowController.setMainUserId(identifierType.equals("email") ? UsersDataBase.getIdWithEmail(identifier) : UsersDataBase.getIdWithName(identifier));
 
             Scene scene = new Scene(root);
             Stage newStage = new Stage();

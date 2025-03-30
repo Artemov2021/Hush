@@ -106,10 +106,26 @@ public class MainChatController {
         chatBackgroundPane.setLayoutX(461);
     }
     private void checkForWrappers() {
-        Pane replyPane = (Pane) mainAnchorPane.lookup("#reply-wrapper");
-        Pane changePane = (Pane) mainAnchorPane.lookup("#reply-wrapper");
-        if (replyPane != null) mainAnchorPane.getChildren().remove(replyPane);
-        if (changePane != null) mainAnchorPane.getChildren().remove(changePane);
+        // Get all elements that match the prefix "replyWrapper" and "editWrapper"
+        Set<Node> replyPanes = mainAnchorPane.lookupAll("#replyWrapper");
+        Set<Node> changePanes = mainAnchorPane.lookupAll("#editWrapper");
+
+        // Remove each of the elements found with those prefixes
+        if (replyPanes != null) {
+            for (Node node : replyPanes) {
+                if (node instanceof Pane) {
+                    mainAnchorPane.getChildren().remove(node);
+                }
+            }
+        }
+
+        if (changePanes != null) {
+            for (Node node : changePanes) {
+                if (node instanceof Pane) {
+                    mainAnchorPane.getChildren().remove(node);
+                }
+            }
+        }
     }
     private void setProfilePicture() throws SQLException {
         if (UsersDataBase.getAvatarWithId(contactId) != null) {
@@ -285,12 +301,12 @@ public class MainChatController {
 
         // Adding Message to DB and Displaying it
         try {
-            int currentMessageId = ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyId,messageTime,messageType,received);
-            int previousMessageId = ChatsDataBase.getPreviousMessageId(currentMessageId,mainUserId,contactId);
             updateInteractionTime();
+            int currentMessageId = ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyId,messageTime,messageType,received);
             displayCurrentTextMessage(currentMessageId);
-            if (previousMessageId != -1) removeLastMessagePadding( previousMessageId);
+            removeCurrentWrapper();
             scrollToTheBottom();
+            chatVBox.setPadding(new Insets(0,0,20,0));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -308,13 +324,21 @@ public class MainChatController {
 
         switch (currentTextMessageType) {
             case "text" -> currentChat.loadTextMessage(currentMessage);
+            case "reply_with_text" -> currentChat.loadReplyWithTextMessage(currentMessage);
         }
     }
-    private void removeLastMessagePadding(int messageId) {
-        HBox messageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
-        VBox.setMargin(messageHBox,new Insets(0,0,0,0));
-    }
+    private void removeCurrentWrapper() {
+        Node wrapper = mainAnchorPane.lookupAll("*").stream()
+                .filter(node -> node instanceof Pane && node.getId() != null &&
+                        (node.getId().startsWith("replyWrapper") || node.getId().startsWith("editWrapper")))
+                .findFirst()
+                .orElse(null);
 
+        // Remove the found wrapper if it exists
+        if (wrapper != null) {
+            mainAnchorPane.getChildren().remove(wrapper);
+        }
+    }
 
     // Small Functions
     private String getCurrentFullTime() {

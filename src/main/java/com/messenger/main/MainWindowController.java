@@ -7,11 +7,8 @@ import com.messenger.design.ToastMessage;
 import com.messenger.main.smallWindows.NewContactWindow;
 import com.messenger.main.smallWindows.SettingsWindow;
 import javafx.animation.PauseTransition;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.CacheHint;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
@@ -21,7 +18,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
@@ -32,14 +28,6 @@ import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
 
 public class MainWindowController {
     @FXML
@@ -69,7 +57,7 @@ public class MainWindowController {
     @FXML
     public VBox mainContactsVBox;
 
-    public int id;
+    public int mainUserId;
 
 
     public void initializeWithValue () throws SQLException, IOException {
@@ -93,7 +81,7 @@ public class MainWindowController {
            there is going to be the default title ( pointing how to add a new contact ). If the person
            has already at least one contact, there is going to be "login-title"
         */
-        if (UsersDataBase.getContactsAmount(id) > 0) {
+        if (UsersDataBase.getContactsAmount(mainUserId) > 0) {
             mainTitle.setVisible(false);
             mainSmallTitle.setVisible(false);
             logInTitle.setVisible(true);
@@ -101,17 +89,17 @@ public class MainWindowController {
     }
     private void setProfileInfo() throws SQLException {
         // set name and/or email in the upper left corner
-        mainNameLabel.setText(UsersDataBase.getNameWithId(id));
-        mainEmailLabel.setText(UsersDataBase.getEmailWithId(id));
-        if (UsersDataBase.getEmailWithId(id) == null) {
+        mainNameLabel.setText(UsersDataBase.getNameWithId(mainUserId));
+        mainEmailLabel.setText(UsersDataBase.getEmailWithId(mainUserId));
+        if (UsersDataBase.getEmailWithId(mainUserId) == null) {
             mainEmailLabel.setVisible(false);
             mainNameLabel.setLayoutY(23);
         }
     }
     private void setAppropriateAvatar() throws SQLException {
         // set the profile avatar in the upper left corner
-        if (UsersDataBase.getAvatarWithId(id) != null) {
-            byte[] blobBytes = UsersDataBase.getAvatarWithId(id);
+        if (UsersDataBase.getAvatarWithId(mainUserId) != null) {
+            byte[] blobBytes = UsersDataBase.getAvatarWithId(mainUserId);
             assert blobBytes != null;
             ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
             ImageView imageView = new ImageView(new Image(byteStream));
@@ -138,15 +126,15 @@ public class MainWindowController {
         ScrollPaneEffect.addScrollBarEffect(mainContactsScrollPane);
     }
     private void loadContacts() throws SQLException, IOException {
-        MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
+        MainContactList.loadContacts(mainUserId,mainContactsVBox,anchorPane);
     }
     private void setLazyLoading() {
         mainContactsScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal.doubleValue() == 1.0) {
                 int bottomContactId = getBottomContactId();
                 try {
-                    if (hasMoreContacts(id, bottomContactId)) {
-                        MainContactList.loadMoreContacts(id,mainContactsVBox,anchorPane,bottomContactId);
+                    if (hasMoreContacts(mainUserId, bottomContactId)) {
+                        MainContactList.loadMoreContacts(mainUserId,mainContactsVBox,anchorPane,bottomContactId);
                     }
                 } catch (SQLException | RuntimeException | IOException e) {
                     throw new RuntimeException("Error fetching more contacts", e);
@@ -163,7 +151,7 @@ public class MainWindowController {
             try {
                 if (newValue.trim().length() == 0) {
                     mainContactsVBox.getChildren().clear();
-                    MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
+                    MainContactList.loadContacts(mainUserId,mainContactsVBox,anchorPane);
                 }
             } catch (Exception e) {
                 throw new RuntimeException();
@@ -209,11 +197,11 @@ public class MainWindowController {
         try {
             if (enteredName.trim().length() > 0) {
                 mainContactsVBox.getChildren().clear();
-                int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(id,enteredName.trim());
-                MainContactList.loadCustomContacts(id,foundedUsersId,mainContactsVBox,anchorPane);
+                int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(mainUserId,enteredName.trim());
+                MainContactList.loadCustomContacts(mainUserId,foundedUsersId,mainContactsVBox,anchorPane);
             } else {
                 mainContactsVBox.getChildren().clear();
-                MainContactList.loadContacts(id,mainContactsVBox,anchorPane);
+                MainContactList.loadContacts(mainUserId,mainContactsVBox,anchorPane);
             }
         } catch (Exception e) {
             throw new RuntimeException();
@@ -243,7 +231,7 @@ public class MainWindowController {
         Parent newContactRoot = fxmlLoader.load();
 
         NewContactWindow newContactWindow = fxmlLoader.getController();
-        newContactWindow.setMainUserId(id);
+        newContactWindow.setMainUserId(mainUserId);
         newContactWindow.setMainAnchorPane(anchorPane);
         newContactWindow.setMainContactsVBox(mainContactsVBox);
         newContactWindow.initializeWithValue();
@@ -255,7 +243,7 @@ public class MainWindowController {
         Parent settingsWindowRoot = loader.load();
 
         SettingsWindow settingsWindow = loader.getController();
-        settingsWindow.setMainUserId(id);
+        settingsWindow.setMainUserId(mainUserId);
         settingsWindow.setMainAnchorPane(anchorPane);
         settingsWindow.initializeWithValue();
         // TODO
@@ -264,12 +252,12 @@ public class MainWindowController {
     }
 
 
-    public void setId(int id) throws SQLException, IOException {
-        this.id = id;
+    public void setMainUserId(int mainUserId) throws SQLException, IOException {
+        this.mainUserId = mainUserId;
         initializeWithValue();
     }
     public void initialize() throws SQLException, IOException {
-        this.id = 1;
+        this.mainUserId = 1;
         initializeWithValue();
     }
 

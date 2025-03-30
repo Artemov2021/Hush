@@ -96,7 +96,7 @@ public class UsersDataBase {
     }
 
     public static int getIdWithName(String name) throws SQLException {
-        String statement = "SELECT id FROM users WHERE name = ?";
+        String statement = "SELECT mainUserId FROM users WHERE name = ?";
         try (var conn = DriverManager.getConnection(url,user,password)) {
             var stmt = conn.prepareStatement(statement);
             stmt.setString(1,name);
@@ -109,7 +109,7 @@ public class UsersDataBase {
     }
 
     public static int getIdWithEmail(String email) throws SQLException {
-        String statement = "SELECT id FROM users WHERE email = ?";
+        String statement = "SELECT mainUserId FROM users WHERE email = ?";
         try (var conn = DriverManager.getConnection(url,user,password)) {
             var stmt = conn.prepareStatement(statement);
             stmt.setString(1,email);
@@ -148,7 +148,7 @@ public class UsersDataBase {
     }
 
     public static int getLength() throws SQLException {
-        String statement = "SELECT MAX(id) AS last_id FROM users";
+        String statement = "SELECT MAX(mainUserId) AS last_id FROM users";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             Statement stmt = connection.createStatement();
             ResultSet result = stmt.executeQuery(statement);
@@ -173,7 +173,7 @@ public class UsersDataBase {
     }
 
     public static void deleteAvatar(int id) throws SQLException {
-        String statement = "UPDATE users SET avatar_picture = NULL WHERE id = ?";
+        String statement = "UPDATE users SET avatar_picture = NULL WHERE mainUserId = ?";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt = connection.prepareStatement(statement);
             stmt.setInt(1,id);
@@ -181,7 +181,7 @@ public class UsersDataBase {
         }
     }
     public static void setAvatar(int id,String path) throws SQLException, FileNotFoundException {
-        String statement = "UPDATE users SET avatar_picture = ? WHERE id = ?";
+        String statement = "UPDATE users SET avatar_picture = ? WHERE mainUserId = ?";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt = connection.prepareStatement(statement);
             InputStream inputStream = new FileInputStream(path);
@@ -192,7 +192,7 @@ public class UsersDataBase {
     }
     public static void setName(int id,String name) throws SQLException {
         name = name.isEmpty() ? null : name;
-        String statement = "UPDATE users SET name = ? WHERE id = ?";
+        String statement = "UPDATE users SET name = ? WHERE mainUserId = ?";
         try (Connection connection3 = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt3 = connection3.prepareStatement(statement);
             stmt3.setString(1,name);
@@ -202,7 +202,7 @@ public class UsersDataBase {
     }
     public static void setEmail(int id,String email) throws SQLException {
         email = email.isEmpty() ? null : email;
-        String statement = "UPDATE users SET email = ? WHERE id = ?";
+        String statement = "UPDATE users SET email = ? WHERE mainUserId = ?";
         try (Connection connection3 = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt3 = connection3.prepareStatement(statement);
             stmt3.setString(1,email);

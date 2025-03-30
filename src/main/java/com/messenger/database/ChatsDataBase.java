@@ -157,6 +157,7 @@ public class ChatsDataBase {
                 message.add(result.getBytes("picture"));
                 message.add((result.getInt("reply_message_id") == 0) ? (-1) : (result.getInt("reply_message_id")));
                 message.add(result.getString("message_time"));
+                message.add(result.getString("message_type"));
                 message.add(result.getString("received"));
             }
         }
