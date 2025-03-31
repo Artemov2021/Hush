@@ -234,7 +234,7 @@ public class ChatHistory {
         });
 
         // TODO ( reply on picture.. )
-        if (repliedMessageExists && ChatsDataBase.getMessage(repliedMessageId).get(7).equals("text")) {
+        if (repliedMessageExists && (ChatsDataBase.getMessage(repliedMessageId).get(7).equals("text") || ChatsDataBase.getMessage(repliedMessageId).get(7).equals("reply_with_text"))) {
             String repliedMessageName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessage(repliedMessageId).get(1));
             Label messageReplyNameLabel = new Label(repliedMessageName);
             messageReplyNameLabel.getStyleClass().add("chat-message-reply-name");

@@ -25,6 +25,7 @@ import javafx.util.Duration;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
@@ -95,14 +96,27 @@ public class MainContact {
         }
 
     }
-    public void setTime(String time) {
-        String pattern = "\\d\\d:\\d\\d$";
-        Pattern compliedPattern = Pattern.compile(pattern);
-        Matcher matcher = compliedPattern.matcher(time);
+    public void setTime(String fullDate) {
+        String pattern = "(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}:\\d{2})"; // Extracts YYYY, MM, DD, HH:mm
+        Pattern compiledPattern = Pattern.compile(pattern);
+        Matcher matcher = compiledPattern.matcher(fullDate);
+
         if (matcher.find()) {
-            mainContactTimeLabel.setText(matcher.group());
+            String year = matcher.group(1);
+            String month = matcher.group(2);
+            String day = matcher.group(3);
+            String time = matcher.group(4);
+
+            LocalDate messageDate = LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day));
+            LocalDate today = LocalDate.now();
+
+            if (messageDate.isEqual(today)) {
+                mainContactTimeLabel.setText(time); // Show only HH:mm if it's today
+            } else {
+                mainContactTimeLabel.setText(day + "." + month + "." + year); // Show full date if not today
+            }
         } else {
-            mainContactTimeLabel.setText("");
+            mainContactTimeLabel.setText(""); // Default to empty if no match
         }
     }
     public void setPaneId(int contactId) {

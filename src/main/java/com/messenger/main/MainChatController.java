@@ -106,24 +106,13 @@ public class MainChatController {
         chatBackgroundPane.setLayoutX(461);
     }
     private void checkForWrappers() {
-        // Get all elements that match the prefix "replyWrapper" and "editWrapper"
-        Set<Node> replyPanes = mainAnchorPane.lookupAll("#replyWrapper");
-        Set<Node> changePanes = mainAnchorPane.lookupAll("#editWrapper");
+        // Get all children of mainAnchorPane
+        List<Node> children = new ArrayList<>(mainAnchorPane.getChildren());
 
-        // Remove each of the elements found with those prefixes
-        if (replyPanes != null) {
-            for (Node node : replyPanes) {
-                if (node instanceof Pane) {
-                    mainAnchorPane.getChildren().remove(node);
-                }
-            }
-        }
-
-        if (changePanes != null) {
-            for (Node node : changePanes) {
-                if (node instanceof Pane) {
-                    mainAnchorPane.getChildren().remove(node);
-                }
+        // Iterate through the children and remove nodes with IDs starting with "replyWrapper" or "editWrapper"
+        for (Node node : children) {
+            if (node.getId() != null && (node.getId().startsWith("replyWrapper") || node.getId().startsWith("editWrapper"))) {
+                mainAnchorPane.getChildren().remove(node);
             }
         }
     }
@@ -270,49 +259,82 @@ public class MainChatController {
 
     // Message Sending
     @FXML
-    public void sendCurrentTextMessage() throws SQLException {
-        boolean isCurrentTextMessageEmpty = chatTextField.getText().trim().isEmpty();
-        if (!isCurrentTextMessageEmpty) {
-            saveAndDisplayCurrentTextMessage();
-            clearChatInput();
-        }
-    }
-    private void saveAndDisplayCurrentTextMessage() throws SQLException {
-        // Message Information
-        int senderId = mainUserId;
-        int receiverId = contactId;
+    private void saveAndDisplayCurrentTextMessage() throws SQLException, ParseException {
         String message = chatTextField.getText().trim();
-        byte[] picture = null;
-        int replyId = mainAnchorPane.getChildren().stream()
+        if (message.isEmpty()) return; // Avoid saving empty messages
+
+        int replyId = getReplyId();
+        int editedMessageId = getEditedMessageId();
+
+        if (editedMessageId != -1) {
+            updateExistingMessage(editedMessageId, message);
+        } else {
+            sendNewMessage(message, replyId);
+        }
+
+        clearChatInput();
+        chatVBox.setPadding(new Insets(0, 0, 20, 0));
+    }
+    private int getReplyId() {
+        return mainAnchorPane.getChildren().stream()
                 .map(Node::getId)
                 .filter(id -> id != null && id.startsWith("replyWrapper"))
-                .map(id -> id.replaceAll("\\D+", "")) // Nur Zahlen extrahieren
-                .map(num -> num.isEmpty() ? null : Integer.parseInt(num)) // Falls leer, setze null
+                .map(id -> id.replaceAll("\\D+", ""))
+                .filter(num -> !num.isEmpty())
+                .mapToInt(Integer::parseInt)
                 .findFirst()
-                .orElse(-1); // Falls kein passendes Element existiert, wird null zurückgegeben
+                .orElse(-1);
+    }
+    private int getEditedMessageId() {
+        return mainAnchorPane.getChildren().stream()
+                .map(Node::getId)
+                .filter(id -> id != null && id.startsWith("editWrapper"))
+                .map(id -> id.substring("editWrapper".length()))
+                .map(num -> num.replaceAll("\\D+", ""))
+                .filter(num -> !num.isEmpty())
+                .mapToInt(Integer::parseInt)
+                .findFirst()
+                .orElse(-1);
+    }
+    private void updateExistingMessage(int editedMessageId, String message) throws SQLException {
+        ChatsDataBase.editMessage(editedMessageId,message,null);
+
+        HBox editedMessageHBox = (HBox) chatVBox.lookup("#messageHBox" + editedMessageId);
+        StackPane editedMessageStackPane = (StackPane) editedMessageHBox.lookup("#messageStackPane" + editedMessageId);
+        Label messageTextLabel = (Label) editedMessageStackPane.lookup("#messageTextLabel" + editedMessageId);
+        messageTextLabel.setText(message);
+        removeCurrentWrapper();
+    }
+    private void sendNewMessage(String message, int replyId) throws SQLException, ParseException {
+        int senderId = mainUserId;
+        int receiverId = contactId;
+        byte[] picture = null;
         String messageTime = getCurrentFullTime();
         String messageType = getCurrentMessageType();
         boolean received = false;
 
-        // Check and Add ( if necessary ) User to Contact’s List of Contact
-        int[] contactListOfContact = ContactsDataBase.getContactsIdList(contactId);
-        boolean existsInContactList = Arrays.stream(contactListOfContact).anyMatch(id -> id == mainUserId);
-        if (!existsInContactList) ContactsDataBase.addContact(contactId,mainUserId);
+        ensureUserInContacts(receiverId);
+        int currentMessageId = ChatsDataBase.addMessage(senderId, receiverId, message, picture, replyId, messageTime, messageType, received);
 
-        // Adding Message to DB and Displaying it
-        try {
-            updateInteractionTime();
-            int currentMessageId = ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyId,messageTime,messageType,received);
-            displayCurrentTextMessage(currentMessageId);
-            removeCurrentWrapper();
-            scrollToTheBottom();
-            chatVBox.setPadding(new Insets(0,0,20,0));
-        } catch (Exception e) {
-            e.printStackTrace();
+        displayCurrentTextMessage(currentMessageId);
+        updateInteractionTime();
+        updateLastMessage()
+
+        removeCurrentWrapper();
+        scrollToTheBottom();
+    }
+    private void ensureUserInContacts(int receiverId) throws SQLException {
+        int[] contactListOfContact = ContactsDataBase.getContactsIdList(receiverId);
+        boolean existsInContactList = Arrays.stream(contactListOfContact).anyMatch(id -> id == mainUserId);
+        if (!existsInContactList) {
+            ContactsDataBase.addContact(receiverId, mainUserId);
         }
     }
     private void updateInteractionTime() throws SQLException {
         ContactsDataBase.updateInteractionTime(mainUserId,contactId,getCurrentFullTime());
+    }
+    private void updateLastMessage() {
+
     }
     private void clearChatInput() {
         chatTextField.setText("");

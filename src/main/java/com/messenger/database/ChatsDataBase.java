@@ -176,13 +176,15 @@ public class ChatsDataBase {
         }
         return -1;
     }
-    public static void editMessage(int messageId,String newMessage) throws SQLException {
-        String statement = "UPDATE chats SET message = ? WHERE message_id = ?";
+    public static void editMessage(int messageId,String newMessage,byte[] picture) throws SQLException {
+        String statement = "UPDATE chats SET message = ?,picture = ? WHERE message_id = ?";
+        InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setString(1,newMessage);
-            preparedStatement.setInt(2,messageId);
+            preparedStatement.setBlob(2,inputStreamPicture);
+            preparedStatement.setInt(3,messageId);
             preparedStatement.executeUpdate();
         }
     }

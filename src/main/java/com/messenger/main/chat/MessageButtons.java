@@ -293,7 +293,7 @@ public class MessageButtons {
         String editeMessageSenderName = UsersDataBase.getNameWithId(senderId);
         Label editWrapperName = new Label(editeMessageSenderName);
         editWrapperName.getStyleClass().add("chat-wrapper-name");
-        editWrapperName.setLayoutX(80);
+        editWrapperName.setLayoutX(78);
         editWrapperName.setLayoutY(6);
         editWrapperBackground.getChildren().add(editWrapperName);
 
@@ -301,7 +301,7 @@ public class MessageButtons {
         Label replyWrapperMessage = new Label(message);
         replyWrapperMessage.setCursor(Cursor.HAND);
         replyWrapperMessage.getStyleClass().add("chat-wrapper-message");
-        replyWrapperMessage.setLayoutX(81);
+        replyWrapperMessage.setLayoutX(79);
         replyWrapperMessage.setLayoutY(31);
         replyWrapperMessage.setMaxWidth(400);
         replyWrapperMessage.setMaxHeight(17);
@@ -314,6 +314,27 @@ public class MessageButtons {
             }
         });
         editWrapperBackground.getChildren().add(replyWrapperMessage);
+
+        Label wrapperExit = new Label();
+        wrapperExit.setCursor(Cursor.HAND);
+        wrapperExit.getStyleClass().add("chat-wrapper-exit");
+        wrapperExit.setLayoutX(1412);
+        wrapperExit.setLayoutY(24);
+        wrapperExit.setPrefWidth(22);
+        wrapperExit.setPrefHeight(22);
+        wrapperExit.setOnMouseClicked(clickEvent -> {
+            mainAnchorPane.getChildren().remove(
+                    mainAnchorPane.lookupAll("*").stream()
+                            .filter(node -> node instanceof Pane && node.getId() != null && node.getId().startsWith("editWrapper"))
+                            .findFirst()
+                            .orElse(null)
+            );
+            setVBoxBottomPadding(20);
+            moveBackScrollDownButton();
+        });
+        editWrapperBackground.getChildren().add(wrapperExit);
+
+
     }
 
     private void deletePreviousReplyWrapper() {
