@@ -268,8 +268,12 @@ public class MainChatController {
 
         if (editedMessageId != -1) {
             updateExistingMessage(editedMessageId, message);
+            removeCurrentWrapper();
+            changeEditedLastMessage(editedMessageId,message);
+            moveBackScrollDownButton();
         } else {
             sendNewMessage(message, replyId);
+            moveBackScrollDownButton();
         }
 
         clearChatInput();
@@ -303,7 +307,6 @@ public class MainChatController {
         StackPane editedMessageStackPane = (StackPane) editedMessageHBox.lookup("#messageStackPane" + editedMessageId);
         Label messageTextLabel = (Label) editedMessageStackPane.lookup("#messageTextLabel" + editedMessageId);
         messageTextLabel.setText(message);
-        removeCurrentWrapper();
     }
     private void sendNewMessage(String message, int replyId) throws SQLException, ParseException {
         int senderId = mainUserId;
@@ -318,7 +321,8 @@ public class MainChatController {
 
         displayCurrentTextMessage(currentMessageId);
         updateInteractionTime();
-        updateLastMessage()
+        updateLastMessage(message);
+        updateLastMessageTime(getMessageHours(messageTime));
 
         removeCurrentWrapper();
         scrollToTheBottom();
@@ -333,8 +337,11 @@ public class MainChatController {
     private void updateInteractionTime() throws SQLException {
         ContactsDataBase.updateInteractionTime(mainUserId,contactId,getCurrentFullTime());
     }
-    private void updateLastMessage() {
-
+    private void updateLastMessage(String newLastMessage) {
+        mainContactMessageLabel.setText(newLastMessage);
+    }
+    private void updateLastMessageTime(String messageHours) {
+        mainContactTimeLabel.setText(messageHours);
     }
     private void clearChatInput() {
         chatTextField.setText("");
@@ -361,11 +368,34 @@ public class MainChatController {
             mainAnchorPane.getChildren().remove(wrapper);
         }
     }
+    private void moveBackScrollDownButton() {
+        Label scrollDownButton = (Label) mainAnchorPane.lookup("#scrollDownButton");
+        scrollDownButton.setLayoutY(871);
+    }
+    private void changeEditedLastMessage(int messageId,String newMessage) throws SQLException {
+        boolean isLastMessage = (int) ChatsDataBase.getLastMessageWithId(mainUserId,contactId).get(1) == messageId;
+
+        if (isLastMessage) {
+            mainContactMessageLabel.setText(newMessage);
+        }
+    }
+
 
     // Small Functions
     private String getCurrentFullTime() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
         return LocalDateTime.now().format(formatter);
+    }
+    public static String getMessageHours(String messageFullTime) {
+        // Define the input and output formats
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        // Parse the input string to LocalDateTime
+        LocalDateTime dateTime = LocalDateTime.parse(messageFullTime, inputFormatter);
+
+        // Format and return the output as a string
+        return dateTime.format(outputFormatter);
     }
     private String getCurrentMessageType() {
         if (mainAnchorPane.getChildren().stream().anyMatch(node -> node.getId() != null && node.getId().startsWith("replyWrapper"))) {
@@ -376,12 +406,6 @@ public class MainChatController {
             return "text";
         }
     }
-
-
-
-
-
-
 
 
 

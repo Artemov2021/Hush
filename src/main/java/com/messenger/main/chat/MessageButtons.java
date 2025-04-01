@@ -211,7 +211,7 @@ public class MessageButtons {
         replyWrapperBackground.setLayoutX(462);
         replyWrapperBackground.setLayoutY(888);
         replyWrapperBackground.setPrefWidth(1477);
-        replyWrapperBackground.setPrefHeight(58);
+        replyWrapperBackground.setPrefHeight(59);
         mainAnchorPane.getChildren().add(replyWrapperBackground);
 
         Label replyWrapperSymbol = new Label();
