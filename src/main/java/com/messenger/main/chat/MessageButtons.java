@@ -1,34 +1,41 @@
 package com.messenger.main.chat;
 
 import com.messenger.database.ChatsDataBase;
+import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
+import com.messenger.main.MainContactList;
+import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
+import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
 
 public class MessageButtons {
     private AnchorPane mainAnchorPane;
     private VBox mainChatVBox;
     private ScrollPane mainChatScrollPane;
+    private int mainUserId;
 
-    public MessageButtons(AnchorPane mainAnchorPane,VBox mainChatVBox,ScrollPane mainChatScrollPane) {
+    public MessageButtons(AnchorPane mainAnchorPane,VBox mainChatVBox,ScrollPane mainChatScrollPane,int mainUserId) {
         this.mainAnchorPane = mainAnchorPane;
         this.mainChatVBox = mainChatVBox;
         this.mainChatScrollPane = mainChatScrollPane;
+        this.mainUserId = mainUserId;
     }
 
     public void showMessageButtons(int clickPlaceX,int clickPlaceY,int messageId) {
@@ -126,6 +133,9 @@ public class MessageButtons {
         deletePane.setLayoutX(5);
         deletePane.setLayoutY(75);
         deletePane.getStyleClass().add("chat-message-buttons-small-pane");
+        deletePane.setOnMouseClicked(mouseEvent -> {
+            showDeleteMessageConfirmation(messageId);
+        });
         messageButtonsBackground.getChildren().add(deletePane);
 
         Label deleteSymbol = new Label();
@@ -430,5 +440,144 @@ public class MessageButtons {
     private void setTextFieldFocused() {
         TextField chatTextField = (TextField) mainAnchorPane.lookup("#chatTextField");
         chatTextField.requestFocus();
+    }
+    private void showDeleteMessageConfirmation(int messageId) {
+        Pane confirmationOverlay = new Pane();
+        confirmationOverlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.68)");
+        confirmationOverlay.setLayoutX(0);
+        confirmationOverlay.setLayoutY(0);
+        confirmationOverlay.setPrefWidth(mainAnchorPane.getWidth());
+        confirmationOverlay.setPrefHeight(mainAnchorPane.getHeight());
+        confirmationOverlay.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                mainAnchorPane.getChildren().remove(confirmationOverlay);
+            }
+        });
+        mainAnchorPane.getChildren().add(confirmationOverlay);
+
+        Pane confirmationBackground = new Pane();
+        confirmationBackground.getStyleClass().add("contact-delete-confirmation-window-background");
+        confirmationBackground.setLayoutX(778);
+        confirmationBackground.setLayoutY(401);
+        confirmationBackground.setPrefWidth(409);
+        confirmationBackground.setPrefHeight(149);
+        confirmationBackground.setOnMouseClicked(Event::consume);
+        confirmationOverlay.getChildren().add(confirmationBackground);
+
+        Label confirmationText = new Label("You want to delete that message? ");
+        confirmationText.getStyleClass().add("contact-delete-confirmation-window-text");
+        confirmationText.setLayoutX(30);
+        confirmationText.setLayoutY(20);
+        confirmationBackground.getChildren().add(confirmationText);
+
+        Label confirmationDeleteButton = new Label();
+        confirmationDeleteButton.setCursor(Cursor.HAND);
+        confirmationDeleteButton.getStyleClass().add("contact-delete-confirmation-window-delete-button");
+        confirmationDeleteButton.setLayoutX(290);
+        confirmationDeleteButton.setLayoutY(94);
+        confirmationDeleteButton.setPrefWidth(98);
+        confirmationDeleteButton.setPrefHeight(40);
+        confirmationBackground.getChildren().add(confirmationDeleteButton);
+        confirmationDeleteButton.setOnMouseClicked(clickEvent -> {
+            try {
+                deleteMessage(messageId);
+                mainAnchorPane.getChildren().remove(confirmationOverlay);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        Label confirmationCancelButton = new Label();
+        confirmationCancelButton.setCursor(Cursor.HAND);
+        confirmationCancelButton.getStyleClass().add("contact-delete-confirmation-window-cancel-button");
+        confirmationCancelButton.setLayoutX(175);
+        confirmationCancelButton.setLayoutY(94);
+        confirmationCancelButton.setPrefWidth(104);
+        confirmationCancelButton.setPrefHeight(40);
+        confirmationBackground.getChildren().add(confirmationCancelButton);
+        confirmationCancelButton.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                mainAnchorPane.getChildren().remove(confirmationOverlay);
+            }
+        });
+
+        // Appearing time
+        FadeTransition FadeIn = new FadeTransition(Duration.millis(180),confirmationOverlay);
+        FadeIn.setFromValue(0);
+        FadeIn.setToValue(1);
+        FadeIn.play();
+
+        // Appearing move to left
+        TranslateTransition translateIn = new TranslateTransition(Duration.millis(180), confirmationBackground);
+        translateIn.setFromX(0);
+        translateIn.setToX(-35);
+        translateIn.play();
+    }
+
+    private void deleteMessage(int messageId) throws SQLException {
+        int senderId = ChatsDataBase.getSenderIdWithMessageId(messageId);
+        int receiverId = ChatsDataBase.getReceiverIdWithMessageId(messageId);
+        deleteMessageFromDB(messageId);
+        deleteMessageInChat(messageId,senderId,receiverId);
+    }
+    private void deleteMessageFromDB(int messageId) throws SQLException {
+        ChatsDataBase.deleteMessage(messageId);
+    }
+    private void deleteMessageInChat(int messageId,int senderId,int receiverId) throws SQLException {
+        moveMessageAvatarBack(messageId,senderId,receiverId);
+        //changeLastMessage();
+        //changeLastMessageTime();
+        removeMessageHBox(messageId);
+        deleteDateLabel();
+    }
+    private void moveMessageAvatarBack(int messageId,int senderId,int receiverId) throws SQLException {
+        HBox targetMessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
+        HBox previousMessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId));
+
+        boolean hasAvatarLabel = targetMessageHBox.lookup("#messageAvatarLabel"+messageId) != null;
+        boolean hasSameSender = senderId == (int) ChatsDataBase.getMessage(ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId)).get(1);
+        boolean previousMessageNoAvatarLabel = previousMessageHBox.lookup("#messageAvatarLabel"+ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId)) == null;
+
+        if (hasAvatarLabel && hasSameSender && previousMessageNoAvatarLabel) {
+            addNewAvatarLabel(previousMessageHBox,ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId),senderId);
+        }
+    }
+    private void deleteDateLabel() {
+
+    }
+    private void addNewAvatarLabel(HBox messageHBox,int messageId,int senderId) throws SQLException {
+        Label newAvatarLabel = new Label();
+        newAvatarLabel.setId("messageAvatarLabel"+messageId);
+        setMessageAvatar(newAvatarLabel,senderId);
+        messageHBox.getChildren().add(newAvatarLabel);
+
+        StackPane messageStackPane = (StackPane) messageHBox.lookup("#messageStackPane"+messageId);
+        HBox.setMargin(newAvatarLabel, (senderId == mainUserId) ? new Insets(0, 110, 0, 0) : new Insets(0, 0, 0, 110));
+        HBox.setMargin(messageStackPane, (senderId == mainUserId) ? new Insets(0, 13, 0, 0) : new Insets(0, 0, 0, 13));
+    }
+    private void removeMessageHBox(int messageId) {
+        HBox targetMessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
+        mainChatVBox.getChildren().remove(targetMessageHBox);
+    }
+    private void setMessageAvatar(Label avatar,int senderId) throws SQLException {
+        byte[] blobBytes = UsersDataBase.getAvatarWithId(senderId);
+        if (blobBytes == null) {
+            avatar.getStyleClass().clear();
+            avatar.getStyleClass().add("chat-message-default-avatar");
+            avatar.setPrefHeight(40);
+            avatar.setPrefWidth(40);
+            return;
+        }
+        ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
+        ImageView imageView = new ImageView(new Image(byteStream));
+        imageView.setFitHeight(40);
+        imageView.setFitWidth(40);
+        imageView.setSmooth(true);
+        avatar.setGraphic(imageView);
+        Circle clip = new Circle();
+        clip.setLayoutX(20);
+        clip.setLayoutY(20);
+        clip.setRadius(20);
+        avatar.setClip(clip);
     }
 }

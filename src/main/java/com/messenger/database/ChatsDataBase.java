@@ -176,6 +176,19 @@ public class ChatsDataBase {
         }
         return -1;
     }
+    public static int getReceiverIdWithMessageId(int messageId) throws SQLException {
+        String statement = "SELECT receiver_id FROM chats WHERE message_id = ?";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,messageId);
+            ResultSet result = preparedStatement.executeQuery();
+            if (result.next()) {
+                return result.getInt("receiver_id");
+            }
+        }
+        return -1;
+    }
     public static void editMessage(int messageId,String newMessage,byte[] picture) throws SQLException {
         String statement = "UPDATE chats SET message = ?,picture = ? WHERE message_id = ?";
         InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
@@ -233,26 +246,29 @@ public class ChatsDataBase {
         return ids;
     }
     public static int getPreviousMessageId(int messageId,int senderId,int receiverId) throws SQLException {
-        String statement = "SELECT MAX(message_id) FROM chats " +
-                "WHERE ((sender_id = ? AND receiver_id = ?) " +
-                "OR (sender_id = ? AND receiver_id = ?)) " +
-                "AND message_id < ?";
+        String getMessageIdStatement = "SELECT message_id \n" +
+                "FROM chats \n" +
+                "WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) \n" +
+                "AND message_id < ?\n" +
+                "ORDER BY message_id DESC;";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
-            PreparedStatement preparedStatement = connection.prepareStatement(statement);
-            preparedStatement.setInt(1,senderId);
-            preparedStatement.setInt(2,receiverId);
-            preparedStatement.setInt(3,receiverId);
-            preparedStatement.setInt(4,senderId);
-            preparedStatement.setInt(5,messageId);
-            ResultSet result = preparedStatement.executeQuery();
-            if (result.next()) {
-                int previousMessageId = result.getInt(1);
-                if (!result.wasNull()) {
-                    return previousMessageId;
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+                // Second Query: Get previous message_id
+                PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
+                preparedStatement.setInt(1, senderId);
+                preparedStatement.setInt(2, receiverId);
+                preparedStatement.setInt(3, receiverId);
+                preparedStatement.setInt(4, senderId);
+                preparedStatement.setInt(5, messageId); // Now correctly setting the last parameter
+
+                ResultSet messageIdResult = preparedStatement.executeQuery();
+                if (messageIdResult.next()) {
+                    int previousMessageId = messageIdResult.getInt(1);
+                    if (!messageIdResult.wasNull()) {
+                        return previousMessageId; // Return the previous message_id
+                    }
                 }
-            }
         }
-        return -1;
+        return -1; // Return -1 if no previous message is found
     }
 }

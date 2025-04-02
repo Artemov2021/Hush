@@ -95,7 +95,7 @@ public class ChatHistory {
         String messageTime = getMessageTime((String) message.get(6));
 
         // Date Label ( if necessary )
-        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,mainUserId,contactId);
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId);
         String messageFullDate = (String) message.get(6);
         String previousMessageFullDate = (previousMessageId != -1) ? (String) ChatsDataBase.getMessage(previousMessageId).get(6) : null;
         boolean isDateLabelAlreadyAdded = chatVBox.getChildren().get(chatVBox.getChildren().size()-1).getId().equals("dateLabel");
@@ -118,7 +118,7 @@ public class ChatHistory {
             if (clickEvent.getButton() == MouseButton.SECONDARY) {
                 int x = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getX();
                 int y = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getY();
-                MessageButtons messageButtons = new MessageButtons(mainAnchorPane,chatVBox,chatScrollPane);
+                MessageButtons messageButtons = new MessageButtons(mainAnchorPane,chatVBox,chatScrollPane,mainUserId);
                 if (senderId == mainUserId) {
                     messageButtons.showMessageButtons(x, y, messageId);
                 } else {
@@ -141,7 +141,7 @@ public class ChatHistory {
         StackPane.setMargin(messageTimeLabel,new Insets(0,10,4,0));
         messageStackPane.getChildren().add(messageTimeLabel);
 
-        if (avatarIsRequired(messageId, senderId, receiverId)) {
+        if (avatarIsRequired(messageId,senderId,receiverId)) {
             HBox.setMargin(messageStackPane,(senderId == mainUserId) ? new Insets(0,13, 0,0) : new Insets(0,0,0,13));
             Label avatarLabel = new Label();
             avatarLabel.setId("messageAvatarLabel" + messageId);
@@ -182,7 +182,7 @@ public class ChatHistory {
         String messageTime = getMessageTime((String) message.get(6));
 
         // Date Label ( if necessary )
-        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,mainUserId,contactId);
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId);
         String messageFullDate = (String) message.get(6);
         String previousMessageFullDate = (previousMessageId != -1) ? (String) ChatsDataBase.getMessage(previousMessageId).get(6) : null;
         boolean isDateLabelAlreadyAdded = chatVBox.getChildren().get(chatVBox.getChildren().size()-1).getId().equals("dateLabel");
@@ -204,7 +204,7 @@ public class ChatHistory {
             if (clickEvent.getButton() == MouseButton.SECONDARY) {
                 int x = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getX();
                 int y = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getY();
-                MessageButtons messageButtons = new MessageButtons(mainAnchorPane,chatVBox,chatScrollPane);
+                MessageButtons messageButtons = new MessageButtons(mainAnchorPane,chatVBox,chatScrollPane,mainUserId);
                 if (senderId == mainUserId) {
                     messageButtons.showMessageButtons(x, y, messageId);
                 } else {
@@ -271,7 +271,7 @@ public class ChatHistory {
         StackPane.setMargin(messageTimeLabel,new Insets(0,10,4,0));
         messageStackPane.getChildren().add(messageTimeLabel);
 
-        if (avatarIsRequired(messageId, senderId, receiverId)) {
+        if (avatarIsRequired(messageId,senderId,receiverId)) {
             HBox.setMargin(messageStackPane,(senderId == mainUserId) ? new Insets(0,13, 0,0) : new Insets(0,0,0,13));
             Label avatarLabel = new Label();
             avatarLabel.setId("messageAvatarLabel" + messageId);
