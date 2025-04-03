@@ -252,7 +252,7 @@ public class MainChatController {
 
     // Chat Loading
     private void loadChatHistory() throws SQLException, ExecutionException, InterruptedException {
-        ChatHistory currentChatHistory = new ChatHistory(mainUserId,contactId,chatScrollPane,chatVBox,mainAnchorPane);
+        ChatHistory currentChatHistory = new ChatHistory(mainUserId,contactId,chatScrollPane,chatVBox,mainAnchorPane,mainContactMessageLabel,mainContactTimeLabel);
         currentChatHistory.load();
     }
 
@@ -349,7 +349,7 @@ public class MainChatController {
     private void displayCurrentTextMessage(int messageId) throws SQLException, ParseException {
         String currentTextMessageType = getCurrentMessageType();
         ArrayList<Object> currentMessage = ChatsDataBase.getMessage(messageId);
-        ChatHistory currentChat = new ChatHistory(mainUserId,contactId,chatScrollPane,chatVBox,mainAnchorPane);
+        ChatHistory currentChat = new ChatHistory(mainUserId,contactId,chatScrollPane,chatVBox,mainAnchorPane,mainContactMessageLabel,mainContactTimeLabel);
 
         switch (currentTextMessageType) {
             case "text" -> currentChat.loadTextMessage(currentMessage);

@@ -19,23 +19,33 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Arc;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
 import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MessageButtons {
     private AnchorPane mainAnchorPane;
     private VBox mainChatVBox;
     private ScrollPane mainChatScrollPane;
     private int mainUserId;
+    private Label contactLastMessage;
+    private Label contactLastMessageTime;
 
-    public MessageButtons(AnchorPane mainAnchorPane,VBox mainChatVBox,ScrollPane mainChatScrollPane,int mainUserId) {
+    public MessageButtons(AnchorPane mainAnchorPane,VBox mainChatVBox,ScrollPane mainChatScrollPane,int mainUserId,Label contactLastMessage,Label contactLastMessageTime) {
         this.mainAnchorPane = mainAnchorPane;
         this.mainChatVBox = mainChatVBox;
         this.mainChatScrollPane = mainChatScrollPane;
         this.mainUserId = mainUserId;
+        this.contactLastMessage = contactLastMessage;
+        this.contactLastMessageTime = contactLastMessageTime;
     }
 
     public void showMessageButtons(int clickPlaceX,int clickPlaceY,int messageId) {
@@ -519,16 +529,17 @@ public class MessageButtons {
         int receiverId = ChatsDataBase.getReceiverIdWithMessageId(messageId);
         deleteMessageFromDB(messageId);
         deleteMessageInChat(messageId,senderId,receiverId);
+        changeReplyMessages(messageId,senderId,receiverId);
     }
     private void deleteMessageFromDB(int messageId) throws SQLException {
         ChatsDataBase.deleteMessage(messageId);
     }
     private void deleteMessageInChat(int messageId,int senderId,int receiverId) throws SQLException {
         moveMessageAvatarBack(messageId,senderId,receiverId);
-        //changeLastMessage();
-        //changeLastMessageTime();
+        changeLastMessage(messageId,senderId,receiverId);
+        changeLastMessageTime(messageId,senderId,receiverId);
+        deleteDateLabel(messageId);
         removeMessageHBox(messageId);
-        deleteDateLabel();
     }
     private void moveMessageAvatarBack(int messageId,int senderId,int receiverId) throws SQLException {
         HBox targetMessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
@@ -542,8 +553,27 @@ public class MessageButtons {
             addNewAvatarLabel(previousMessageHBox,ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId),senderId);
         }
     }
-    private void deleteDateLabel() {
-
+    private void changeLastMessage(int messageId,int senderId,int receiverId) throws SQLException {
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId);
+        if (previousMessageId == ChatsDataBase.getLastMessageId(senderId,receiverId)) {
+            String previousMessage = (String) ChatsDataBase.getMessage(previousMessageId).get(3);
+            contactLastMessage.setText(previousMessage);
+        }
+    }
+    private void changeLastMessageTime(int messageId,int senderId,int receiverId) throws SQLException {
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId);
+        if (previousMessageId == ChatsDataBase.getLastMessageId(senderId,receiverId)) {
+            String previousMessageTime = getMessageHours((String) ChatsDataBase.getMessage(previousMessageId).get(6));
+            contactLastMessageTime.setText(previousMessageTime);
+        }
+    }
+    private void deleteDateLabel(int messageId) {
+        HBox messageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
+        int elementIndexBeforeDeletedMessage = mainChatVBox.getChildren().indexOf(messageHBox)-1;
+        boolean isPreviousDateLabel = mainChatVBox.getChildren().get(elementIndexBeforeDeletedMessage) instanceof Label;
+        if (isPreviousDateLabel) {
+            mainChatVBox.getChildren().remove(elementIndexBeforeDeletedMessage);
+        }
     }
     private void addNewAvatarLabel(HBox messageHBox,int messageId,int senderId) throws SQLException {
         Label newAvatarLabel = new Label();
@@ -579,5 +609,37 @@ public class MessageButtons {
         clip.setLayoutY(20);
         clip.setRadius(20);
         avatar.setClip(clip);
+    }
+    public static String getMessageHours(String messageFullTime) {
+        // Define the input and output formats
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        // Parse the input string to LocalDateTime
+        LocalDateTime dateTime = LocalDateTime.parse(messageFullTime, inputFormatter);
+
+        // Format and return the output as a string
+        return dateTime.format(outputFormatter);
+    }
+    public void changeReplyMessages(int messageId, int senderId, int receiverId) throws SQLException {
+        // Get list of replied message IDs from DB
+        List<Integer> ids = ChatsDataBase.getRepliedMessageIds(senderId, receiverId, messageId);
+        System.out.println("Ids of relatableMessages: " + ids);
+
+        // Process HBoxes and clear StackPane children
+        mainChatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox && node.getId() != null)
+                .map(node -> (HBox) node)
+                .filter(hbox -> {
+                    try {
+                        return ids.contains(Integer.parseInt(hbox.getId().replace("messageHBox", "")));
+                    } catch (NumberFormatException e) {
+                        return false; // Skip if ID is not a valid integer
+                    }
+                })
+                .flatMap(hbox -> hbox.getChildren().stream())
+                .filter(child -> child instanceof StackPane && child.getId() != null && child.getId().startsWith("messageReplyStackPane"))
+                .map(child -> (StackPane) child)
+                .forEach(stackPane -> stackPane.getChildren().clear());
     }
 }

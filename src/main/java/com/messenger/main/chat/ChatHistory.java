@@ -40,14 +40,18 @@ public class ChatHistory {
     private ScrollPane chatScrollPane;
     private VBox chatVBox;
     private AnchorPane mainAnchorPane;
+    private Label contactLastMessage;
+    private Label contactLastMessageTime;
 
 
-    public ChatHistory(int mainUserId, int contactId,ScrollPane chatScrollPane,VBox chatVBox,AnchorPane mainAnchorPane) {
+    public ChatHistory(int mainUserId, int contactId,ScrollPane chatScrollPane,VBox chatVBox,AnchorPane mainAnchorPane,Label contactLastMessage,Label contactLastMessageTime) {
         this.mainUserId = mainUserId;
         this.contactId = contactId;
         this.chatVBox = chatVBox;
         this.mainAnchorPane = mainAnchorPane;
         this.chatScrollPane = chatScrollPane;
+        this.contactLastMessage = contactLastMessage;
+        this.contactLastMessageTime = contactLastMessageTime;
     }
 
 
@@ -118,7 +122,7 @@ public class ChatHistory {
             if (clickEvent.getButton() == MouseButton.SECONDARY) {
                 int x = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getX();
                 int y = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getY();
-                MessageButtons messageButtons = new MessageButtons(mainAnchorPane,chatVBox,chatScrollPane,mainUserId);
+                MessageButtons messageButtons = new MessageButtons(mainAnchorPane,chatVBox,chatScrollPane,mainUserId,contactLastMessage,contactLastMessageTime);
                 if (senderId == mainUserId) {
                     messageButtons.showMessageButtons(x, y, messageId);
                 } else {
@@ -204,7 +208,7 @@ public class ChatHistory {
             if (clickEvent.getButton() == MouseButton.SECONDARY) {
                 int x = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getX();
                 int y = (int) convertToTopLevelAnchorPaneCoordinates(messageStackPane,clickEvent.getX(),clickEvent.getY()).getY();
-                MessageButtons messageButtons = new MessageButtons(mainAnchorPane,chatVBox,chatScrollPane,mainUserId);
+                MessageButtons messageButtons = new MessageButtons(mainAnchorPane,chatVBox,chatScrollPane,mainUserId,contactLastMessage,contactLastMessageTime);
                 if (senderId == mainUserId) {
                     messageButtons.showMessageButtons(x, y, messageId);
                 } else {
@@ -216,6 +220,7 @@ public class ChatHistory {
 
         boolean repliedMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,repliedMessageId);
         StackPane messageReplyPane = new StackPane();
+        messageReplyPane.setId("messageReplyStackPane"+repliedMessageId);
         messageReplyPane.setCursor(repliedMessageExists ? Cursor.HAND : Cursor.DEFAULT);
         messageReplyPane.setMinWidth(80);
         messageReplyPane.setPrefHeight(37);
