@@ -5,6 +5,7 @@ import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
 import com.messenger.main.chat.ChatHistory;
+import com.messenger.main.chat.PictureWindow;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.scene.control.*;
@@ -17,9 +18,11 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
+import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import javafx.scene.Cursor;
 
+import java.io.File;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 
@@ -188,7 +191,7 @@ public class MainChatController {
         fadeOut.setOnFinished(event -> scrollDownButton.setVisible(false)); // Hide after fading out
 
         chatScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal.doubleValue() < 1.0) { // Scrolled up → Show button
+            if (newVal.doubleValue() < 1.0 && chatVBox.getHeight() >= 862) { // Scrolled up → Show button
                 if (scrollDownButton.getOpacity() == 0) {
                     scrollDownButton.setVisible(true);
                     fadeOut.stop(); // Stop fade-out if it's playing
@@ -380,6 +383,24 @@ public class MainChatController {
         }
     }
 
+    // Picture Sending
+    @FXML
+    public String openFileChooserAndGetPath() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select an Image");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+        );
+        File selectedFile = fileChooser.showOpenDialog(mainAnchorPane.getScene().getWindow());
+
+        if (selectedFile != null) {
+            System.out.println("Selected file: " + selectedFile.getAbsolutePath());
+            return selectedFile.getAbsolutePath();
+        } else {
+            System.out.println("No file selected.");
+            return null;
+        }
+    }
 
     // Small Functions
     private String getCurrentFullTime() {

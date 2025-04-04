@@ -10,7 +10,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -29,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MessageButtons {
@@ -229,7 +232,7 @@ public class MessageButtons {
         replyWrapperBackground.setId("replyWrapper"+messageId);
         replyWrapperBackground.getStyleClass().add("chat-wrapper-background");
         replyWrapperBackground.setLayoutX(462);
-        replyWrapperBackground.setLayoutY(888);
+        replyWrapperBackground.setLayoutY(891);
         replyWrapperBackground.setPrefWidth(1477);
         replyWrapperBackground.setPrefHeight(59);
         mainAnchorPane.getChildren().add(replyWrapperBackground);
@@ -297,9 +300,9 @@ public class MessageButtons {
         editWrapperBackground.setId("editWrapper"+messageId);
         editWrapperBackground.getStyleClass().add("chat-wrapper-background");
         editWrapperBackground.setLayoutX(462);
-        editWrapperBackground.setLayoutY(888);
+        editWrapperBackground.setLayoutY(891);
         editWrapperBackground.setPrefWidth(1477);
-        editWrapperBackground.setPrefHeight(58);
+        editWrapperBackground.setPrefHeight(59);
         mainAnchorPane.getChildren().add(editWrapperBackground);
 
         Label editWrapperSymbol = new Label();
@@ -530,6 +533,7 @@ public class MessageButtons {
         deleteMessageFromDB(messageId);
         deleteMessageInChat(messageId,senderId,receiverId);
         changeReplyMessages(messageId,senderId,receiverId);
+        deletePotentialWrapper(messageId);
     }
     private void deleteMessageFromDB(int messageId) throws SQLException {
         ChatsDataBase.deleteMessage(messageId);
@@ -624,22 +628,37 @@ public class MessageButtons {
     public void changeReplyMessages(int messageId, int senderId, int receiverId) throws SQLException {
         // Get list of replied message IDs from DB
         List<Integer> ids = ChatsDataBase.getRepliedMessageIds(senderId, receiverId, messageId);
-        System.out.println("Ids of relatableMessages: " + ids);
+        List<HBox> foundHBoxes = ids.stream()
+                .map(id -> (HBox) mainChatVBox.lookup("#messageHBox" + id))
+                .filter(Objects::nonNull).toList();
 
-        // Process HBoxes and clear StackPane children
-        mainChatVBox.getChildren().stream()
-                .filter(node -> node instanceof HBox && node.getId() != null)
-                .map(node -> (HBox) node)
-                .filter(hbox -> {
-                    try {
-                        return ids.contains(Integer.parseInt(hbox.getId().replace("messageHBox", "")));
-                    } catch (NumberFormatException e) {
-                        return false; // Skip if ID is not a valid integer
-                    }
-                })
-                .flatMap(hbox -> hbox.getChildren().stream())
-                .filter(child -> child instanceof StackPane && child.getId() != null && child.getId().startsWith("messageReplyStackPane"))
-                .map(child -> (StackPane) child)
-                .forEach(stackPane -> stackPane.getChildren().clear());
+        List<StackPane> messageessageStackPane = foundHBoxes.stream()
+                .flatMap(hbox -> hbox.getChildren().stream()) // Get all children of each HBox
+                .filter(node -> node instanceof StackPane) // Keep only StackPane elements
+                .filter(node -> node.getId() != null && node.getId().startsWith("messageStackPane")) // Filter by ID prefix
+                .map(node -> (StackPane) node) // Cast to StackPane
+                .toList(); // Collect as List
+
+        List<StackPane> replyMessageStackPane = messageessageStackPane.stream()
+                .flatMap(messageStackPane -> messageStackPane.getChildren().stream()) // Get all children of each HBox
+                .filter(node -> node instanceof StackPane) // Keep only StackPane elements
+                .filter(node -> node.getId() != null && node.getId().startsWith("messageReplyStackPane")) // Filter by ID prefix
+                .map(node -> (StackPane) node) // Cast to StackPane
+                .toList(); // Collect as List
+
+        for (StackPane replyStackPane: replyMessageStackPane) {
+            replyStackPane.getChildren().clear();
+            Label repliedMessageDeletedMessage = new Label("(deleted message)");
+            repliedMessageDeletedMessage.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-deleted-message" : "chat-message-contact-deleted-message");
+            StackPane.setAlignment(repliedMessageDeletedMessage, Pos.TOP_LEFT);
+            StackPane.setMargin(repliedMessageDeletedMessage,new Insets(10,8,5,8));
+            replyStackPane.getChildren().add(repliedMessageDeletedMessage);
+            replyStackPane.setOnMouseClicked(null);
+            replyStackPane.setCursor(Cursor.DEFAULT);
+        }
+    }
+    public void deletePotentialWrapper(int messageId) {
+        mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#replyWrapper"+messageId));
+        mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#editWrapper"+messageId));
     }
 }
