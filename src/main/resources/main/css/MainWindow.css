@@ -114,4 +114,57 @@
 .scroll-pane-contacts .scroll-bar .decrement-button {
     -fx-opacity: 0;
 }
+/*-----------------------------------------------------------------------------*/
+/* Picture Sending Window */
+.picture-sending-window-background {
+    -fx-background-color: #1D1C20;
+    -fx-background-radius: 14;
+}
+.picture-sending-window-title {
+    -fx-font-size: 22;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+.picture-sending-window-textfield {
+    -fx-font-size: 15;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #8A8893;
+    -fx-background-color: #2C2B30;
+    -fx-background-radius: 10;
+    -fx-padding: 0 5 0 16;
+}
+.picture-sending-window-send-button {
+    -fx-background-image: url("../elements/sendPictureButtonDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.picture-sending-window-send-button:hover {
+    -fx-background-image: url("../elements/sendPictureButtonHovered.png");
+    -fx-background-repeat: no-repeat;
+}
+.picture-sending-window-send-button:pressed {
+    -fx-background-image: url("../elements/sendPictureButtonPressed.png");
+    -fx-background-repeat: no-repeat;
+}
+.picture-sending-window-exit-button {
+    -fx-background-image: url("../elements/sendingPictureExitButtonDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.picture-sending-window-exit-button:hover {
+    -fx-background-image: url("../elements/sendingPictureExitButtonHovered.png");
+    -fx-background-repeat: no-repeat;
+}
+.picture-sending-window-picture {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-background-color: blue;
+}
+.picture-sending-window-picture-change-button {
+    -fx-background-image: url("../elements/changePictureButtonDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.picture-sending-window-picture-change-button:hover {
+    -fx-background-image: url("../elements/changePictureButtonHovered.png");
+    -fx-background-repeat: no-repeat;
+}
+
 

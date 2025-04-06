@@ -47,9 +47,11 @@ public class MainChatController {
     public VBox chatVBox;
     @FXML
     public TextField chatTextField;
+    @FXML
+    public Label chatAddPictureLabel;
 
 
-    public AnchorPane mainAnchorPane;
+    public static AnchorPane mainAnchorPane;
     public int contactId;
     public int mainUserId;
     public Pane mainContactPane;
@@ -95,6 +97,7 @@ public class MainChatController {
         scrollToTheBottom();
         setScrollDownButtonListener();
         removeTextFieldContextMenu();
+        setAddPictureOnMouseAction();
     }
     private void removeTitle() {
         Set<String> titlesToRemove = new HashSet<>(Arrays.asList("mainTitle", "mainSmallTitle", "logInTitle"));
@@ -251,6 +254,13 @@ public class MainChatController {
     private void removeTextFieldContextMenu() {
         chatTextField.setContextMenu(new ContextMenu());
     }
+    private void setAddPictureOnMouseAction() {
+        chatAddPictureLabel.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                loadPicture();
+            }
+        });
+    }
 
 
     // Chat Loading
@@ -383,9 +393,13 @@ public class MainChatController {
         }
     }
 
+
     // Picture Sending
-    @FXML
-    public String openFileChooserAndGetPath() {
+    public void loadPicture() {
+         String chosenPicturePath = openFileChooserAndGetPath();
+         PictureWindow.showWindow(chosenPicturePath);
+    }
+    public static String openFileChooserAndGetPath() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select an Image");
         fileChooser.getExtensionFilters().addAll(
@@ -394,13 +408,12 @@ public class MainChatController {
         File selectedFile = fileChooser.showOpenDialog(mainAnchorPane.getScene().getWindow());
 
         if (selectedFile != null) {
-            System.out.println("Selected file: " + selectedFile.getAbsolutePath());
             return selectedFile.getAbsolutePath();
         } else {
-            System.out.println("No file selected.");
             return null;
         }
     }
+
 
     // Small Functions
     private String getCurrentFullTime() {

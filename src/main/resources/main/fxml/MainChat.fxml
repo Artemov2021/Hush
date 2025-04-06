@@ -28,7 +28,7 @@
                   <Cursor fx:constant="DEFAULT" />
                </cursor></Label>
             <Label fx:id="chatMainNameLabel" layoutX="80.0" layoutY="23.0" prefHeight="35.0" prefWidth="466.0" styleClass="chat-name-label" text="Name label" />
-            <Label fx:id="chatAddPicturLabel" layoutX="13.0" layoutY="963.0" onMouseClicked="#openFileChooserAndGetPath" prefHeight="35.0" prefWidth="38.0" styleClass="chat-add-file-label">
+            <Label fx:id="chatAddPictureLabel" layoutX="13.0" layoutY="963.0" onMouseClicked="#loadPicture" prefHeight="35.0" prefWidth="38.0" styleClass="chat-add-file-label">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Label>

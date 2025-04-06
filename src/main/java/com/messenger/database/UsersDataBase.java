@@ -173,7 +173,7 @@ public class UsersDataBase {
     }
 
     public static void deleteAvatar(int id) throws SQLException {
-        String statement = "UPDATE users SET avatar_picture = NULL WHERE mainUserId = ?";
+        String statement = "UPDATE users SET avatar_picture = NULL WHERE id = ?";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt = connection.prepareStatement(statement);
             stmt.setInt(1,id);
@@ -181,7 +181,7 @@ public class UsersDataBase {
         }
     }
     public static void setAvatar(int id,String path) throws SQLException, FileNotFoundException {
-        String statement = "UPDATE users SET avatar_picture = ? WHERE mainUserId = ?";
+        String statement = "UPDATE users SET avatar_picture = ? WHERE id = ?";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt = connection.prepareStatement(statement);
             InputStream inputStream = new FileInputStream(path);
@@ -192,7 +192,7 @@ public class UsersDataBase {
     }
     public static void setName(int id,String name) throws SQLException {
         name = name.isEmpty() ? null : name;
-        String statement = "UPDATE users SET name = ? WHERE mainUserId = ?";
+        String statement = "UPDATE users SET name = ? WHERE id = ?";
         try (Connection connection3 = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt3 = connection3.prepareStatement(statement);
             stmt3.setString(1,name);
@@ -202,7 +202,7 @@ public class UsersDataBase {
     }
     public static void setEmail(int id,String email) throws SQLException {
         email = email.isEmpty() ? null : email;
-        String statement = "UPDATE users SET email = ? WHERE mainUserId = ?";
+        String statement = "UPDATE users SET email = ? WHERE id = ?";
         try (Connection connection3 = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt3 = connection3.prepareStatement(statement);
             stmt3.setString(1,email);
