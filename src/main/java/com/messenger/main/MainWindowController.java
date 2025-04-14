@@ -1,5 +1,6 @@
 package com.messenger.main;
 
+import com.messenger.auth.AuthWindow;
 import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
@@ -30,37 +31,25 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 public class MainWindowController {
-    @FXML
-    private AnchorPane anchorPane;
-    @FXML
-    private Label mainAvatarLabel;
-    @FXML
-    private Label mainNameLabel;
-    @FXML
-    private Label mainEmailLabel;
-    @FXML
-    private Label toastCopiedMessage;
-    @FXML
-    private Label settingsButton;
-    @FXML
-    private TextField mainSearchField;
-    @FXML
-    private Label addContactButton;
-    @FXML
-    private Label mainTitle;
-    @FXML
-    private Label logInTitle;
-    @FXML
-    private Label mainSmallTitle;
-    @FXML
-    public ScrollPane mainContactsScrollPane;
-    @FXML
-    public VBox mainContactsVBox;
+    @FXML public static AnchorPane mainAnchorPane;
+    @FXML protected Label mainAvatarLabel;
+    @FXML protected Label mainNameLabel;
+    @FXML protected Label mainEmailLabel;
+    @FXML private Label toastCopiedMessage;
+    @FXML private Label settingsButton;
+    @FXML private TextField mainSearchField;
+    @FXML private Label addContactButton;
+    @FXML private Label mainTitle;
+    @FXML private Label logInTitle;
+    @FXML private Label mainSmallTitle;
+    @FXML public ScrollPane mainContactsScrollPane;
+    @FXML public static VBox mainContactsVBox;
 
-    public int mainUserId;
+    public static int mainUserId = AuthWindow.getMainUserId();
 
 
-    public void initializeWithValue () throws SQLException, IOException {
+    public void initialize()throws SQLException, IOException {
+        mainUserId = 1;
         setMainLogInTitle();
         setProfileInfo();
         setAppropriateAvatar();
@@ -126,7 +115,7 @@ public class MainWindowController {
         ScrollPaneEffect.addScrollBarEffect(mainContactsScrollPane);
     }
     private void loadContacts() throws SQLException, IOException {
-        MainContactList.loadContacts(mainUserId,mainContactsVBox,anchorPane);
+        MainContactList.loadContacts();
     }
     private void setLazyLoading() {
         mainContactsScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
@@ -134,7 +123,7 @@ public class MainWindowController {
                 int bottomContactId = getBottomContactId();
                 try {
                     if (hasMoreContacts(mainUserId, bottomContactId)) {
-                        MainContactList.loadMoreContacts(mainUserId,mainContactsVBox,anchorPane,bottomContactId);
+                        MainContactList.loadMoreContacts(bottomContactId);
                     }
                 } catch (SQLException | RuntimeException | IOException e) {
                     throw new RuntimeException("Error fetching more contacts", e);
@@ -151,7 +140,7 @@ public class MainWindowController {
             try {
                 if (newValue.trim().length() == 0) {
                     mainContactsVBox.getChildren().clear();
-                    MainContactList.loadContacts(mainUserId,mainContactsVBox,anchorPane);
+                    MainContactList.loadContacts();
                 }
             } catch (Exception e) {
                 throw new RuntimeException();
@@ -174,7 +163,7 @@ public class MainWindowController {
         settingsButton.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
                 try {
-                    settingsWindow();
+                    openSettingsWindow();
                 } catch (IOException | SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -197,11 +186,11 @@ public class MainWindowController {
         try {
             if (enteredName.trim().length() > 0) {
                 mainContactsVBox.getChildren().clear();
-                int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(mainUserId,enteredName.trim());
-                MainContactList.loadCustomContacts(mainUserId,foundedUsersId,mainContactsVBox,anchorPane);
+                int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(enteredName.trim());
+                MainContactList.loadCustomContacts(foundedUsersId);
             } else {
                 mainContactsVBox.getChildren().clear();
-                MainContactList.loadContacts(mainUserId,mainContactsVBox,anchorPane);
+                MainContactList.loadContacts();
             }
         } catch (Exception e) {
             throw new RuntimeException();
@@ -232,36 +221,17 @@ public class MainWindowController {
 
         NewContactWindow newContactWindow = fxmlLoader.getController();
         newContactWindow.setMainUserId(mainUserId);
-        newContactWindow.setMainAnchorPane(anchorPane);
-        newContactWindow.setMainContactsVBox(mainContactsVBox);
+        newContactWindow.setMainAnchorPane(mainAnchorPane);
         newContactWindow.initializeWithValue();
 
-        anchorPane.getChildren().add(newContactRoot);
+        mainAnchorPane.getChildren().add(newContactRoot);
     }
-    public void settingsWindow() throws IOException, SQLException {
+    public void openSettingsWindow() throws IOException, SQLException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/fxml/MainSettingsWindow.fxml"));
         Parent settingsWindowRoot = loader.load();
 
-        SettingsWindow settingsWindow = loader.getController();
-        settingsWindow.setMainUserId(mainUserId);
-        settingsWindow.setMainAnchorPane(anchorPane);
-        settingsWindow.initializeWithValue();
-        // TODO
-
-        anchorPane.getChildren().add(settingsWindowRoot);
+        mainAnchorPane.getChildren().add(settingsWindowRoot);
     }
-
-
-    public void setMainUserId(int mainUserId) throws SQLException, IOException {
-        this.mainUserId = mainUserId;
-        initializeWithValue();
-    }
-    public void initialize() throws SQLException, IOException {
-        this.mainUserId = 1;
-        initializeWithValue();
-    }
-
-
 
 
 

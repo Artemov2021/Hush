@@ -15,22 +15,22 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 
-public class MainContactList {
-    public static void loadContacts(int mainUserId,VBox mainContactsVBox,AnchorPane mainAnchorPane) throws SQLException, IOException {
+public class MainContactList extends MainWindowController {
+    public static void loadContacts() throws SQLException, IOException {
         mainContactsVBox.getChildren().clear();
         mainContactsVBox.setSpacing(4.0);
         int[] allContactsId = ContactsDataBase.getContactsIdList(mainUserId);
         int[] lastContacts = Arrays.copyOfRange(allContactsId, allContactsId.length - Math.min(allContactsId.length, 20), allContactsId.length);
         for (int contactId: lastContacts) {
-            loadContactFromFXML(mainUserId,contactId,mainContactsVBox,mainAnchorPane);
+            loadContactFromFXML(contactId);
         }
     }
-    public static void loadCustomContacts(int mainUserId,int[] contactsId,VBox mainContactsVBox,AnchorPane mainAnchorPane) throws IOException, SQLException {
+    public static void loadCustomContacts(int[] contactsId) throws IOException, SQLException {
         for (int contactId: contactsId) {
-            loadContactFromFXML(mainUserId,contactId,mainContactsVBox,mainAnchorPane);
+            loadContactFromFXML(contactId);
         }
     }
-    public static void loadMoreContacts(int mainUserId,VBox mainContactsVBox,AnchorPane mainAnchorPane,int lastContactId) throws SQLException, IOException {
+    public static void loadMoreContacts(int lastContactId) throws SQLException, IOException {
         int[] leftContacts = ContactsDataBase.getContactsIdListAfterContact(mainUserId,lastContactId);
         int[] lastContacts = Arrays.copyOfRange(leftContacts, leftContacts.length - Math.min(leftContacts.length,20), leftContacts.length);
         int[] reversedLastContacts = IntStream.range(0, lastContacts.length)
@@ -58,16 +58,16 @@ public class MainContactList {
             mainContactsVBox.getChildren().add(contactRoot);
         }
     }
-    public static void addContactToList(int mainUserId,int contactId,VBox mainContactsVBox,AnchorPane mainAnchorPane) throws SQLException, IOException {
-        loadContactFromFXML(mainUserId,contactId,mainContactsVBox,mainAnchorPane);
+    public static void addContactToList(int contactId) throws SQLException, IOException {
+        loadContactFromFXML(contactId);
     }
-    public static void removeContact(VBox mainContactsVBox,int contactId) {
+    public static void removeContact(int contactId) {
         Pane targetContactPane = (Pane) mainContactsVBox.lookup("#mainContactAnchorPane"+contactId);
         mainContactsVBox.getChildren().remove(targetContactPane);
     }
 
 
-    private static void loadContactFromFXML(int mainUserId, int contactId, VBox mainContactsVBox, AnchorPane mainAnchorPane) throws IOException, SQLException {
+    private static void loadContactFromFXML(int contactId) throws IOException, SQLException {
         FXMLLoader fxmlLoader = new FXMLLoader(MainContactList.class.getResource("/main/fxml/MainContact.fxml"));
         Pane contactRoot = fxmlLoader.load();
 

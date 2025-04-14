@@ -166,5 +166,9 @@
     -fx-background-image: url("../elements/changePictureButtonHovered.png");
     -fx-background-repeat: no-repeat;
 }
+.picture-sending-window-picture-change-button:pressed {
+    -fx-background-image: url("../elements/changePictureButtonPressed.png");
+    -fx-background-repeat: no-repeat;
+}
 
 

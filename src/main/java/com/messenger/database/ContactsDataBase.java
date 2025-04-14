@@ -1,5 +1,7 @@
 package com.messenger.database;
 
+import com.messenger.main.MainWindowController;
+
 import javax.xml.transform.Result;
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -12,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-public class ContactsDataBase {
+public class ContactsDataBase extends MainWindowController {
     private static final String url = "jdbc:mysql://127.0.0.1:3306/messengerdb";
     private static final String user = "root";
     private static final String password = "112233";
@@ -31,7 +33,7 @@ public class ContactsDataBase {
         }
         return contactsIdList.stream().mapToInt(Integer::intValue).toArray();
     }
-    public static int[] getMatchedUsersId(int mainUserId,String userNamePiece) throws SQLException {
+    public static int[] getMatchedUsersId(String userNamePiece) throws SQLException {
         /* For example: user enters "Ar" and that method gives all user's mainUserId, which name
            beginns with "Ar" ( e.g. Artur,Ariana )  */
 
@@ -45,7 +47,7 @@ public class ContactsDataBase {
                     }
                 }).toArray();
     }
-    public static void addContact(int mainUserId,int contactId) throws SQLException {
+    public static void addContact(int contactId) throws SQLException {
         String statement = "INSERT INTO contacts (user_id,contact_id,last_interaction) VALUES (?,?,?)";
 
         LocalDateTime now = LocalDateTime.now();

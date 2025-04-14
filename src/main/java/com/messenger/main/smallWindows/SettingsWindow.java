@@ -2,6 +2,7 @@ package com.messenger.main.smallWindows;
 
 import com.messenger.database.UsersDataBase;
 import com.messenger.main.MainContactList;
+import com.messenger.main.MainWindowController;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.TranslateTransition;
@@ -33,52 +34,29 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class SettingsWindow {
-    @FXML
-    private Pane settingsBackgroundPane;
-    @FXML
-    private Pane settingsPane;
-    @FXML
-    private Label settingsAvatarLabel;
-    @FXML
-    private TextField settingsNameField;
-    @FXML
-    private Label settingsNameExceptionLabel;
-    @FXML
-    private Label emailLabel;
-    @FXML
-    private TextField settingsEmailField;
-    @FXML
-    private Label settingsEmailExceptionLabel;
-    @FXML
-    private Pane buttonsBackgroundPane;
-    @FXML
-    private Pane buttonsBackgroundOverlay;
-    @FXML
-    private Label changeButton;
-    @FXML
-    private Label deleteButton;
+public class SettingsWindow extends MainWindowController {
+    @FXML private Pane settingsBackgroundPane;
+    @FXML private Pane settingsPane;
+    @FXML private Label settingsAvatarLabel;
+    @FXML private TextField settingsNameField;
+    @FXML private Label settingsNameExceptionLabel;
+    @FXML private Label emailLabel;
+    @FXML private TextField settingsEmailField;
+    @FXML private Label settingsEmailExceptionLabel;
+    @FXML private Pane buttonsBackgroundPane;
+    @FXML private Pane buttonsBackgroundOverlay;
+    @FXML private Label changeButton;
+    @FXML private Label deleteButton;
 
-
-    private int mainUserId;
-    private AnchorPane mainAnchorPane;
     private Group emailGroup;
-
     private String newAvatarPath = "";
 
 
-    public void setMainUserId(int id) throws SQLException {
-        this.mainUserId = id;
-    }
-    public void setMainAnchorPane(AnchorPane mainAnchorPane) {
-        this.mainAnchorPane = mainAnchorPane;
-    }
-
-
-    public void initializeWithValue() throws SQLException {
+    @FXML
+    public void initialize() throws SQLException {
         initializeInterface();
-        showOpeningEffect();
         setupClickHandlers();
+        showOpeningEffect();
     }
 
 

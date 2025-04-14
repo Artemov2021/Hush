@@ -12,7 +12,7 @@ public class UsersDataBase {
     private static final String user = "root";
     private static final String password = "112233";
 
-    public static String addUser(String identifier,String userPassword) throws SQLException {
+    public static int addUser(String identifier,String userPassword) throws SQLException {
         String statement = "INSERT INTO users (name,password,email,avatar_picture) VALUES (?,?,?,?)";
 
         String userName = isEmailOrName(identifier).equals("name") ? identifier : "User"+(getLength()+1);
@@ -24,8 +24,14 @@ public class UsersDataBase {
             prepareStatement.setString(2,userPassword);
             prepareStatement.setString(3,userEmail);
             prepareStatement.setString(4,null);
-            prepareStatement.executeUpdate();
-            return "successfully";
+
+            try (ResultSet generatedKeys = prepareStatement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1); // Or getLong(1) if your ID is a long
+                } else {
+                    throw new SQLException("User insertion failed, no ID obtained.");
+                }
+            }
         }
     }
     public static boolean getUserPresence(String identifier) throws SQLException {

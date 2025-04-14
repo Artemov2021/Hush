@@ -35,7 +35,6 @@ public class NewContactWindow {
 
     private int mainUserId;
     private AnchorPane mainAnchorPane;
-    private VBox mainContactsVBox;
 
     public void initializeWithValue() {
         // window opens with an effect
@@ -74,8 +73,8 @@ public class NewContactWindow {
             String identifier = newContactInfoField.getText().trim();
             if (identifierIsValid(identifier)) {
                 int contactId = getIdentifierType(identifier).equals("name") ? UsersDataBase.getIdWithName(identifier) : UsersDataBase.getIdWithEmail(identifier);
-                ContactsDataBase.addContact(mainUserId,contactId);
-                MainContactList.addContactToList(mainUserId,contactId,mainContactsVBox,mainAnchorPane);
+                ContactsDataBase.addContact(contactId);
+                MainContactList.addContactToList(contactId);
                 hideWindow();
             }
         } catch (Exception e) {
@@ -89,9 +88,6 @@ public class NewContactWindow {
     }
     public void setMainAnchorPane(AnchorPane anchorPane) {
         this.mainAnchorPane = anchorPane;
-    }
-    public void setMainContactsVBox(VBox VBox) {
-        this.mainContactsVBox = VBox;
     }
 
 

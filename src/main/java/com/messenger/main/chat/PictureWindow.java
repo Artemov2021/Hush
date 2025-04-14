@@ -1,13 +1,17 @@
 package com.messenger.main.chat;
 
+import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.main.MainChatController;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.event.Event;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -19,14 +23,24 @@ import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class PictureWindow extends MainChatController {
     private static Pane pictureSendingWindowBackground;
     private static Pane pictureSendingWindowOverlay;
     private static Label pictureSendingWindowPicture;
-    private static String picturePath;
-    public static void showWindow(String givenPicturePath) {
-        picturePath = givenPicturePath;
+    private static TextField pictureSendingWindowTextField;
+    private static byte[] picture;
+    public static void showWindow(String givenPicturePath) throws IOException {
+        convertIntoPicture(givenPicturePath);
         pictureSendingWindowBackground = new Pane();
         pictureSendingWindowBackground.setStyle("-fx-background-color: rgba(0, 0, 0, 0.68)");
         pictureSendingWindowBackground.setLayoutX(0);
@@ -75,6 +89,7 @@ public class PictureWindow extends MainChatController {
                 }
             }
         });
+        pictureSendingWindowOverlay.getChildren().add(pictureSendingWindowPicture);
         setPictureToLabel();
 
         Label pictureSendingWindowChangePicture = new Label();
@@ -86,13 +101,20 @@ public class PictureWindow extends MainChatController {
         pictureSendingWindowChangePicture.setLayoutY(70);
         pictureSendingWindowChangePicture.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
-                    picturePath = openFileChooserAndGetPath();
-                    setPictureToLabel();
+                try {
+                    String newPicturePath = openFileChooserAndGetPath();
+                    if (newPicturePath != null) {
+                        convertIntoPicture(newPicturePath);
+                        setPictureToLabel();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
         pictureSendingWindowOverlay.getChildren().add(pictureSendingWindowChangePicture);
 
-        TextField pictureSendingWindowTextField = new TextField();
+        pictureSendingWindowTextField = new TextField();
         pictureSendingWindowTextField.getStyleClass().add("picture-sending-window-textfield");
         pictureSendingWindowTextField.setPromptText("Add a comment...");
         pictureSendingWindowTextField.setPrefHeight(44);
@@ -108,6 +130,18 @@ public class PictureWindow extends MainChatController {
         pictureSendingWindowSendButton.setPrefWidth(85);
         pictureSendingWindowSendButton.setLayoutX(328);
         pictureSendingWindowSendButton.setLayoutY(412);
+        pictureSendingWindowSendButton.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                try {
+                    int addedMessageId = addPictureToTheDBAndGetID();
+                    sendPictureMessage(addedMessageId);
+                    hideWindowSmoothly();
+                } catch (IOException | SQLException | ParseException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
         pictureSendingWindowOverlay.getChildren().add(pictureSendingWindowSendButton);
 
         Label pictureSendingWindowExitButton = new Label();
@@ -142,12 +176,22 @@ public class PictureWindow extends MainChatController {
         fadeIn.setToValue(1);
         fadeIn.play();
     }
-    private static void setPictureToLabel() {
+    private static void setPictureToLabel() throws IOException {
         double pictureLabelWidth = 386;
         double pictureLabelHeight = 339;
 
-        // Load image
-        Image image = new Image(new File(picturePath).toURI().toString(),true);
+        // Write byte[] to a temporary file
+        File tempFile = File.createTempFile("tempImage", ".png");
+        tempFile.deleteOnExit();  // Optionally delete when the program exits
+
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            fos.write(picture);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Now load the image with background loading
+        Image image = new Image(tempFile.toURI().toString(), true);
 
         // ImageView
         ImageView imageView = new ImageView(image);
@@ -198,9 +242,6 @@ public class PictureWindow extends MainChatController {
 
         // Add to label
         pictureSendingWindowPicture.setGraphic(imageContainer);
-
-        // Add to your layout
-        pictureSendingWindowOverlay.getChildren().add(pictureSendingWindowPicture);
     }
     private static void showFullyPicture() throws IOException {
         Pane backgroundPane = new Pane();
@@ -224,11 +265,9 @@ public class PictureWindow extends MainChatController {
 
         Label fullyPicturePreview = new Label();
         fullyPicturePreview.setOnMouseClicked(Event::consume);
-        FileInputStream fis = new FileInputStream(new File(picturePath));
-        byte[] blobBytes = fis.readAllBytes();
-        assert blobBytes != null;
+        assert picture != null;
 
-        ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
+        ByteArrayInputStream byteStream = new ByteArrayInputStream(picture);
         Image image = new Image(byteStream);
         ImageView imageView = new ImageView(image);
 
@@ -288,8 +327,103 @@ public class PictureWindow extends MainChatController {
             fullyPicturePreviewLabel.setLayoutY(newLayoutY);
         });
     }
+    private static void convertIntoPicture(String picturePath) throws IOException {
+        Path path = new File(picturePath).toPath();
+        picture = Files.readAllBytes(path);
+    }
+    private static ChatHistory getChat() throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(PictureWindow.class.getResource("/main/fxml/MainChat.fxml"));
+        Parent root = fxmlLoader.load();
+        MainChatController controller = fxmlLoader.getController();
+        return new ChatHistory(mainAnchorPane);
+    }
+    private static boolean thereIsReplyPane() {
+        // Get all children of mainAnchorPane
+        List<Node> children = new ArrayList<>(mainAnchorPane.getChildren());
 
+        // Iterate through the children and remove nodes with IDs starting with "replyWrapper"
+        for (Node node : children) {
+            if (node.getId() != null && (node.getId().startsWith("replyWrapper"))) {
+                return true;
+            }
+        }
 
+        return false;
+    }
+    private static String getReplyWrapperId() {
+        // Get all children of mainAnchorPane
+        List<Node> children = new ArrayList<>(mainAnchorPane.getChildren());
+
+        // Iterate through the children and remove nodes with IDs starting with "replyWrapper"
+        for (Node node : children) {
+            if (node.getId() != null && (node.getId().startsWith("replyWrapper"))) {
+                return node.getId();
+            }
+        }
+
+        return null;
+    }
+    private static String getCurrentFullTime() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        return LocalDateTime.now().format(formatter);
+    }
+    private static boolean thereIsEditPane() {
+        // Get all children of mainAnchorPane
+        List<Node> children = new ArrayList<>(mainAnchorPane.getChildren());
+
+        // Iterate through the children and remove nodes with IDs starting with "replyWrapper"
+        for (Node node : children) {
+            if (node.getId() != null && (node.getId().startsWith("editWrapper"))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    private static String getCurrentPictureMessageType() {
+        boolean thereIsPictureText = !pictureSendingWindowTextField.getText().trim().isEmpty();
+
+        if (thereIsReplyPane() && thereIsPictureText) {
+            return "reply_with_picture_and_text";
+        }
+        if (thereIsReplyPane() && !thereIsPictureText) {
+            return "reply_with_picture";
+        }
+        if (thereIsEditPane() && thereIsPictureText) {
+            return "edit_with_picture_and_text";
+        }
+        if (thereIsEditPane() && !thereIsPictureText) {
+            return "edit_with_picture";
+        }
+        if (!thereIsReplyPane() && !thereIsEditPane() && thereIsPictureText) {
+            return "picture_with_text";
+        }
+        if (!thereIsReplyPane() && !thereIsEditPane() && !thereIsPictureText) {
+            return "picture";
+        }
+
+        return null;
+    }
+    private static void sendPictureMessage(int messageId) throws IOException, SQLException, ParseException {
+        ChatHistory chatHistory = getChat();
+
+        switch (Objects.requireNonNull(getCurrentPictureMessageType())) {
+            case "reply_with_picture_and_text":
+                //chatHistory.loadReplyWithPictureAndTextMessage(messageId);
+        }
+    }
+    private static int addPictureToTheDBAndGetID() throws SQLException {
+        int senderId = mainUserId;
+        int receiverId = contactId;
+        String text = pictureSendingWindowTextField.getText().trim();
+        String message = text.isEmpty() ? null : text;
+        int replyMessageId = thereIsReplyPane() ? Integer.parseInt(Objects.requireNonNull(getReplyWrapperId()).replaceAll("\\D+", "")) : -1;
+        String messageTime = getCurrentFullTime();
+        String messageType = getCurrentPictureMessageType();
+        boolean received = false;
+
+        return ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyMessageId,messageTime,messageType,received);
+    }
 
 
 

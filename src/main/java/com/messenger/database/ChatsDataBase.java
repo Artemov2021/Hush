@@ -245,7 +245,7 @@ public class ChatsDataBase {
         }
         return ids;
     }
-    public static int getPreviousMessageId(int messageId,int senderId,int receiverId) throws SQLException {
+    public static int getPreviousMessageId(int messageId,int mainUserId,int contactId) throws SQLException {
         String getMessageIdStatement = "SELECT message_id \n" +
                 "FROM chats \n" +
                 "WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) \n" +
@@ -255,10 +255,10 @@ public class ChatsDataBase {
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
                 // Second Query: Get previous message_id
                 PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
-                preparedStatement.setInt(1, senderId);
-                preparedStatement.setInt(2, receiverId);
-                preparedStatement.setInt(3, receiverId);
-                preparedStatement.setInt(4, senderId);
+                preparedStatement.setInt(1, mainUserId);
+                preparedStatement.setInt(2, contactId);
+                preparedStatement.setInt(3, contactId);
+                preparedStatement.setInt(4, mainUserId);
                 preparedStatement.setInt(5, messageId); // Now correctly setting the last parameter
 
                 ResultSet messageIdResult = preparedStatement.executeQuery();

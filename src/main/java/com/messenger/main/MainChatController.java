@@ -23,6 +23,7 @@ import javafx.util.Duration;
 import javafx.scene.Cursor;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 
@@ -34,26 +35,18 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 
-public class MainChatController {
-    @FXML
-    private Pane chatBackgroundPane;
-    @FXML
-    private ScrollPane chatScrollPane;
-    @FXML
-    public Label chatMainAvatarLabel;
-    @FXML
-    public Label chatMainNameLabel;
-    @FXML
-    public VBox chatVBox;
-    @FXML
-    public TextField chatTextField;
-    @FXML
-    public Label chatAddPictureLabel;
+public class MainChatController extends MainContact {
+    @FXML private Pane chatBackgroundPane;
+    @FXML public ScrollPane chatScrollPane;
+    @FXML public Label chatMainAvatarLabel;
+    @FXML public Label chatMainNameLabel;
+    @FXML public VBox chatVBox;
+    @FXML public TextField chatTextField;
+    @FXML public Label chatAddPictureLabel;
 
 
-    public static AnchorPane mainAnchorPane;
-    public int contactId;
-    public int mainUserId;
+    public static int contactId;
+    public static int mainUserId;
     public Pane mainContactPane;
     public Label mainContactMessageLabel;
     public Label mainContactTimeLabel;
@@ -61,9 +54,6 @@ public class MainChatController {
 
 
     // Setting Main Values
-    public void setMainAnchorPane(AnchorPane anchorPane) {
-        this.mainAnchorPane = anchorPane;
-    }
     public void setMainUserId(int id) {
         this.mainUserId = id;
     }
@@ -78,9 +68,20 @@ public class MainChatController {
 
 
     // Chat Interface Initialization, Chat Loading
-    public void initializeWithValue() throws SQLException, ExecutionException, InterruptedException {
+    public void initializeWithValue() throws SQLException, ExecutionException, InterruptedException, IOException {
         initializeChatInterface();
-        loadChatHistory();
+        Platform.runLater(() -> {
+            try {
+                loadChatHistory();
+            } catch (SQLException | ExecutionException | InterruptedException | IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @FXML
+    public void initialize() {
+        System.out.println("hello");
     }
 
 
@@ -257,22 +258,26 @@ public class MainChatController {
     private void setAddPictureOnMouseAction() {
         chatAddPictureLabel.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
-                loadPicture();
+                try {
+                    loadPicture();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
     }
 
 
     // Chat Loading
-    private void loadChatHistory() throws SQLException, ExecutionException, InterruptedException {
-        ChatHistory currentChatHistory = new ChatHistory(mainUserId,contactId,chatScrollPane,chatVBox,mainAnchorPane,mainContactMessageLabel,mainContactTimeLabel);
-        currentChatHistory.load();
+    private void loadChatHistory() throws SQLException, ExecutionException, InterruptedException, IOException {
+        ChatHistory currentChatHistory = new ChatHistory(mainAnchorPane);
+        //currentChatHistory.load();
     }
 
 
     // Message Sending
     @FXML
-    private void saveAndDisplayCurrentTextMessage() throws SQLException, ParseException {
+    private void saveAndDisplayCurrentTextMessage() throws SQLException, ParseException, IOException {
         String message = chatTextField.getText().trim();
         if (message.isEmpty()) return; // Avoid saving empty messages
 
@@ -321,7 +326,7 @@ public class MainChatController {
         Label messageTextLabel = (Label) editedMessageStackPane.lookup("#messageTextLabel" + editedMessageId);
         messageTextLabel.setText(message);
     }
-    private void sendNewMessage(String message, int replyId) throws SQLException, ParseException {
+    private void sendNewMessage(String message, int replyId) throws SQLException, ParseException, IOException {
         int senderId = mainUserId;
         int receiverId = contactId;
         byte[] picture = null;
@@ -344,7 +349,7 @@ public class MainChatController {
         int[] contactListOfContact = ContactsDataBase.getContactsIdList(receiverId);
         boolean existsInContactList = Arrays.stream(contactListOfContact).anyMatch(id -> id == mainUserId);
         if (!existsInContactList) {
-            ContactsDataBase.addContact(receiverId, mainUserId);
+            ContactsDataBase.addContact(receiverId);
         }
     }
     private void updateInteractionTime() throws SQLException {
@@ -359,15 +364,14 @@ public class MainChatController {
     private void clearChatInput() {
         chatTextField.setText("");
     }
-    private void displayCurrentTextMessage(int messageId) throws SQLException, ParseException {
+    private void displayCurrentTextMessage(int messageId) throws SQLException, ParseException, IOException {
         String currentTextMessageType = getCurrentMessageType();
-        ArrayList<Object> currentMessage = ChatsDataBase.getMessage(messageId);
-        ChatHistory currentChat = new ChatHistory(mainUserId,contactId,chatScrollPane,chatVBox,mainAnchorPane,mainContactMessageLabel,mainContactTimeLabel);
+        ChatHistory currentChat = new ChatHistory(mainAnchorPane);
 
-        switch (currentTextMessageType) {
-            case "text" -> currentChat.loadTextMessage(currentMessage);
-            case "reply_with_text" -> currentChat.loadReplyWithTextMessage(currentMessage);
-        }
+//        switch (currentTextMessageType) {
+//            case "text" -> currentChat.loadTextMessage(messageId);
+//            case "reply_with_text" -> currentChat.loadReplyWithTextMessage(messageId);
+//        }
     }
     private void removeCurrentWrapper() {
         Node wrapper = mainAnchorPane.lookupAll("*").stream()
@@ -395,7 +399,7 @@ public class MainChatController {
 
 
     // Picture Sending
-    public void loadPicture() {
+    public void loadPicture() throws IOException {
          String chosenPicturePath = openFileChooserAndGetPath();
          PictureWindow.showWindow(chosenPicturePath);
     }

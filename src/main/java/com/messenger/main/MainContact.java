@@ -31,7 +31,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MainContact {
+public class MainContact extends MainWindowController {
     @FXML
     private AnchorPane mainContactAnchorPane;
     @FXML
@@ -45,7 +45,6 @@ public class MainContact {
     @FXML
     private Label mainContactTimeLabel;
 
-    private AnchorPane mainAnchorPane;
     private VBox mainContactsVBox;
     private int mainUserId;
     private int contactId;
@@ -160,12 +159,12 @@ public class MainContact {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainChat.fxml"));
         Parent chatRoot = fxmlLoader.load();
 
-        MainChatController mainChatController = fxmlLoader.getController();
-        mainChatController.setMainAnchorPane(mainAnchorPane);
-        mainChatController.setMainUserId(mainUserId);
-        mainChatController.setContactId(currentUserId);
-        mainChatController.setMainContactPane(mainContactPane);
-        mainChatController.initializeWithValue();
+//        MainChatController mainChatController = fxmlLoader.getController();
+//        mainChatController.setMainAnchorPane(mainAnchorPane);
+//        mainChatController.setMainUserId(mainUserId);
+//        mainChatController.setContactId(currentUserId);
+//        mainChatController.setMainContactPane(mainContactPane);
+//        mainChatController.initializeWithValue();
 
         mainAnchorPane.getChildren().removeIf(child -> Objects.equals(child.getId(), "chatAnchorPane"));
         mainAnchorPane.getChildren().add(0,chatRoot);
@@ -299,7 +298,7 @@ public class MainContact {
         confirmationBackground.getChildren().add(confirmationDeleteButton);
         confirmationDeleteButton.setOnMouseClicked(clickEvent -> {
             ContactsDataBase.deleteContact(mainUserId,contactId);
-            MainContactList.removeContact(mainContactsVBox,contactId);
+            MainContactList.removeContact(contactId);
             mainAnchorPane.getChildren().remove(confirmationOverlay);
         });
 
