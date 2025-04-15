@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
 
-<AnchorPane fx:id="mainContactAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="70.0" prefWidth="425.0" style="-fx-background-color: transparent;;" stylesheets="@../css/MainContact.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainContact">
+<AnchorPane fx:id="mainContactAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="70.0" prefWidth="425.0" style="-fx-background-color: transparent;;" stylesheets="@../css/MainContact.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainContactController">
    <children>
       <Pane fx:id="mainContactPane" prefHeight="70.0" prefWidth="425.0" styleClass="contact-background-pane">
          <children>

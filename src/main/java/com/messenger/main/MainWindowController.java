@@ -1,12 +1,9 @@
 package com.messenger.main;
 
-import com.messenger.auth.AuthWindow;
 import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
 import com.messenger.design.ToastMessage;
-import com.messenger.main.smallWindows.NewContactWindow;
-import com.messenger.main.smallWindows.SettingsWindow;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +16,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
@@ -29,35 +27,40 @@ import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
 public class MainWindowController {
-    @FXML public static AnchorPane mainAnchorPane;
+    @FXML protected AnchorPane mainAnchorPane;
     @FXML protected Label mainAvatarLabel;
     @FXML protected Label mainNameLabel;
     @FXML protected Label mainEmailLabel;
     @FXML private Label toastCopiedMessage;
     @FXML private Label settingsButton;
     @FXML private TextField mainSearchField;
-    @FXML private Label addContactButton;
+    @FXML private Label openAddContactButton;
     @FXML private Label mainTitle;
     @FXML private Label logInTitle;
     @FXML private Label mainSmallTitle;
     @FXML public ScrollPane mainContactsScrollPane;
-    @FXML public static VBox mainContactsVBox;
+    @FXML public VBox mainContactsVBox;
 
-    public static int mainUserId = AuthWindow.getMainUserId();
+    public static int mainUserId;
 
 
-    public void initialize()throws SQLException, IOException {
+    public final void setMainUserId(int id) {
+        mainUserId = id;
+    }
+    public final void initializeWithValue() throws SQLException, IOException {
         mainUserId = 1;
         setMainLogInTitle();
         setProfileInfo();
         setAppropriateAvatar();
-        defocusSearchField();
+        setSearchFieldUnfocused();
         setScrollPaneEffect();
-        loadContacts();
+        loadAllContacts();
         setLazyLoading();
-        addSearchFieldListener();
+        setSearchFieldListener();
         setAddContactButtonListener();
         setSettingsButtonListener();
         setEmailLabelListener();
@@ -65,6 +68,7 @@ public class MainWindowController {
     }
 
 
+    // Interface Initialization
     private void setMainLogInTitle() throws SQLException {
         /* set main title on the right side. If the person has no contacts,
            there is going to be the default title ( pointing how to add a new contact ). If the person
@@ -82,7 +86,7 @@ public class MainWindowController {
         mainEmailLabel.setText(UsersDataBase.getEmailWithId(mainUserId));
         if (UsersDataBase.getEmailWithId(mainUserId) == null) {
             mainEmailLabel.setVisible(false);
-            mainNameLabel.setLayoutY(23);
+            mainNameLabel.setLayoutY(32);
         }
     }
     private void setAppropriateAvatar() throws SQLException {
@@ -106,7 +110,7 @@ public class MainWindowController {
             mainAvatarLabel.getStyleClass().add("avatar-button-default");
         }
     }
-    private void defocusSearchField() {
+    private void setSearchFieldUnfocused() {
         mainSearchField.setFocusTraversable(false);
     }
     private void setScrollPaneEffect() {
@@ -114,33 +118,15 @@ public class MainWindowController {
         mainContactsScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         ScrollPaneEffect.addScrollBarEffect(mainContactsScrollPane);
     }
-    private void loadContacts() throws SQLException, IOException {
-        MainContactList.loadContacts();
-    }
-    private void setLazyLoading() {
-        mainContactsScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal.doubleValue() == 1.0) {
-                int bottomContactId = getBottomContactId();
-                try {
-                    if (hasMoreContacts(mainUserId, bottomContactId)) {
-                        MainContactList.loadMoreContacts(bottomContactId);
-                    }
-                } catch (SQLException | RuntimeException | IOException e) {
-                    throw new RuntimeException("Error fetching more contacts", e);
-                }
-            }
-        });
-    }
-    private void addSearchFieldListener() {
+    private void setSearchFieldListener() {
         PauseTransition pause = new PauseTransition(Duration.millis(200));
         pause.setOnFinished(event -> showFoundedContacts(mainSearchField.getText()));
-
 
         mainSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
                 if (newValue.trim().length() == 0) {
                     mainContactsVBox.getChildren().clear();
-                    MainContactList.loadContacts();
+                    loadAllContacts();
                 }
             } catch (Exception e) {
                 throw new RuntimeException();
@@ -149,7 +135,7 @@ public class MainWindowController {
         });
     }
     private void setAddContactButtonListener(){
-        addContactButton.setOnMouseClicked(clickEvent -> {
+        openAddContactButton.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
                 try {
                     addContactWindow();
@@ -177,61 +163,129 @@ public class MainWindowController {
             }
         });
     }
+    private void setLazyLoading() {
+        mainContactsScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.doubleValue() == 1.0) {
+                try {
+                    if (hasMoreContacts()) {
+                        loadMoreContacts();
+                    }
+                } catch (SQLException | RuntimeException | IOException e) {
+                    throw new RuntimeException("Error fetching more contacts", e);
+                }
+            }
+        });
+    }
     private void removeTextFieldContextMenu() {
         mainSearchField.setContextMenu(new ContextMenu());
     }
 
 
+    // Contacts
+    private void loadAllContacts() throws SQLException, IOException {
+        mainContactsVBox.getChildren().clear();
+        mainContactsVBox.setSpacing(4.0);
+        int[] allContactsId = ContactsDataBase.getContactsIdList(mainUserId);
+        int[] lastContacts = Arrays.copyOfRange(allContactsId, allContactsId.length - Math.min(allContactsId.length, 20), allContactsId.length);
+        for (int contactId: lastContacts) {
+            addContactPane(contactId);
+        }
+    }
+    private void loadMoreContacts() throws SQLException, IOException {
+        int lastContactId = getVisibleBottomContactId();
+        int[] leftContacts = ContactsDataBase.getContactsIdListAfterContact(mainUserId,lastContactId);
+        int[] lastContacts = Arrays.copyOfRange(leftContacts, leftContacts.length - Math.min(leftContacts.length,20), leftContacts.length);
+        int[] reversedLastContacts = IntStream.range(0, lastContacts.length)
+                .map(i -> lastContacts[lastContacts.length - 1 - i]) // Access elements in reverse order
+                .toArray();
+
+        for (int contactId: reversedLastContacts) {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainContact.fxml"));
+            Pane contactRoot = fxmlLoader.load();
+
+            MainContactController contactPane = fxmlLoader.getController();
+            contactPane.setContactId(contactId);
+            contactPane.injectUIElements(this);
+            contactPane.initializeContactPane();
+
+            mainContactsVBox.getChildren().add(contactRoot);
+        }
+    }
+    protected void addContactPane(int contactId) throws IOException, SQLException {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainContact.fxml"));
+        Pane contactRoot = fxmlLoader.load();
+
+        MainContactController contactPane = fxmlLoader.getController();
+        contactPane.setContactId(contactId);
+        contactPane.injectUIElements(this);
+        contactPane.initializeContactPane();
+
+        mainContactsVBox.getChildren().add(0,contactRoot);
+    }
+    private void loadCustomContacts(int[] contactsId) throws IOException, SQLException {
+        for (int contactId: contactsId) {
+            addContactPane(contactId);
+        }
+    }
     private void showFoundedContacts(String enteredName) {
         try {
             if (enteredName.trim().length() > 0) {
                 mainContactsVBox.getChildren().clear();
                 int[] foundedUsersId = ContactsDataBase.getMatchedUsersId(enteredName.trim());
-                MainContactList.loadCustomContacts(foundedUsersId);
+                loadCustomContacts(foundedUsersId);
             } else {
                 mainContactsVBox.getChildren().clear();
-                MainContactList.loadContacts();
+                loadAllContacts();
             }
         } catch (Exception e) {
             throw new RuntimeException();
         }
     }
-    private int getBottomContactId() {
+    private int getVisibleBottomContactId() {
         // Get the last child in the VBox and extract its ID
         AnchorPane lastContactPane = (AnchorPane) mainContactsVBox.getChildren().get(mainContactsVBox.getChildren().size() - 1);
         String contactIdString = lastContactPane.getChildren().get(0).getId().split("mainContactPane")[1];
         return Integer.parseInt(contactIdString);
     }
-    public boolean hasMoreContacts(int mainUserId,int lastContactId) throws SQLException {
+    private boolean hasMoreContacts() throws SQLException {
+        int lastContactId = getVisibleBottomContactId();
         int[] allContactsIds = ContactsDataBase.getContactsIdList(mainUserId);
         return allContactsIds[0] != lastContactId;    // 3,5,15   15 != 3
     }
 
 
-    public void saveToClipboard() {
+    // Email Clipboard
+    private void saveToClipboard() {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         StringSelection selection = new StringSelection(mainEmailLabel.getText());
         clipboard.setContents(selection, null);
         toastCopiedMessage.setLayoutX(mainEmailLabel.getLayoutX() + mainEmailLabel.getWidth()/5);
         ToastMessage.applyFadeEffect(toastCopiedMessage);
     }
-    public void addContactWindow () throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainNewContactWindow.fxml"));
+
+
+    // Small Windows
+    private void addContactWindow () throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainAddContactWindow.fxml"));
         Parent newContactRoot = fxmlLoader.load();
 
-        NewContactWindow newContactWindow = fxmlLoader.getController();
-        newContactWindow.setMainUserId(mainUserId);
-        newContactWindow.setMainAnchorPane(mainAnchorPane);
-        newContactWindow.initializeWithValue();
+        AddContactWindowController addContactWindow = fxmlLoader.getController();
+        addContactWindow.injectUIElements(this);
+        addContactWindow.initializeAddContactInterface();
 
         mainAnchorPane.getChildren().add(newContactRoot);
     }
-    public void openSettingsWindow() throws IOException, SQLException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/fxml/MainSettingsWindow.fxml"));
-        Parent settingsWindowRoot = loader.load();
+    private void openSettingsWindow() throws IOException, SQLException {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainSettingsWindow.fxml"));
+        Parent settingsWindowRoot = fxmlLoader.load();
+
+        SettingsWindowController settingsWindow = fxmlLoader.getController();
+        settingsWindow.injectUIElements(this);
+        settingsWindow.initializeSettingsInterface();
 
         mainAnchorPane.getChildren().add(settingsWindowRoot);
     }
+
 
 
 

@@ -6,18 +6,18 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.Pane?>
 
-<Pane fx:id="settingsBackgroundPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1009.0" prefWidth="1920.0" style="-fx-background-color: rgba(0, 0, 0, 0.68);" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.smallWindows.SettingsWindow">
+<Pane fx:id="settingsBackground" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1009.0" prefWidth="1920.0" style="-fx-background-color: rgba(0, 0, 0, 0.68);" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.SettingsWindowController">
    <children>
-      <Pane fx:id="settingsPane" layoutX="660.0" layoutY="285.0" prefHeight="426.0" prefWidth="602.0" styleClass="settings-window" stylesheets="@../css/MainSettingsWindow.css">
+      <Pane fx:id="settingsOverlay" layoutX="660.0" layoutY="285.0" prefHeight="426.0" prefWidth="602.0" styleClass="settings-window" stylesheets="@../css/MainSettingsWindow.css">
          <children>
             <TextField fx:id="settingsEmailField" layoutX="244.0" layoutY="231.0" prefHeight="57.0" prefWidth="313.0" promptText="Enter your email" styleClass="settings-email-field" />
-            <Label fx:id="emailLabel" layoutX="256.0" layoutY="194.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your email" />
+            <Label fx:id="emailTitle" layoutX="256.0" layoutY="194.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your email" />
             <TextField fx:id="settingsNameField" layoutX="244.0" layoutY="127.0" prefHeight="57.0" prefWidth="316.0" promptText="Enter your name" styleClass="settings-name-field" />
             <Label layoutX="256.0" layoutY="90.0" prefHeight="36.0" prefWidth="82.0" styleClass="settings-text-field-title" text="Your name" />
-            <Label fx:id="settingsAvatarLabel" layoutX="54.0" layoutY="107.0" prefHeight="155.0" prefWidth="155.0" styleClass="settings-avatar" />
-            <Pane fx:id="buttonsBackgroundPane" layoutY="4.0" prefHeight="426.0" prefWidth="602.0">
+            <Label fx:id="settingsAvatar" layoutX="54.0" layoutY="107.0" prefHeight="155.0" prefWidth="155.0" styleClass="settings-avatar" />
+            <Pane fx:id="buttonsBackground" layoutY="4.0" prefHeight="426.0" prefWidth="602.0">
                <children>
-                  <Pane fx:id="buttonsBackgroundOverlay" layoutX="155.0" layoutY="188.0" prefHeight="75.0" prefWidth="99.0" styleClass="settings-avatar-buttons-background">
+                  <Pane fx:id="buttonsOverlay" layoutX="155.0" layoutY="188.0" prefHeight="75.0" prefWidth="99.0" styleClass="settings-avatar-buttons-background">
                      <children>
                         <Label fx:id="changeButton" layoutX="5.0" layoutY="5.0" prefHeight="31.0" prefWidth="89.0" styleClass="settings-avatar-buttons-change-background">
                            <cursor>
@@ -40,8 +40,8 @@
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Button>
-            <Label fx:id="settingsEmailExceptionLabel" layoutX="256.0" layoutY="296.0" prefHeight="20.0" prefWidth="291.0" styleClass="settings-error-label" text="Exception error" visible="false" />
-            <Label fx:id="settingsNameExceptionLabel" layoutX="256.0" layoutY="189.0" prefHeight="20.0" prefWidth="291.0" styleClass="settings-error-label" text="Exception error" visible="false" />
+            <Label fx:id="settingsEmailErrorMessage" layoutX="256.0" layoutY="296.0" prefHeight="20.0" prefWidth="291.0" styleClass="settings-error-label" text="Exception error" visible="false" />
+            <Label fx:id="settingsNameErrorMessage" layoutX="256.0" layoutY="189.0" prefHeight="20.0" prefWidth="291.0" styleClass="settings-error-label" text="Exception error" visible="false" />
             <Button fx:id="settingsSaveButton" layoutX="455.0" layoutY="353.0" mnemonicParsing="false" onAction="#saveInformation" prefHeight="44.0" prefWidth="113.0" styleClass="settings-save-button">
                <cursor>
                   <Cursor fx:constant="HAND" />

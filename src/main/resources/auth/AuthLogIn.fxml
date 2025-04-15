@@ -10,21 +10,21 @@
 
 <AnchorPane fx:id="anchorPane" prefHeight="526.0" prefWidth="853.0" stylesheets="@AuthWindow.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.auth.AuthLogInController">
    <children>
-      <Label fx:id="lowerLabel" layoutX="333.0" layoutY="296.0" prefHeight="21.0" prefWidth="66.0" styleClass="input-field-label" text="Password" />
-      <Label fx:id="identifierLabel" layoutX="331.0" layoutY="233.0" prefHeight="25.0" prefWidth="151.0" styleClass="input-field-label" text="Email adress or name" textAlignment="CENTER">
+      <Label fx:id="passwordFieldLabel" layoutX="333.0" layoutY="296.0" prefHeight="21.0" prefWidth="66.0" styleClass="input-field-label" text="Password" />
+      <Label fx:id="identifierTextFieldLabel" layoutX="331.0" layoutY="233.0" prefHeight="25.0" prefWidth="151.0" styleClass="input-field-label" text="Email adress or name" textAlignment="CENTER">
          <font>
             <Font size="14.0" />
          </font>
       </Label>
       <Label layoutX="278.0" layoutY="61.0" prefHeight="77.0" prefWidth="331.0" styleClass="main-text" text="Welcome back!" />
       <Label layoutX="337.0" layoutY="113.0" prefHeight="61.0" prefWidth="220.0" styleClass="second-text" text="fill out the following fields to log in" textAlignment="CENTER" wrapText="true" />
-      <TextField fx:id="identifierField" layoutX="318.0" layoutY="221.0" prefHeight="48.0" prefWidth="262.0" styleClass="input-field" />
+      <TextField fx:id="identifierTextField" layoutX="318.0" layoutY="221.0" prefHeight="48.0" prefWidth="262.0" styleClass="input-field" />
       <Button fx:id="logInButton" layoutX="395.0" layoutY="412.0" mnemonicParsing="false" prefHeight="33.0" prefWidth="101.0" styleClass="main-button" text="Log In">
          <cursor>
             <Cursor fx:constant="HAND" />
          </cursor></Button>
       <Label layoutX="371.0" layoutY="454.0" prefHeight="24.0" prefWidth="112.0" styleClass="bottom-text" text="You don't have an" />
-      <Button fx:id="accountButton" layoutX="463.0" layoutY="454.0" mnemonicParsing="false" onAction="#openSingUp" prefHeight="14.0" prefWidth="66.0" styleClass="account-button" text="account?">
+      <Button fx:id="accountButton" layoutX="463.0" layoutY="454.0" mnemonicParsing="false" prefHeight="14.0" prefWidth="66.0" styleClass="account-button" text="account?">
          <cursor>
             <Cursor fx:constant="HAND" />
          </cursor></Button>

@@ -11,7 +11,7 @@
 
 <AnchorPane fx:id="chatAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1009.0" prefWidth="1476.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.messenger.main.MainChatController">
    <children>
-      <Pane fx:id="chatBackgroundPane" prefHeight="1009.0" prefWidth="1476.0" styleClass="root" stylesheets="@../css/MainChat.css">
+      <Pane fx:id="chatBackground" prefHeight="1009.0" prefWidth="1476.0" styleClass="root" stylesheets="@../css/MainChat.css">
          <children>
             <ScrollPane fx:id="chatScrollPane" hbarPolicy="NEVER" layoutX="-5.0" layoutY="80.0" prefHeight="862.0" prefWidth="1466.0" styleClass="chat-scroll-pane">
                <content>
@@ -23,12 +23,12 @@
             </ScrollPane>
             <Label layoutX="1.0" layoutY="3.0" prefHeight="78.0" prefWidth="1476.0" styleClass="chat-upper-background" />
             <TextField fx:id="chatTextField" layoutX="1.0" layoutY="952.0" onAction="#saveAndDisplayCurrentTextMessage" prefHeight="58.0" prefWidth="1477.0" promptText="Write a message...." styleClass="chat-text-field" />
-            <Label fx:id="chatMainAvatarLabel" layoutX="26.0" layoutY="20.0" onMouseClicked="#showContactFullAvatar" prefHeight="45.0" prefWidth="45.0" styleClass="chat-avatar-label">
+            <Label fx:id="chatMainAvatar" layoutX="26.0" layoutY="20.0" onMouseClicked="#showContactFullAvatar" prefHeight="45.0" prefWidth="45.0" styleClass="chat-avatar-label">
                <cursor>
                   <Cursor fx:constant="DEFAULT" />
                </cursor></Label>
-            <Label fx:id="chatMainNameLabel" layoutX="80.0" layoutY="23.0" prefHeight="35.0" prefWidth="466.0" styleClass="chat-name-label" text="Name label" />
-            <Label fx:id="chatAddPictureLabel" layoutX="13.0" layoutY="963.0" onMouseClicked="#loadPicture" prefHeight="35.0" prefWidth="38.0" styleClass="chat-add-file-label">
+            <Label fx:id="chatMainName" layoutX="80.0" layoutY="23.0" prefHeight="35.0" prefWidth="466.0" styleClass="chat-name-label" text="Name label" />
+            <Label fx:id="chatAddPictureButton" layoutX="13.0" layoutY="963.0" onMouseClicked="#loadPicture" prefHeight="35.0" prefWidth="38.0" styleClass="chat-add-file-label">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Label>

@@ -1,10 +1,7 @@
-package com.messenger.main.smallWindows;
+package com.messenger.main;
 
 import com.messenger.database.UsersDataBase;
-import com.messenger.main.MainContactList;
-import com.messenger.main.MainWindowController;
 import javafx.animation.FadeTransition;
-import javafx.animation.PauseTransition;
 import javafx.animation.TranslateTransition;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -17,10 +14,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -34,82 +28,58 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class SettingsWindow extends MainWindowController {
-    @FXML private Pane settingsBackgroundPane;
-    @FXML private Pane settingsPane;
-    @FXML private Label settingsAvatarLabel;
+public class SettingsWindowController extends MainWindowController {
+    @FXML private Pane settingsBackground;
+    @FXML private Pane settingsOverlay;
+    @FXML private Label settingsAvatar;
     @FXML private TextField settingsNameField;
-    @FXML private Label settingsNameExceptionLabel;
-    @FXML private Label emailLabel;
     @FXML private TextField settingsEmailField;
-    @FXML private Label settingsEmailExceptionLabel;
-    @FXML private Pane buttonsBackgroundPane;
-    @FXML private Pane buttonsBackgroundOverlay;
+    @FXML private Label settingsNameErrorMessage;
+    @FXML private Label settingsEmailErrorMessage;
+    @FXML private Label emailTitle;
+    @FXML private Pane buttonsBackground;
+    @FXML private Pane buttonsOverlay;
     @FXML private Label changeButton;
     @FXML private Label deleteButton;
 
     private Group emailGroup;
     private String newAvatarPath = "";
 
-
-    @FXML
-    public void initialize() throws SQLException {
+    public void injectUIElements(MainWindowController source) {
+        this.mainAnchorPane = source.mainAnchorPane;
+        this.mainAvatarLabel = source.mainAvatarLabel;
+        this.mainNameLabel = source.mainNameLabel;
+        this.mainEmailLabel = source.mainEmailLabel;
+    }
+    public void initializeSettingsInterface() throws SQLException {
         initializeInterface();
         setupClickHandlers();
         showOpeningEffect();
     }
 
 
+    // Initialize Interface
     public void initializeInterface() throws SQLException {
-        createEmailGroup();
-        defocusTextFields();
-        setDataBaseAvatarPicture();
-        setNameInField();
-        setEmailInField();
+        setEmailGroup();
+        setTextFieldsUnfocused();
+        setAvatarPicture();
+        setNameInsideField();
+        setEmailInsideField();
         hideErrorLabels();
-        putAvatarButtonsToFront();
+        setAvatarButtonsToFront();
         hideAvatarButtonsElements();
     }
-    public void createEmailGroup() {
-        emailGroup = new Group(emailLabel,settingsEmailField,settingsEmailExceptionLabel);
-        settingsPane.getChildren().add(emailGroup);
+    public void setEmailGroup() {
+        emailGroup = new Group(emailTitle,settingsEmailField,settingsEmailErrorMessage);
+        settingsOverlay.getChildren().add(emailGroup);
         emailGroup.toBack();
     }
-    private void showOpeningEffect() {
-        // Appearing time
-        FadeTransition FadeIn = new FadeTransition(Duration.millis(180),settingsBackgroundPane);
-        FadeIn.setFromValue(0);
-        FadeIn.setToValue(1);
-        FadeIn.play();
-
-        // Appearing move to left
-        TranslateTransition translateIn = new TranslateTransition(Duration.millis(180), settingsPane);
-        translateIn.setFromX(0);
-        translateIn.setToX(-35);
-        translateIn.play();
-    }
-    public void setupClickHandlers() {
-        // Consume the event to prevent it from affecting backgroundPane
-        settingsPane.setOnMouseClicked(Event::consume);
-
-        // Set event handler for backgroundPane
-        settingsBackgroundPane.setOnMouseClicked(clickEvent -> {
-            if (clickEvent.getButton() == MouseButton.PRIMARY) {
-                hideWindow();
-            }
-        });
-
-        // Set event handler for avatar label
-        settingsAvatarLabel.setOnMouseClicked(this::checkEvent);
-    }
-
-
-    public void defocusTextFields() {
+    public void setTextFieldsUnfocused() {
         settingsNameField.setFocusTraversable(false);
         settingsEmailField.setFocusTraversable(false);
     }
-    private void setDataBaseAvatarPicture() throws SQLException {
-        settingsAvatarLabel.getStyleClass().clear();
+    private void setAvatarPicture() throws SQLException {
+        settingsAvatar.getStyleClass().clear();
         if (UsersDataBase.getAvatarWithId(mainUserId) != null) {
             byte[] blobBytes = UsersDataBase.getAvatarWithId(mainUserId);
             assert blobBytes != null;
@@ -118,58 +88,90 @@ public class SettingsWindow extends MainWindowController {
             imageView.setFitHeight(155);
             imageView.setFitWidth(155);
             imageView.setSmooth(true);
-            settingsAvatarLabel.setGraphic(imageView);
+            settingsAvatar.setGraphic(imageView);
             Circle clip = new Circle();
             clip.setLayoutX(77.5);
             clip.setLayoutY(77.5);
             clip.setRadius(77.5);
-            settingsAvatarLabel.setClip(clip);
+            settingsAvatar.setClip(clip);
         } else {
-            settingsAvatarLabel.getStyleClass().add("settings-avatar");
+            settingsAvatar.getStyleClass().add("settings-avatar");
         }
     }
-    private void setNameInField() throws SQLException {
+    private void setNameInsideField() throws SQLException {
         String mainUserName = UsersDataBase.getNameWithId(mainUserId);
         settingsNameField.setText(mainUserName);
     }
-    private void setEmailInField() throws SQLException {
+    private void setEmailInsideField() throws SQLException {
         String mainUserEmail = UsersDataBase.getEmailWithId(mainUserId);
         settingsEmailField.setText(mainUserEmail);
     }
     private void hideErrorLabels() {
         // Setting all error label to "invisible" mode
-        settingsNameExceptionLabel.setVisible(false);
-        settingsEmailExceptionLabel.setVisible(false);
+        settingsNameErrorMessage.setVisible(false);
+        settingsEmailErrorMessage.setVisible(false);
     }
-    private void putAvatarButtonsToFront() {
-        buttonsBackgroundOverlay.toFront();
+    private void setAvatarButtonsToFront() {
+        buttonsOverlay.toFront();
     }
     private void hideAvatarButtonsElements() {
         // Hiding change and delete avatar buttons
-        buttonsBackgroundPane.setVisible(false);
-        buttonsBackgroundOverlay.setVisible(false);
+        buttonsBackground.setVisible(false);
+        buttonsOverlay.setVisible(false);
     }
 
 
-    private void checkEvent(MouseEvent mouseEvent) {
-        if (mouseEvent.getButton() == MouseButton.SECONDARY) {
-            Point2D paneCoordinates = settingsAvatarLabel.localToParent(mouseEvent.getX(), mouseEvent.getY());
-            double x = paneCoordinates.getX();
-            double y = paneCoordinates.getY();
-            showAvatarsButton(x,y);
-        }
+    // Set Up Click Handlers
+    public void setupClickHandlers() {
+        // Consume the event to prevent it from affecting backgroundPane
+        settingsOverlay.setOnMouseClicked(Event::consume);
+
+        // Set event handler for backgroundPane
+        settingsBackground.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                hideWindow();
+            }
+        });
+
+        // Set event handler for avatar label
+        settingsAvatar.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.SECONDARY) {
+                Point2D paneCoordinates = settingsAvatar.localToParent(clickEvent.getX(), clickEvent.getY());
+                double x = paneCoordinates.getX();
+                double y = paneCoordinates.getY();
+                showAvatarsButton(x,y);
+            }
+        });
     }
+
+
+    // Show Opening Effect
+    private void showOpeningEffect() {
+        // Appearing time
+        FadeTransition FadeIn = new FadeTransition(Duration.millis(180),settingsBackground);
+        FadeIn.setFromValue(0);
+        FadeIn.setToValue(1);
+        FadeIn.play();
+
+        // Appearing move to left
+        TranslateTransition translateIn = new TranslateTransition(Duration.millis(180),settingsOverlay);
+        translateIn.setFromX(0);
+        translateIn.setToX(-35);
+        translateIn.play();
+    }
+
+
     private void showAvatarsButton(double x,double y) {
         // Setting buttons visibility, creating background pane
-        buttonsBackgroundOverlay.setVisible(true);
-        buttonsBackgroundPane.setVisible(true);
-        buttonsBackgroundOverlay.setLayoutX(x);
-        buttonsBackgroundOverlay.setLayoutY(y);
+        buttonsOverlay.setVisible(true);
+        buttonsBackground.setVisible(true);
+        buttonsOverlay.setLayoutX(x);
+        buttonsOverlay.setLayoutY(y);
 
         // When you click away, buttons disappear
-        buttonsBackgroundPane.setOnMouseClicked(event -> {
-            buttonsBackgroundOverlay.setVisible(false);
-            buttonsBackgroundPane.setVisible(false);
+        buttonsBackground.setOnMouseClicked(event -> {
+            buttonsOverlay.setVisible(false);
+            buttonsBackground.setVisible(false);
         });
 
         // When you click "change" button
@@ -179,20 +181,18 @@ public class SettingsWindow extends MainWindowController {
                 newAvatarPath = selectedFile.getPath();
                 setAvatarPicture(selectedFile.getPath());
             }
-            buttonsBackgroundOverlay.setVisible(false);
-            buttonsBackgroundPane.setVisible(false);
+            buttonsOverlay.setVisible(false);
+            buttonsBackground.setVisible(false);
         });
 
         // When you click "delete" button
         deleteButton.setOnMouseClicked(ActionEvent -> {
             newAvatarPath = "-";
             setDefaultAvatar();
-            buttonsBackgroundOverlay.setVisible(false);
-            buttonsBackgroundPane.setVisible(false);
+            buttonsOverlay.setVisible(false);
+            buttonsBackground.setVisible(false);
         });
     }
-
-
     private File getFileFromFileChooser() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select an image");
@@ -204,17 +204,17 @@ public class SettingsWindow extends MainWindowController {
         imageView.setFitHeight(155);
         imageView.setFitWidth(155);
         imageView.setSmooth(true);
-        settingsAvatarLabel.setGraphic(imageView);
+        settingsAvatar.setGraphic(imageView);
         Circle clip = new Circle();
         clip.setLayoutX(77.5);
         clip.setLayoutY(77.5);
         clip.setRadius(77.5);
-        settingsAvatarLabel.setClip(clip);
+        settingsAvatar.setClip(clip);
     }
     private void setDefaultAvatar() {
-        settingsAvatarLabel.setGraphic(null);
-        settingsAvatarLabel.getStyleClass().clear();
-        settingsAvatarLabel.getStyleClass().add("settings-avatar");
+        settingsAvatar.setGraphic(null);
+        settingsAvatar.getStyleClass().clear();
+        settingsAvatar.getStyleClass().add("settings-avatar");
     }
     private String sanitize(String input) {
         return (input == null) ? "" : input.trim();
@@ -267,20 +267,20 @@ public class SettingsWindow extends MainWindowController {
     }
     private boolean nameIsValid(String name) throws SQLException {
         if (name.isEmpty() || !isNameFormatValid(name)) {
-            setErrorNameFieldStyle(settingsNameField,settingsNameExceptionLabel,"Invalid information");
+            setErrorNameFieldStyle(settingsNameField,settingsNameErrorMessage,"Invalid information");
             emailGroup.setTranslateY(20);
             return false;
         }
 
         if (name.length() > 24) {
-            setErrorNameFieldStyle(settingsNameField,settingsNameExceptionLabel,"Name is too long! ( max. 25 character )");
+            setErrorNameFieldStyle(settingsNameField,settingsNameErrorMessage,"Name is too long! ( max. 25 character )");
             return false;
         }
 
         boolean userPresenceInDataBase = UsersDataBase.getUserPresence(name);
         String mainUserOldName = UsersDataBase.getNameWithId(mainUserId);
         if (userPresenceInDataBase && !name.equals(mainUserOldName)) {
-            setErrorNameFieldStyle(settingsNameField,settingsNameExceptionLabel,"Name is already taken!");
+            setErrorNameFieldStyle(settingsNameField,settingsNameErrorMessage,"Name is already taken!");
             return false;
         }
 
@@ -288,24 +288,25 @@ public class SettingsWindow extends MainWindowController {
     }
     private boolean emailIsValid(String email) throws SQLException {
         if (!email.isEmpty() && !isEmailFormatValid(email)) {
-            setErrorEmailFieldStyle(settingsEmailField,settingsEmailExceptionLabel,"Invalid information");
+            setErrorEmailFieldStyle(settingsEmailField,settingsEmailErrorMessage,"Invalid information");
             return false;
         }
 
         if (email.length() > 38) {
-            setErrorEmailFieldStyle(settingsNameField,settingsNameExceptionLabel,"Name is too long! ( max. 25 character )");
+            setErrorEmailFieldStyle(settingsNameField,settingsEmailErrorMessage,"Name is too long! ( max. 25 character )");
             return false;
         }
 
         boolean userPresenceInDataBase = UsersDataBase.getUserPresence(email);
         String mainUserOldEmail = UsersDataBase.getEmailWithId(mainUserId);
         if (userPresenceInDataBase && !email.equals(mainUserOldEmail)) {
-            setErrorEmailFieldStyle(settingsEmailField,settingsEmailExceptionLabel,"Email is already taken!");
+            setErrorEmailFieldStyle(settingsEmailField,settingsEmailErrorMessage,"Email is already taken!");
             return false;
         }
 
         return true;
     }
+
 
     private void updateDataBaseAvatar() throws SQLException, FileNotFoundException {
         if (newAvatarPath.isEmpty()) {
@@ -358,17 +359,18 @@ public class SettingsWindow extends MainWindowController {
 
         if (UsersDataBase.getEmailWithId(mainUserId) == null) {
             mainEmailLabel.setVisible(false);
-            mainNameLabel.setLayoutY(30);
+            mainNameLabel.setLayoutY(32);
         }
     }
+
 
     @FXML
     public void saveInformation() throws SQLException, FileNotFoundException {
         String name = sanitize(settingsNameField.getText());
         String email = sanitize(settingsEmailField.getText());
 
-        setDefaultNameFieldStyle(settingsNameField,settingsNameExceptionLabel);
-        setDefaultEmailFieldStyle(settingsEmailField,settingsEmailExceptionLabel);
+        setDefaultNameFieldStyle(settingsNameField,settingsNameErrorMessage);
+        setDefaultEmailFieldStyle(settingsEmailField,settingsEmailErrorMessage);
         emailGroup.setTranslateY(0);
 
         boolean nameIsValid = nameIsValid(name);
@@ -385,11 +387,11 @@ public class SettingsWindow extends MainWindowController {
     }
     @FXML
     public void hideWindow() {
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(180), settingsPane);
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(180), settingsOverlay);
         fadeOut.setFromValue(1);
         fadeOut.setToValue(0);
         fadeOut.setOnFinished(event -> {
-            mainAnchorPane.getChildren().remove(settingsBackgroundPane);
+            mainAnchorPane.getChildren().remove(settingsBackground);
         });
         fadeOut.play();
     }
@@ -408,7 +410,7 @@ public class SettingsWindow extends MainWindowController {
             newLoginStage.show();  // Show the login window
         } catch (Exception e) {
             // Handle any exceptions (like FXML loading issues)
-            settingsEmailExceptionLabel.setText(e.getMessage());
+            settingsEmailErrorMessage.setText(e.getMessage());
         }
     }
 

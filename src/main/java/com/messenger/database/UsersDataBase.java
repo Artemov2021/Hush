@@ -12,19 +12,31 @@ public class UsersDataBase {
     private static final String user = "root";
     private static final String password = "112233";
 
-    public static int addUser(String identifier,String userPassword) throws SQLException {
-        String statement = "INSERT INTO users (name,password,email,avatar_picture) VALUES (?,?,?,?)";
+    public static int addUser(String identifier, String userPassword) throws SQLException {
+        String statement = "INSERT INTO users (name, password, email, avatar_picture) VALUES (?, ?, ?, ?)";
 
-        String userName = isEmailOrName(identifier).equals("name") ? identifier : "User"+(getLength()+1);
+        String userName = isEmailOrName(identifier).equals("name") ? identifier : "User" + (getLength() + 1);
         String userEmail = isEmailOrName(identifier).equals("email") ? identifier : null;
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
-            PreparedStatement prepareStatement = connection.prepareStatement(statement);
-            prepareStatement.setString(1,userName);
-            prepareStatement.setString(2,userPassword);
-            prepareStatement.setString(3,userEmail);
-            prepareStatement.setString(4,null);
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            // Prepare the statement and request generated keys
+            PreparedStatement prepareStatement = connection.prepareStatement(statement, Statement.RETURN_GENERATED_KEYS);
 
+            // Set the values for the placeholders in the query
+            prepareStatement.setString(1, userName);
+            prepareStatement.setString(2, userPassword);
+            prepareStatement.setString(3, userEmail);
+            prepareStatement.setString(4, null); // avatar_picture is being set to null
+
+            // Execute the statement
+            int affectedRows = prepareStatement.executeUpdate();
+
+            // If no rows were affected, something went wrong
+            if (affectedRows == 0) {
+                throw new SQLException("User insertion failed, no rows affected.");
+            }
+
+            // Retrieve generated keys
             try (ResultSet generatedKeys = prepareStatement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     return generatedKeys.getInt(1); // Or getLong(1) if your ID is a long
@@ -102,7 +114,7 @@ public class UsersDataBase {
     }
 
     public static int getIdWithName(String name) throws SQLException {
-        String statement = "SELECT mainUserId FROM users WHERE name = ?";
+        String statement = "SELECT id FROM users WHERE name = ?";
         try (var conn = DriverManager.getConnection(url,user,password)) {
             var stmt = conn.prepareStatement(statement);
             stmt.setString(1,name);
@@ -115,7 +127,7 @@ public class UsersDataBase {
     }
 
     public static int getIdWithEmail(String email) throws SQLException {
-        String statement = "SELECT mainUserId FROM users WHERE email = ?";
+        String statement = "SELECT id FROM users WHERE email = ?";
         try (var conn = DriverManager.getConnection(url,user,password)) {
             var stmt = conn.prepareStatement(statement);
             stmt.setString(1,email);
@@ -127,24 +139,12 @@ public class UsersDataBase {
         return -1;
     }
 
-    public static String getEmailWithName( String name ) throws SQLException {
-        String statement = "SELECT email FROM users WHERE name = ?";
-        try (var conn = DriverManager.getConnection(url)) {
-            var stmt = conn.prepareStatement(statement);
-            stmt.setString(1, name);
-            ResultSet result = stmt.executeQuery();
-            if (result.next()) {
-                return result.getString("email");
-            }
-        }
-        return null;
-    }
 
-    public static int getContactsAmount(int id) throws SQLException {
-        String statement = "SELECT COUNT(*) contacts_amount FROM contacts WHERE user_id = ?";
+    public static int getContactsAmount(int userId) throws SQLException {
+        String statement = "SELECT COUNT(*) AS contacts_amount FROM contacts WHERE user_id = ?";
         try (var conn = DriverManager.getConnection(url,user,password)) {
             PreparedStatement stmt = conn.prepareStatement(statement);
-            stmt.setInt(1,id);
+            stmt.setInt(1, userId);
             ResultSet result = stmt.executeQuery();
             if (result.next()) {
                 return result.getInt("contacts_amount");
@@ -154,7 +154,7 @@ public class UsersDataBase {
     }
 
     public static int getLength() throws SQLException {
-        String statement = "SELECT MAX(mainUserId) AS last_id FROM users";
+        String statement = "SELECT MAX(id) AS last_id FROM users";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             Statement stmt = connection.createStatement();
             ResultSet result = stmt.executeQuery(statement);

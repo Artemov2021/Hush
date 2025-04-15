@@ -18,13 +18,58 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class AuthSingUpController extends AuthWindow {
+public class AuthSingUpController {
     @FXML private AnchorPane anchorPane;
+    @FXML private TextField identifierTextField;
+    @FXML private Label identifierTextFieldLabel;
+    @FXML private PasswordField passwordField;
+    @FXML private Label passwordFieldLabel;
+    @FXML private Label identifierErrorLabel;
+    @FXML private Label passwordErrorLabel;
     @FXML private Button singUpButton;
+    @FXML private Button accountButton;
+    @FXML private Label extraLabel;
+    protected Group passwordGroup;
+    private int userId;
+
 
     @FXML
     public void initialize() {
-        super.initialize();
+        setFieldsUnfocused();
+        setErrorLabelsInvisible();
+        setAccountButtonUnderlined();
+        setPasswordGroup();
+        setFieldsStyle();
+        setSingUpButtonAction();
+        setAccountButtonAction();
+    }
+    private void setFieldsUnfocused() {
+        identifierTextField.setFocusTraversable(false);
+        passwordField.setFocusTraversable(false);
+    }
+    private void setErrorLabelsInvisible() {
+        identifierErrorLabel.setVisible(false);
+        passwordErrorLabel.setVisible(false);
+    }
+    private void setAccountButtonUnderlined() {
+        accountButton.setUnderline(true);
+    }
+    private void setPasswordGroup() {
+        passwordGroup = new Group(passwordField,passwordFieldLabel, passwordErrorLabel);
+        anchorPane.getChildren().add(passwordGroup);
+    }
+    private void setFieldsStyle() {
+        var emailFieldStyled = new AuthField(identifierTextField,identifierTextFieldLabel);
+        emailFieldStyled.setLabelChanges(-26, -2);
+        emailFieldStyled.setLabelMovePath(-5, -24);
+        emailFieldStyled.setStyle();
+
+        var passwordFieldStyled = new AuthField(passwordField,passwordFieldLabel);
+        passwordFieldStyled.setLabelChanges(-11, -2);
+        passwordFieldStyled.setLabelMovePath(-5, -24);
+        passwordFieldStyled.setStyle();
+    }
+    private void setSingUpButtonAction() {
         singUpButton.setOnMouseClicked(event -> {
             if (event.getButton() == MouseButton.PRIMARY) {
                 try {
@@ -34,6 +79,8 @@ public class AuthSingUpController extends AuthWindow {
                 }
             }
         });
+    }
+    private void setAccountButtonAction() {
         accountButton.setOnMouseClicked(event -> {
             if (event.getButton() == MouseButton.PRIMARY) {
                 openLogInWindow();
@@ -41,6 +88,20 @@ public class AuthSingUpController extends AuthWindow {
             }
         });
     }
+
+
+    protected void setIdentifierDefaultStyle() {
+        identifierErrorLabel.setVisible(false);
+        identifierTextField.getStyleClass().clear();
+        identifierTextField.getStyleClass().add("input-field");
+    }
+    protected void setPasswordDefaultStyle() {
+        passwordErrorLabel.setVisible(false);
+        passwordField.getStyleClass().clear();
+        passwordField.getStyleClass().add("input-field");
+        passwordGroup.setTranslateY(0);
+    }
+
 
     protected void handleSignupClick() throws SQLException {
         boolean isIdentifierValid = getIdentifierValidity().equals("valid");
@@ -60,6 +121,7 @@ public class AuthSingUpController extends AuthWindow {
         }
 
     }
+
 
     private String getIdentifierType(String identifier) {
         String emailPattern = "^[a-zA-Z0-9._@\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$";
@@ -104,6 +166,7 @@ public class AuthSingUpController extends AuthWindow {
         return "valid";
     }
 
+
     private void showIdentifierErrorMessage(String errorMessage) {
         identifierErrorLabel.setVisible(true);
         identifierErrorLabel.setText(errorMessage);
@@ -119,6 +182,7 @@ public class AuthSingUpController extends AuthWindow {
         passwordField.getStyleClass().add("input-field-error");
     }
 
+
     private void singUpAndOpenMainWindow() throws SQLException {
         String identifier = identifierTextField.getText().trim();
         String password = passwordField.getText().trim();
@@ -128,12 +192,16 @@ public class AuthSingUpController extends AuthWindow {
         closeSingUpWindow();
     }
     private void insertUserIntoDB(String identifier,String password) throws SQLException {
-        setMainUserId(UsersDataBase.addUser(identifier,password));
+        userId = UsersDataBase.addUser(identifier,password);
     }
     private void openMainWindow() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/fxml/MainWindow.fxml"));
             Parent root = loader.load();
+
+            MainWindowController controller = loader.getController();
+            controller.setMainUserId(userId);
+            controller.initializeWithValue(); // now it's safe to load user dat
 
             Scene scene = new Scene(root);
             Stage newStage = new Stage();
@@ -148,6 +216,7 @@ public class AuthSingUpController extends AuthWindow {
     private void closeSingUpWindow() {
         ((Stage) (anchorPane.getScene().getWindow())).close();
     }
+
 
     public void openLogInWindow() {
         try {

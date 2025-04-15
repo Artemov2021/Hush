@@ -1,5 +1,6 @@
 package com.messenger.main;
 
+import com.messenger.database.ChatsDataBase;
 import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
 import javafx.animation.FadeTransition;
@@ -31,38 +32,60 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MainContact extends MainWindowController {
-    @FXML
-    private AnchorPane mainContactAnchorPane;
-    @FXML
-    private Pane mainContactPane;
-    @FXML
-    private Label mainContactAvatarLabel;
-    @FXML
-    private Label mainContactNameLabel;
-    @FXML
-    private Label mainContactMessageLabel;
-    @FXML
-    private Label mainContactTimeLabel;
+public class MainContactController extends MainWindowController {
+    @FXML private AnchorPane mainContactAnchorPane;
+    @FXML public Pane mainContactPane;
+    @FXML private Label mainContactAvatarLabel;
+    @FXML private Label mainContactNameLabel;
+    @FXML protected Label mainContactMessageLabel;
+    @FXML protected Label mainContactTimeLabel;
+    MainWindowController mainWindowController;
 
-    private VBox mainContactsVBox;
-    private int mainUserId;
-    private int contactId;
+    protected int contactId;
 
-    public void setMainUserId(int id) {
-        this.mainUserId = id;
+
+    public void injectUIElements(MainWindowController source) {
+        this.mainWindowController = source;
+        this.mainAnchorPane = source.mainAnchorPane;
+        this.mainContactsVBox = source.mainContactsVBox;
     }
-    public void setContactId(int id) {
+    public final void initializeContactPane() throws SQLException {
+        setContactName(UsersDataBase.getNameWithId(contactId));
+        setContactAvatar(UsersDataBase.getAvatarWithId(contactId));
+        setContactLastMessage();
+        setContactLastMessageTime();
+        mainContactPane.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                try {
+                    showChat();
+                } catch (IOException | SQLException | ExecutionException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (clickEvent.getButton() == MouseButton.SECONDARY) {
+                int x = (int) convertToTopLevelAnchorPaneCoordinates(mainContactPane,clickEvent.getX(),clickEvent.getY()).getX();
+                int y = (int) convertToTopLevelAnchorPaneCoordinates(mainContactPane,clickEvent.getX(),clickEvent.getY()).getY();
+                if (!mainContactPane.getStyleClass().get(0).equals("contact-background-pane-focused")) {
+                    mainContactPane.getStyleClass().clear();
+                    setPaneHoveredStyle();
+                }
+                showDeleteContactButton(x,y);
+            }
+        });
+    }
+    public final void setContactId(int id) {
         this.contactId = id;
+        setContactPaneId(id);
     }
-    public void setName(String name) {
+    public final void setContactPaneId(int id) {
+        mainContactPane.setId("#mainContactPane"+id);
+    }
+    public final void setContactName(String name) {
         mainContactNameLabel.setText(name);
     }
-    public void setAvatar(int contactId) throws SQLException {
+    public final void setContactAvatar(byte[] avatarPicture) throws SQLException {
         if (UsersDataBase.getAvatarWithId(contactId) != null) {
-            byte[] blobBytes = UsersDataBase.getAvatarWithId(contactId);
-            assert blobBytes != null;
-            ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
+            assert avatarPicture != null;
+            ByteArrayInputStream byteStream = new ByteArrayInputStream(avatarPicture);
             ImageView imageView = new ImageView(new Image(byteStream));
             imageView.setFitHeight(45);
             imageView.setFitWidth(45);
@@ -75,30 +98,34 @@ public class MainContact extends MainWindowController {
             mainContactAvatarLabel.setClip(clip);
         }
     }
-    public void setMessage(String message,int messageId) {
+    public final void setContactLastMessage() throws SQLException {
+        int lastMessageId = ChatsDataBase.getLastMessageId(mainUserId,contactId);
+        String lastMessage = ChatsDataBase.getLastMessage(mainUserId,contactId);
+
         mainContactMessageLabel.getStyleClass().clear();
 
         // if there is no last message and its mainUserId ( chat is empty )
-        if (message == null && messageId == -1) {
+        if (lastMessage == null && lastMessageId == -1) {
             mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
             mainContactMessageLabel.setText("");
 
-        // if there is no message, but there is message mainUserId ( means it is a picture )
-        } else if (message == null && messageId != -1) {
+        // if there is a message id, but no message ( means it is a picture )
+        } else if (lastMessageId != -1 && lastMessage == null) {
             mainContactMessageLabel.setStyle("-fx-text-fill: white;");
             mainContactMessageLabel.setText("Picture");
 
         // otherwise ( if there is last message )
         } else {
             mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
-            mainContactMessageLabel.setText(message);
+            mainContactMessageLabel.setText(lastMessage);
         }
 
     }
-    public void setTime(String fullDate) {
+    public final void setContactLastMessageTime() throws SQLException {
+        String lastMessageFullDate = ChatsDataBase.getLastMessageTime(mainUserId,contactId);
         String pattern = "(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}:\\d{2})"; // Extracts YYYY, MM, DD, HH:mm
         Pattern compiledPattern = Pattern.compile(pattern);
-        Matcher matcher = compiledPattern.matcher(fullDate);
+        Matcher matcher = compiledPattern.matcher(lastMessageFullDate);
 
         if (matcher.find()) {
             String year = matcher.group(1);
@@ -118,57 +145,25 @@ public class MainContact extends MainWindowController {
             mainContactTimeLabel.setText(""); // Default to empty if no match
         }
     }
-    public void setPaneId(int contactId) {
-        mainContactPane.setId("mainContactPane"+contactId);
-    }
-    public void setMainAnchorPane(AnchorPane anchorPane) {
-        this.mainAnchorPane = anchorPane;
-    }
-    public void setMainAnchorPaneId() {
-        mainContactAnchorPane.setId("mainContactAnchorPane"+contactId);
-    }
-    public void setMainContactVBox(VBox vbox) {
-        this.mainContactsVBox = vbox;
-    }
-    public void initialize() {
-        mainContactPane.setOnMouseClicked(clickEvent -> {
-            if (clickEvent.getButton() == MouseButton.PRIMARY) {
-                try {
-                    showChat();
-                } catch (IOException | SQLException | ExecutionException | InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            } else if (clickEvent.getButton() == MouseButton.SECONDARY) {
-                int x = (int) convertToTopLevelAnchorPaneCoordinates(mainContactPane,clickEvent.getX(),clickEvent.getY()).getX();
-                int y = (int) convertToTopLevelAnchorPaneCoordinates(mainContactPane,clickEvent.getX(),clickEvent.getY()).getY();
-                if (!mainContactPane.getStyleClass().get(0).equals("contact-background-pane-focused")) {
-                    mainContactPane.getStyleClass().clear();
-                    setPaneHoveredStyle();
-                }
-                showDeleteContactButton(x,y);
-            }
-        });
-    }
 
-    public void showChat() throws IOException, SQLException, ExecutionException, InterruptedException {
-        int currentUserId = Integer.parseInt(mainContactPane.getId().split("mainContactPane")[1]);
 
+    private void showChat() throws IOException, SQLException, ExecutionException, InterruptedException {
         setPanesNormalStyle();
         setCurrentPaneFocusedStyle();
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainChat.fxml"));
         Parent chatRoot = fxmlLoader.load();
 
-//        MainChatController mainChatController = fxmlLoader.getController();
-//        mainChatController.setMainAnchorPane(mainAnchorPane);
-//        mainChatController.setMainUserId(mainUserId);
-//        mainChatController.setContactId(currentUserId);
-//        mainChatController.setMainContactPane(mainContactPane);
-//        mainChatController.initializeWithValue();
+        MainChatController mainChatController = fxmlLoader.getController();
+        mainChatController.setContactId(contactId);
+        mainChatController.injectMainUIElements(mainWindowController);
+        mainChatController.injectContactUIElements(this);
+        mainChatController.initializeChat();
 
         mainAnchorPane.getChildren().removeIf(child -> Objects.equals(child.getId(), "chatAnchorPane"));
         mainAnchorPane.getChildren().add(0,chatRoot);
     }
+
 
     private void setPanesNormalStyle() {
         VBox mainVBox = (VBox) mainAnchorPane.lookup("#mainContactsVBox");
@@ -298,7 +293,7 @@ public class MainContact extends MainWindowController {
         confirmationBackground.getChildren().add(confirmationDeleteButton);
         confirmationDeleteButton.setOnMouseClicked(clickEvent -> {
             ContactsDataBase.deleteContact(mainUserId,contactId);
-            MainContactList.removeContact(contactId);
+            mainContactsVBox.getChildren().remove(mainContactAnchorPane);
             mainAnchorPane.getChildren().remove(confirmationOverlay);
         });
 
