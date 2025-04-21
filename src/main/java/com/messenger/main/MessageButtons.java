@@ -1,7 +1,9 @@
-package com.messenger.main.chat;
+package com.messenger.main;
 
 import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
+import com.messenger.main.MainChatController;
+import com.messenger.main.MainContactController;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
@@ -28,21 +30,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
-public class MessageButtons {
-    private AnchorPane mainAnchorPane;
-    private VBox mainChatVBox;
-    private ScrollPane mainChatScrollPane;
-    private int mainUserId;
-    private Label contactLastMessage;
-    private Label contactLastMessageTime;
+public class MessageButtons extends MainChatController {
 
-    public MessageButtons(AnchorPane mainAnchorPane,VBox mainChatVBox,ScrollPane mainChatScrollPane,int mainUserId,Label contactLastMessage,Label contactLastMessageTime) {
-        this.mainAnchorPane = mainAnchorPane;
-        this.mainChatVBox = mainChatVBox;
-        this.mainChatScrollPane = mainChatScrollPane;
-        this.mainUserId = mainUserId;
-        this.contactLastMessage = contactLastMessage;
-        this.contactLastMessageTime = contactLastMessageTime;
+    public MessageButtons(MainChatController mainChatController) {
+       this.mainAnchorPane = mainChatController.mainAnchorPane;
+       this.chatVBox = mainChatController.chatVBox;
     }
 
     public void showMessageButtons(int clickPlaceX,int clickPlaceY,int messageId) {
@@ -256,7 +248,7 @@ public class MessageButtons {
         replyWrapperMessage.setMaxHeight(17);
         replyWrapperMessage.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
-                HBox repliedmessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
+                HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
                 double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
                 smoothScrollTo(hboxPosition,0.4);
                 fadeOutBackgroundColor(repliedmessageHBox);
@@ -324,7 +316,7 @@ public class MessageButtons {
         replyWrapperMessage.setMaxHeight(17);
         replyWrapperMessage.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
-                HBox repliedmessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
+                HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
                 double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
                 smoothScrollTo(hboxPosition,0.4);
                 fadeOutBackgroundColor(repliedmessageHBox);
@@ -371,7 +363,7 @@ public class MessageButtons {
         mainAnchorPane.getChildren().remove(replyWrapper);
     }
     private void setVBoxBottomPadding(int bottomPadding) {
-        mainChatVBox.setPadding(new Insets(0, 0, bottomPadding, 0));
+        chatVBox.setPadding(new Insets(0, 0, bottomPadding, 0));
     }
     private void raiseScrollDownButton() {
         Label scrollDownButton = (Label) mainAnchorPane.lookup("#scrollDownButton");
@@ -383,9 +375,9 @@ public class MessageButtons {
     }
     private double getCenteredScrollPosition(HBox targetHBox) {
         double hboxY = targetHBox.localToScene(0, 0).getY(); // Y position of HBox in scene
-        double vboxY = mainChatVBox.localToScene(0, 0).getY(); // Y position of VBox in scene
-        double viewportHeight = mainChatScrollPane.getViewportBounds().getHeight(); // Viewport height
-        double totalHeight = mainChatVBox.getBoundsInLocal().getHeight(); // Total VBox height
+        double vboxY = chatVBox.localToScene(0, 0).getY(); // Y position of VBox in scene
+        double viewportHeight = chatScrollPane.getViewportBounds().getHeight(); // Viewport height
+        double totalHeight = chatVBox.getBoundsInLocal().getHeight(); // Total VBox height
 
         // Compute scroll position to center the HBox
         double position = (hboxY - vboxY - (viewportHeight / 2) + (targetHBox.getBoundsInLocal().getHeight() / 2))
@@ -395,7 +387,7 @@ public class MessageButtons {
         return Math.max(0, Math.min(1, position));
     }
     private void smoothScrollTo(double targetValue, double durationInSeconds) {
-        double startValue = mainChatScrollPane.getVvalue(); // Current scroll position
+        double startValue = chatScrollPane.getVvalue(); // Current scroll position
         double distance = targetValue - startValue; // How much to scroll
 
         Timeline timeline = new Timeline();
@@ -405,7 +397,7 @@ public class MessageButtons {
             double interpolatedValue = startValue + distance * progress; // Linear interpolation
 
             timeline.getKeyFrames().add(new KeyFrame(Duration.millis(i * (1000.0 / 60)),
-                    event -> mainChatScrollPane.setVvalue(interpolatedValue)));
+                    event -> chatScrollPane.setVvalue(interpolatedValue)));
         }
 
         timeline.setCycleCount(1);
@@ -540,8 +532,8 @@ public class MessageButtons {
         removeMessageHBox(messageId);
     }
     private void moveMessageAvatarBack(int messageId,int senderId,int receiverId) throws SQLException {
-        HBox targetMessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
-        HBox previousMessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId));
+        HBox targetMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+        HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId));
 
         boolean hasAvatarLabel = targetMessageHBox.lookup("#messageAvatarLabel"+messageId) != null;
         boolean hasSameSender = senderId == (int) ChatsDataBase.getMessage(ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId)).get(1);
@@ -555,22 +547,22 @@ public class MessageButtons {
         int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId);
         if (previousMessageId == ChatsDataBase.getLastMessageId(senderId,receiverId)) {
             String previousMessage = (String) ChatsDataBase.getMessage(previousMessageId).get(3);
-            contactLastMessage.setText(previousMessage);
+            mainContactMessageLabel.setText(previousMessage);
         }
     }
     private void changeLastMessageTime(int messageId,int senderId,int receiverId) throws SQLException {
         int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId);
         if (previousMessageId == ChatsDataBase.getLastMessageId(senderId,receiverId)) {
             String previousMessageTime = getMessageHours((String) ChatsDataBase.getMessage(previousMessageId).get(6));
-            contactLastMessageTime.setText(previousMessageTime);
+            mainContactTimeLabel.setText(previousMessageTime);
         }
     }
     private void deleteDateLabel(int messageId) {
-        HBox messageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
-        int elementIndexBeforeDeletedMessage = mainChatVBox.getChildren().indexOf(messageHBox)-1;
-        boolean isPreviousDateLabel = mainChatVBox.getChildren().get(elementIndexBeforeDeletedMessage) instanceof Label;
+        HBox messageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+        int elementIndexBeforeDeletedMessage = chatVBox.getChildren().indexOf(messageHBox)-1;
+        boolean isPreviousDateLabel = chatVBox.getChildren().get(elementIndexBeforeDeletedMessage) instanceof Label;
         if (isPreviousDateLabel) {
-            mainChatVBox.getChildren().remove(elementIndexBeforeDeletedMessage);
+            chatVBox.getChildren().remove(elementIndexBeforeDeletedMessage);
         }
     }
     private void addNewAvatarLabel(HBox messageHBox,int messageId,int senderId) throws SQLException {
@@ -584,8 +576,8 @@ public class MessageButtons {
         HBox.setMargin(messageStackPane, (senderId == mainUserId) ? new Insets(0, 13, 0, 0) : new Insets(0, 0, 0, 13));
     }
     private void removeMessageHBox(int messageId) {
-        HBox targetMessageHBox = (HBox) mainChatVBox.lookup("#messageHBox"+messageId);
-        mainChatVBox.getChildren().remove(targetMessageHBox);
+        HBox targetMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+        chatVBox.getChildren().remove(targetMessageHBox);
     }
     private void setMessageAvatar(Label avatar,int senderId) throws SQLException {
         byte[] blobBytes = UsersDataBase.getAvatarWithId(senderId);
@@ -623,7 +615,7 @@ public class MessageButtons {
         // Get list of replied message IDs from DB
         List<Integer> ids = ChatsDataBase.getRepliedMessageIds(senderId, receiverId, messageId);
         List<HBox> foundHBoxes = ids.stream()
-                .map(id -> (HBox) mainChatVBox.lookup("#messageHBox" + id))
+                .map(id -> (HBox) chatVBox.lookup("#messageHBox" + id))
                 .filter(Objects::nonNull).toList();
 
         List<StackPane> messageessageStackPane = foundHBoxes.stream()

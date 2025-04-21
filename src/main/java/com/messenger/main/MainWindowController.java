@@ -244,7 +244,7 @@ public class MainWindowController {
     private int getVisibleBottomContactId() {
         // Get the last child in the VBox and extract its ID
         AnchorPane lastContactPane = (AnchorPane) mainContactsVBox.getChildren().get(mainContactsVBox.getChildren().size() - 1);
-        String contactIdString = lastContactPane.getChildren().get(0).getId().split("mainContactPane")[1];
+        String contactIdString = lastContactPane.getId().split("mainContactAnchorPane")[1];
         return Integer.parseInt(contactIdString);
     }
     private boolean hasMoreContacts() throws SQLException {

@@ -22,7 +22,7 @@
                </content>
             </ScrollPane>
             <Label layoutX="1.0" layoutY="3.0" prefHeight="78.0" prefWidth="1476.0" styleClass="chat-upper-background" />
-            <TextField fx:id="chatTextField" layoutX="1.0" layoutY="952.0" onAction="#saveAndDisplayCurrentTextMessage" prefHeight="58.0" prefWidth="1477.0" promptText="Write a message...." styleClass="chat-text-field" />
+            <TextField fx:id="chatTextField" layoutX="1.0" layoutY="952.0" onAction="#validateAndSendMessage" prefHeight="58.0" prefWidth="1477.0" promptText="Write a message...." styleClass="chat-text-field" />
             <Label fx:id="chatMainAvatar" layoutX="26.0" layoutY="20.0" onMouseClicked="#showContactFullAvatar" prefHeight="45.0" prefWidth="45.0" styleClass="chat-avatar-label">
                <cursor>
                   <Cursor fx:constant="DEFAULT" />
@@ -36,7 +36,7 @@
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Label>
-            <Label layoutX="1397.0" layoutY="962.0" onMouseClicked="#saveAndDisplayCurrentTextMessage" prefHeight="35.0" prefWidth="46.0" styleClass="chat-send-message-label">
+            <Label fx:id="sendMessageButton" layoutX="1397.0" layoutY="962.0" prefHeight="35.0" prefWidth="46.0" styleClass="chat-send-message-label">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor>

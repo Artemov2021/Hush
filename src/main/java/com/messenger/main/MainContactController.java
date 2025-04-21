@@ -58,7 +58,7 @@ public class MainContactController extends MainWindowController {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
                 try {
                     showChat();
-                } catch (IOException | SQLException | ExecutionException | InterruptedException e) {
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             } else if (clickEvent.getButton() == MouseButton.SECONDARY) {
@@ -77,7 +77,7 @@ public class MainContactController extends MainWindowController {
         setContactPaneId(id);
     }
     public final void setContactPaneId(int id) {
-        mainContactPane.setId("#mainContactPane"+id);
+        mainContactAnchorPane.setId("mainContactAnchorPane"+id);
     }
     public final void setContactName(String name) {
         mainContactNameLabel.setText(name);
@@ -147,7 +147,7 @@ public class MainContactController extends MainWindowController {
     }
 
 
-    private void showChat() throws IOException, SQLException, ExecutionException, InterruptedException {
+    private void showChat() throws Exception {
         setPanesNormalStyle();
         setCurrentPaneFocusedStyle();
 
@@ -155,7 +155,7 @@ public class MainContactController extends MainWindowController {
         Parent chatRoot = fxmlLoader.load();
 
         MainChatController mainChatController = fxmlLoader.getController();
-        mainChatController.setContactId(contactId);
+        mainChatController.setChatContactId(contactId);
         mainChatController.injectMainUIElements(mainWindowController);
         mainChatController.injectContactUIElements(this);
         mainChatController.initializeChat();

@@ -1,31 +1,27 @@
 package com.messenger.database;
 
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.shape.Circle;
+import com.messenger.main.ChatMessage;
 
-import javax.print.attribute.standard.JobHoldUntil;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class ChatsDataBase {
     private static final String url = "jdbc:mysql://127.0.0.1:3306/messengerdb";
     private static final String user = "root";
     private static final String password = "112233";
 
-    public static String getLastMessage(int mainUserId,int contactId) throws SQLException {
+    public static String getLastMessage(int senderId,int receiverId) throws SQLException {
         String statement = "SELECT message FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id DESC LIMIT 1";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
-            preparedStatement.setInt(1,mainUserId);
-            preparedStatement.setInt(2,contactId);
-            preparedStatement.setInt(3,mainUserId);
-            preparedStatement.setInt(4,contactId);
+            preparedStatement.setInt(1,senderId);
+            preparedStatement.setInt(2,receiverId);
+            preparedStatement.setInt(3,senderId);
+            preparedStatement.setInt(4,receiverId);
             ResultSet result = preparedStatement.executeQuery();
             if (result.next()) {
                 return result.getString("message");
@@ -114,8 +110,8 @@ public class ChatsDataBase {
         }
 
     }
-    public static List<ArrayList<Object>> getAllMessages(int mainUserId,int contactId) throws SQLException {
-        List<ArrayList<Object>> messages = new ArrayList<>();
+    public static ArrayList<ChatMessage> getAllMessages(int mainUserId, int contactId) throws SQLException {
+        ArrayList<ChatMessage> messages = new ArrayList<>();
         String statement = "SELECT * FROM chats WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY message_time ASC;";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
@@ -126,16 +122,8 @@ public class ChatsDataBase {
             preparedStatement.setInt(4,mainUserId);
             ResultSet result = preparedStatement.executeQuery();
             while (result.next()) {
-                ArrayList<Object> message = new ArrayList<>();
-                message.add(result.getInt("message_id"));
-                message.add(result.getInt("sender_id"));
-                message.add(result.getInt("receiver_id"));
-                message.add(result.getString("message"));
-                message.add(result.getBytes("picture"));
-                message.add(result.getInt("reply_message_id"));
-                message.add(result.getString("message_time"));
-                message.add(result.getString("message_type"));
-                message.add(result.getBoolean("received"));
+                int messageId = result.getInt("message_id");
+                ChatMessage message = new ChatMessage(messageId);
                 messages.add(message);
             }
         }
@@ -158,7 +146,7 @@ public class ChatsDataBase {
                 message.add((result.getInt("reply_message_id") == 0) ? (-1) : (result.getInt("reply_message_id")));
                 message.add(result.getString("message_time"));
                 message.add(result.getString("message_type"));
-                message.add(result.getString("received"));
+                message.add(result.getBoolean("received"));
             }
         }
         return message;
@@ -210,16 +198,16 @@ public class ChatsDataBase {
             preparedStatement.executeUpdate();
         }
     }
-    public static boolean messageExists(int mainUserId,int contactId,int messageId) throws SQLException {
+    public static boolean messageExists(int senderId,int receiverId,int messageId) throws SQLException {
         String statement = "SELECT * FROM chats WHERE message_id = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,messageId);
-            preparedStatement.setInt(2,mainUserId);
-            preparedStatement.setInt(3,contactId);
-            preparedStatement.setInt(4,contactId);
-            preparedStatement.setInt(5,mainUserId);
+            preparedStatement.setInt(2,senderId);
+            preparedStatement.setInt(3,receiverId);
+            preparedStatement.setInt(4,receiverId);
+            preparedStatement.setInt(5,senderId);
             ResultSet result = preparedStatement.executeQuery();
             if (result.next()) {
                 return true;
