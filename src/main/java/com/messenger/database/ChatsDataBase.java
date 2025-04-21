@@ -5,6 +5,9 @@ import com.messenger.main.ChatMessage;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -258,5 +261,38 @@ public class ChatsDataBase {
                 }
         }
         return -1; // Return -1 if no previous message is found
+    }
+    public static boolean isThereMessagesOnSameDay(int mainUserId, int contactId, int messageId, String fullTime) {
+        String sql = """
+        SELECT 1 FROM chats
+        WHERE DATE(message_time) = DATE(?) 
+          AND message_id != ?
+          AND (
+                (sender_id = ? AND receiver_id = ?)
+                OR
+                (sender_id = ? AND receiver_id = ?)
+              )
+        LIMIT 1
+        """;
+
+        try (Connection connection = DriverManager.getConnection(url, user, password);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            // Set parameters
+            preparedStatement.setString(1, fullTime);       // Full timestamp
+            preparedStatement.setInt(2, messageId);         // Exclude the original
+            preparedStatement.setInt(3, mainUserId);        // sender/receiver match
+            preparedStatement.setInt(4, contactId);
+            preparedStatement.setInt(5, contactId);
+            preparedStatement.setInt(6, mainUserId);
+
+            ResultSet result = preparedStatement.executeQuery();
+            return result.next(); // returns true if at least 1 match found
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }

@@ -44,7 +44,7 @@ public class MainChatController extends MainContactController {
     @FXML protected VBox chatVBox;
     @FXML private TextField chatTextField;
     @FXML private Label chatAddPictureButton;
-    @FXML private Label scrollDownButton;
+    @FXML protected Label scrollDownButton;
     @FXML private Label sendMessageButton;
 
 
@@ -217,6 +217,7 @@ public class MainChatController extends MainContactController {
     }
 
 
+
     // Chat Interface Initialization - FXML functions
     @FXML
     public void showContactFullAvatar() throws SQLException {
@@ -282,7 +283,6 @@ public class MainChatController extends MainContactController {
     }
 
 
-
     // Chat Loading: Small Functions
     private void setCurrentDateLabel() {
         LocalDate today = LocalDate.now();
@@ -310,29 +310,36 @@ public class MainChatController extends MainContactController {
         }
     }
     private void sendCurrentMessage() throws Exception {
-        String currentMessage = chatTextField.getText().trim();
-        String currentMessageType = getCurrentMessageType();
+        TextMessageType currentMessageType = getCurrentMessageType();
 
-        System.out.println(currentMessageType);
-
-        if (currentMessageType.contains("edit")) {
-            editChosenMessage();
-            updatePotentialLastMessage();
+        if (currentMessageType == TextMessageType.EDIT_WITH_TEXT) {
+            processMessageEdit();
         } else {
-            ensureUserInContacts(contactId);
-            insertAndDisplayMessage();
-            updateInteractionTime();
-            updateLastMessage(currentMessage);
-            updateLastMessageTime();
+            processMessageSend();
         }
 
-        removePotentialWrapper();
-        moveBackScrollDownButton();
-        clearChatInput();
+        finalizeMessageFlow();
     }
 
 
     // Message Sending: Small Functions
+    private void processMessageEdit() throws SQLException {
+        editChosenMessage();
+        updatePotentialLastMessage();
+    }
+    private void processMessageSend() throws Exception {
+        ensureUserInContacts(contactId);
+        insertAndDisplayMessage();
+        updateInteractionTime();
+        updateLastMessage();
+        updateLastMessageTime();
+    }
+    private void finalizeMessageFlow() {
+        removePotentialWrapper();
+        moveBackScrollDownButton();
+        updateScrollDownButtonVisibility();
+        clearChatInput();
+    }
     private void insertAndDisplayMessage() throws Exception {
         int currentMessageId = insertCurrentMessageIntoDB();
         displayCurrentMessage(currentMessageId);
@@ -361,13 +368,11 @@ public class MainChatController extends MainContactController {
         chosenMessageTextLabel.setText(currentMessage);
     }
     private void updatePotentialLastMessage() throws SQLException {
-        String currentMessage = chatTextField.getText().trim();
         int chosenMessageId = getEditWrapperId();
         boolean isLastMessage = chosenMessageId == ChatsDataBase.getLastMessageId(mainUserId,contactId);
 
         if (isLastMessage) {
-            updateLastMessage(currentMessage);
-            updateLastMessageTime();
+            updateLastMessage();
         }
     }
     private int insertCurrentMessageIntoDB() throws SQLException {
@@ -379,7 +384,7 @@ public class MainChatController extends MainContactController {
         byte[] picture = null;
         int replyMessageId = getReplyWrapperId();
         String messageTime = getCurrentFullTime();
-        String messageType = getCurrentMessageType();
+        String messageType = getConvertedCurrentDBMessageType();
         boolean received = false;
 
         return ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyMessageId,messageTime,messageType,received);
@@ -408,21 +413,39 @@ public class MainChatController extends MainContactController {
     private int getEditWrapperId() {
         return mainAnchorPane.getChildren().stream()
                 .map(Node::getId)
-                .filter(id -> id != null && id.startsWith("replyWrapper"))
+                .filter(id -> id != null && id.startsWith("editWrapper"))
                 .map(id -> id.replaceAll("\\D+", ""))
                 .filter(num -> !num.isEmpty())
                 .mapToInt(Integer::parseInt)
                 .findFirst()
                 .orElse(-1);
     }
-    private String getCurrentMessageType() {
+    enum TextMessageType {
+        REPLY_WITH_TEXT,
+        EDIT_WITH_TEXT,
+        TEXT
+    }
+    private TextMessageType getCurrentMessageType() {
         if (mainAnchorPane.getChildren().stream().anyMatch(node -> node.getId() != null && node.getId().startsWith("replyWrapper"))) {
-            return "reply_with_text";
+            return TextMessageType.REPLY_WITH_TEXT;
         } else if (mainAnchorPane.getChildren().stream().anyMatch(node -> node.getId() != null && node.getId().startsWith("editWrapper"))) {
-            return "change_with_text";
+            return TextMessageType.EDIT_WITH_TEXT;
+        } else {
+            return TextMessageType.TEXT;
+        }
+    }
+    private String getConvertedCurrentDBMessageType() throws SQLException {
+        TextMessageType currentMessageType = getCurrentMessageType();
+
+        if (currentMessageType == TextMessageType.REPLY_WITH_TEXT) {
+            return "reply_with_text";
+        } else if (currentMessageType == TextMessageType.EDIT_WITH_TEXT) {
+            String previousMessageType = (String) ChatsDataBase.getMessage(getEditWrapperId()).get(7);
+            return previousMessageType;
         } else {
             return "text";
         }
+
     }
     private void removePotentialWrapper() {
         Node wrapper = mainAnchorPane.lookupAll("*").stream()
@@ -440,8 +463,9 @@ public class MainChatController extends MainContactController {
     private void updateInteractionTime() throws SQLException {
         ContactsDataBase.updateInteractionTime(mainUserId,contactId,getCurrentFullTime());
     }
-    private void updateLastMessage(String newLastMessage) {
-        mainContactMessageLabel.setText(newLastMessage);
+    private void updateLastMessage() {
+        String currentMessage = chatTextField.getText().trim();
+        mainContactMessageLabel.setText(currentMessage);
     }
     private void updateLastMessageTime() {
         mainContactTimeLabel.setText(getMessageHours(getCurrentFullTime()));
@@ -467,6 +491,18 @@ public class MainChatController extends MainContactController {
     private void moveBackScrollDownButton() {
         Label scrollDownButton = (Label) mainAnchorPane.lookup("#scrollDownButton");
         scrollDownButton.setLayoutY(871);
+    }
+    private void updateScrollDownButtonVisibility() {
+        // Fade-out Transition (0.2 seconds)
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.2), scrollDownButton);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+        fadeOut.setCycleCount(1);
+        fadeOut.setOnFinished(event -> scrollDownButton.setVisible(false)); // Hide after fading out
+
+        if (scrollDownButton.getOpacity() > 0) {
+            fadeOut.playFromStart();
+        }
     }
 
 

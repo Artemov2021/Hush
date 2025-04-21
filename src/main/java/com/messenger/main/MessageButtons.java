@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,6 +36,10 @@ public class MessageButtons extends MainChatController {
     public MessageButtons(MainChatController mainChatController) {
        this.mainAnchorPane = mainChatController.mainAnchorPane;
        this.chatVBox = mainChatController.chatVBox;
+       this.scrollDownButton = mainChatController.scrollDownButton;
+       this.mainContactMessageLabel = mainChatController.mainContactMessageLabel;
+       this.mainContactTimeLabel = mainChatController.mainContactTimeLabel;
+       this.contactId = mainChatController.contactId;
     }
 
     public void showMessageButtons(int clickPlaceX,int clickPlaceY,int messageId) {
@@ -272,6 +277,7 @@ public class MessageButtons extends MainChatController {
             );
             setVBoxBottomPadding(20);
             moveBackScrollDownButton();
+            updateScrollDownButtonVisibility();
         });
         replyWrapperBackground.getChildren().add(wrapperExit);
 
@@ -307,14 +313,14 @@ public class MessageButtons extends MainChatController {
         editWrapperBackground.getChildren().add(editWrapperName);
 
         String message = (String) ChatsDataBase.getMessage(messageId).get(3);
-        Label replyWrapperMessage = new Label(message);
-        replyWrapperMessage.setCursor(Cursor.HAND);
-        replyWrapperMessage.getStyleClass().add("chat-wrapper-message");
-        replyWrapperMessage.setLayoutX(79);
-        replyWrapperMessage.setLayoutY(31);
-        replyWrapperMessage.setMaxWidth(400);
-        replyWrapperMessage.setMaxHeight(17);
-        replyWrapperMessage.setOnMouseClicked(clickEvent -> {
+        Label editWrapperMessage = new Label(message);
+        editWrapperMessage.setCursor(Cursor.HAND);
+        editWrapperMessage.getStyleClass().add("chat-wrapper-message");
+        editWrapperMessage.setLayoutX(79);
+        editWrapperMessage.setLayoutY(31);
+        editWrapperMessage.setMaxWidth(400);
+        editWrapperMessage.setMaxHeight(17);
+        editWrapperMessage.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
                 HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
                 double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
@@ -322,7 +328,7 @@ public class MessageButtons extends MainChatController {
                 fadeOutBackgroundColor(repliedmessageHBox);
             }
         });
-        editWrapperBackground.getChildren().add(replyWrapperMessage);
+        editWrapperBackground.getChildren().add(editWrapperMessage);
 
         Label wrapperExit = new Label();
         wrapperExit.setCursor(Cursor.HAND);
@@ -340,6 +346,7 @@ public class MessageButtons extends MainChatController {
             );
             setVBoxBottomPadding(20);
             moveBackScrollDownButton();
+            updateScrollDownButtonVisibility();
         });
         editWrapperBackground.getChildren().add(wrapperExit);
 
@@ -372,6 +379,18 @@ public class MessageButtons extends MainChatController {
     private void moveBackScrollDownButton() {
         Label scrollDownButton = (Label) mainAnchorPane.lookup("#scrollDownButton");
         scrollDownButton.setLayoutY(871);
+    }
+    private void updateScrollDownButtonVisibility() {
+        // Fade-out Transition (0.2 seconds)
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.2), scrollDownButton);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+        fadeOut.setCycleCount(1);
+        fadeOut.setOnFinished(event -> scrollDownButton.setVisible(false)); // Hide after fading out
+
+        if (scrollDownButton.getOpacity() > 0) {
+            fadeOut.playFromStart();
+        }
     }
     private double getCenteredScrollPosition(HBox targetHBox) {
         double hboxY = targetHBox.localToScene(0, 0).getY(); // Y position of HBox in scene
@@ -516,8 +535,8 @@ public class MessageButtons extends MainChatController {
     private void deleteMessage(int messageId) throws SQLException {
         int senderId = ChatsDataBase.getSenderIdWithMessageId(messageId);
         int receiverId = ChatsDataBase.getReceiverIdWithMessageId(messageId);
-        deleteMessageFromDB(messageId);
         deleteMessageInChat(messageId,senderId,receiverId);
+        deleteMessageFromDB(messageId);
         changeReplyMessages(messageId,senderId,receiverId);
         deletePotentialWrapper(messageId);
     }
@@ -536,10 +555,10 @@ public class MessageButtons extends MainChatController {
         HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId));
 
         boolean hasAvatarLabel = targetMessageHBox.lookup("#messageAvatarLabel"+messageId) != null;
-        boolean hasSameSender = senderId == (int) ChatsDataBase.getMessage(ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId)).get(1);
-        boolean previousMessageNoAvatarLabel = previousMessageHBox.lookup("#messageAvatarLabel"+ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId)) == null;
+        boolean isSameSender = (previousMessageHBox != null) && senderId == (int) ChatsDataBase.getMessage(ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId)).get(1);
+        boolean previousMessageNoAvatarLabel = (previousMessageHBox != null) && previousMessageHBox.lookup("#messageAvatarLabel"+ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId)) == null;
 
-        if (hasAvatarLabel && hasSameSender && previousMessageNoAvatarLabel) {
+        if (hasAvatarLabel && isSameSender && previousMessageNoAvatarLabel) {
             addNewAvatarLabel(previousMessageHBox,ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId),senderId);
         }
     }
@@ -557,13 +576,29 @@ public class MessageButtons extends MainChatController {
             mainContactTimeLabel.setText(previousMessageTime);
         }
     }
-    private void deleteDateLabel(int messageId) {
-        HBox messageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
-        int elementIndexBeforeDeletedMessage = chatVBox.getChildren().indexOf(messageHBox)-1;
-        boolean isPreviousDateLabel = chatVBox.getChildren().get(elementIndexBeforeDeletedMessage) instanceof Label;
-        if (isPreviousDateLabel) {
-            chatVBox.getChildren().remove(elementIndexBeforeDeletedMessage);
+    private void deleteDateLabel(int messageId) throws SQLException {
+        String messageTime = (String) ChatsDataBase.getMessage(messageId).get(6);
+        Label dateLabel = (Label) chatVBox.lookup("#dateLabel"+getDateLabelDate(messageTime));
+
+        boolean isThereMessageOnSameDate = ChatsDataBase.isThereMessagesOnSameDay(mainUserId,contactId,messageId,messageTime);
+
+        if (!isThereMessageOnSameDate) {
+            chatVBox.getChildren().remove(dateLabel);
         }
+    }
+    private String getDateLabelDate(String fullTime) {
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        LocalDateTime dateTime = LocalDateTime.parse(fullTime, inputFormatter);
+
+        return dateTime.toLocalDate().toString(); // Outputs in yyyy-MM-dd format
+    }
+    private boolean areOnSameDay(String fullTime1, String fullTime2) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
+        LocalDateTime msg1 = LocalDateTime.parse(fullTime1, formatter);
+        LocalDateTime msg2 = LocalDateTime.parse(fullTime2, formatter);
+
+        return msg1.toLocalDate().isEqual(msg2.toLocalDate());
     }
     private void addNewAvatarLabel(HBox messageHBox,int messageId,int senderId) throws SQLException {
         Label newAvatarLabel = new Label();
@@ -572,7 +607,7 @@ public class MessageButtons extends MainChatController {
         messageHBox.getChildren().add(newAvatarLabel);
 
         StackPane messageStackPane = (StackPane) messageHBox.lookup("#messageStackPane"+messageId);
-        HBox.setMargin(newAvatarLabel, (senderId == mainUserId) ? new Insets(0, 110, 0, 0) : new Insets(0, 0, 0, 110));
+        HBox.setMargin(newAvatarLabel, (senderId == mainUserId) ? new Insets(0, 100, 0, 0) : new Insets(0, 0, 0, 100));
         HBox.setMargin(messageStackPane, (senderId == mainUserId) ? new Insets(0, 13, 0, 0) : new Insets(0, 0, 0, 13));
     }
     private void removeMessageHBox(int messageId) {
