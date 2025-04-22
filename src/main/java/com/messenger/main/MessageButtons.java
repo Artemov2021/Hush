@@ -25,11 +25,14 @@ import javafx.util.Duration;
 
 import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MessageButtons extends MainChatController {
 
@@ -545,7 +548,7 @@ public class MessageButtons extends MainChatController {
     }
     private void deleteMessageInChat(int messageId,int senderId,int receiverId) throws SQLException {
         moveMessageAvatarBack(messageId,senderId,receiverId);
-        changeLastMessage(messageId,senderId,receiverId);
+        changeLastMessage(messageId);
         changeLastMessageTime(messageId,senderId,receiverId);
         deleteDateLabel(messageId);
         removeMessageHBox(messageId);
@@ -562,18 +565,46 @@ public class MessageButtons extends MainChatController {
             addNewAvatarLabel(previousMessageHBox,ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId),senderId);
         }
     }
-    private void changeLastMessage(int messageId,int senderId,int receiverId) throws SQLException {
-        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId);
-        if (previousMessageId == ChatsDataBase.getLastMessageId(senderId,receiverId)) {
+    private void changeLastMessage(int messageId) throws SQLException {
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,mainUserId,contactId);
+        if (ChatsDataBase.messageExists(mainUserId,contactId,previousMessageId)) {
             String previousMessage = (String) ChatsDataBase.getMessage(previousMessageId).get(3);
             mainContactMessageLabel.setText(previousMessage);
+        } else {
+            mainContactMessageLabel.setText("");
         }
     }
     private void changeLastMessageTime(int messageId,int senderId,int receiverId) throws SQLException {
         int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId);
-        if (previousMessageId == ChatsDataBase.getLastMessageId(senderId,receiverId)) {
-            String previousMessageTime = getMessageHours((String) ChatsDataBase.getMessage(previousMessageId).get(6));
+        if (ChatsDataBase.messageExists(mainUserId,contactId,previousMessageId)) {
+            String previousMessageTime = getMessageTime(previousMessageId);
             mainContactTimeLabel.setText(previousMessageTime);
+        } else {
+            mainContactTimeLabel.setText("");
+        }
+    }
+    private String getMessageTime(int messageId) throws SQLException {
+        String lastMessageFullDate = (String) ChatsDataBase.getMessage(messageId).get(6);
+        String pattern = "(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}:\\d{2})"; // Extracts YYYY, MM, DD, HH:mm
+        Pattern compiledPattern = Pattern.compile(pattern);
+        Matcher matcher = compiledPattern.matcher(lastMessageFullDate);
+
+        if (matcher.find()) {
+            String year = matcher.group(1);
+            String month = matcher.group(2);
+            String day = matcher.group(3);
+            String time = matcher.group(4);
+
+            LocalDate messageDate = LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day));
+            LocalDate today = LocalDate.now();
+
+            if (messageDate.isEqual(today)) {
+                return time; // Show only HH:mm if it's today
+            } else {
+                return (day + "." + month + "." + year); // Show full date if not today
+            }
+        } else {
+            return ""; // Default to empty if no match
         }
     }
     private void deleteDateLabel(int messageId) throws SQLException {
@@ -592,14 +623,6 @@ public class MessageButtons extends MainChatController {
 
         return dateTime.toLocalDate().toString(); // Outputs in yyyy-MM-dd format
     }
-    private boolean areOnSameDay(String fullTime1, String fullTime2) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-
-        LocalDateTime msg1 = LocalDateTime.parse(fullTime1, formatter);
-        LocalDateTime msg2 = LocalDateTime.parse(fullTime2, formatter);
-
-        return msg1.toLocalDate().isEqual(msg2.toLocalDate());
-    }
     private void addNewAvatarLabel(HBox messageHBox,int messageId,int senderId) throws SQLException {
         Label newAvatarLabel = new Label();
         newAvatarLabel.setId("messageAvatarLabel"+messageId);
@@ -607,7 +630,7 @@ public class MessageButtons extends MainChatController {
         messageHBox.getChildren().add(newAvatarLabel);
 
         StackPane messageStackPane = (StackPane) messageHBox.lookup("#messageStackPane"+messageId);
-        HBox.setMargin(newAvatarLabel, (senderId == mainUserId) ? new Insets(0, 100, 0, 0) : new Insets(0, 0, 0, 100));
+        HBox.setMargin(newAvatarLabel, (senderId == mainUserId) ? new Insets(0, 115, 0, 0) : new Insets(0, 0, 0, 105));
         HBox.setMargin(messageStackPane, (senderId == mainUserId) ? new Insets(0, 13, 0, 0) : new Insets(0, 0, 0, 13));
     }
     private void removeMessageHBox(int messageId) {

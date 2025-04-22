@@ -24,7 +24,7 @@
                               <Cursor fx:constant="HAND" />
                            </cursor>
                         </Label>
-                        <Label fx:id="deleteButton" layoutX="4.0" layoutY="38.0" prefHeight="31.0" prefWidth="89.0" styleClass="settings-avatar-buttons-change-background">
+                        <Label fx:id="deleteButton" layoutX="5.0" layoutY="38.0" prefHeight="31.0" prefWidth="89.0" styleClass="settings-avatar-buttons-change-background">
                            <cursor>
                               <Cursor fx:constant="HAND" />
                            </cursor>

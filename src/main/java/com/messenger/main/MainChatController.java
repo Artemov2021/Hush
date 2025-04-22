@@ -6,8 +6,6 @@ import com.messenger.database.UsersDataBase;
 import com.messenger.design.ScrollPaneEffect;
 import javafx.animation.*;
 import javafx.application.Platform;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.*;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -17,7 +15,6 @@ import javafx.scene.image.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
@@ -25,7 +22,6 @@ import javafx.scene.Cursor;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -54,6 +50,7 @@ public class MainChatController extends MainContactController {
     }
     public void injectMainUIElements(MainWindowController source) {
         this.mainAnchorPane = source.mainAnchorPane;
+        this.mainContactsVBox = source.mainContactsVBox;
     }
     public void injectContactUIElements(MainContactController mainContactController) {
         this.mainContactMessageLabel = mainContactController.mainContactMessageLabel;
@@ -217,7 +214,6 @@ public class MainChatController extends MainContactController {
     }
 
 
-
     // Chat Interface Initialization - FXML functions
     @FXML
     public void showContactFullAvatar() throws SQLException {
@@ -225,20 +221,26 @@ public class MainChatController extends MainContactController {
             Pane backgroundPane = new Pane();
             backgroundPane.setPrefWidth(1920);
             backgroundPane.setPrefHeight(1009);
-            backgroundPane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.68)");
+            backgroundPane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.78)");
+
+            // Apply a fade-in transition to make the background appear smoothly
+            FadeTransition fadeTransition = new FadeTransition(Duration.millis(150), backgroundPane);
+            fadeTransition.setFromValue(0.0); // Start from fully transparent
+            fadeTransition.setToValue(1.0); // Fade to fully opaque
+            fadeTransition.play();
+
             mainAnchorPane.getChildren().add(backgroundPane);
+
             backgroundPane.setOnMouseClicked(clickEvent -> {
                 if (clickEvent.getButton() == MouseButton.PRIMARY) {
                     mainAnchorPane.getChildren().remove(backgroundPane);
                 }
             });
 
-            Label pictureLabel = new Label();
-            pictureLabel.setOnMouseClicked(Event::consume);
-            byte[] blobBytes = UsersDataBase.getAvatarWithId(contactId);
-            assert blobBytes != null;
+            Label fullyPicturePreview = new Label();
+            fullyPicturePreview.setOnMouseClicked(Event::consume);
 
-            ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
+            ByteArrayInputStream byteStream = new ByteArrayInputStream(Objects.requireNonNull(UsersDataBase.getAvatarWithId(contactId)));
             Image image = new Image(byteStream);
             ImageView imageView = new ImageView(image);
 
@@ -248,21 +250,22 @@ public class MainChatController extends MainContactController {
             imageView.setFitHeight(Math.min(image.getHeight(), 609));
 
             imageView.setSmooth(true);
-            pictureLabel.setGraphic(imageView);
+            fullyPicturePreview.setGraphic(imageView);
 
             // Ensure the layout is updated before centering
             Platform.runLater(() -> {
-                double finalWidth = imageView.getBoundsInLocal().getWidth();
-                double finalHeight = imageView.getBoundsInLocal().getHeight();
+                // Recalculate layout position after image rendering
+                double initialWidth = imageView.getLayoutBounds().getWidth();
+                double initialHeight = imageView.getLayoutBounds().getHeight();
 
                 // Correct centering calculations
-                pictureLabel.setLayoutX((1920 - finalWidth) / 2.0);
-                pictureLabel.setLayoutY((1009 - finalHeight) / 2.0);
-                backgroundPane.getChildren().add(pictureLabel);
+                fullyPicturePreview.setLayoutX((1920 - initialWidth) / 2.0);
+                fullyPicturePreview.setLayoutY((1009 - initialHeight) / 2.0);
+
+                backgroundPane.getChildren().add(fullyPicturePreview);
             });
         }
     }
-
 
 
     // Chat Loading
@@ -299,7 +302,6 @@ public class MainChatController extends MainContactController {
     }
 
 
-
     // Message Sending
     @FXML
     private void validateAndSendMessage() throws Exception {
@@ -333,6 +335,7 @@ public class MainChatController extends MainContactController {
         updateInteractionTime();
         updateLastMessage();
         updateLastMessageTime();
+        moveContactPaneUp();
     }
     private void finalizeMessageFlow() {
         removePotentialWrapper();
@@ -393,7 +396,7 @@ public class MainChatController extends MainContactController {
         int[] contactListOfContact = ContactsDataBase.getContactsIdList(contactId);
         boolean existsInContactList = Arrays.stream(contactListOfContact).anyMatch(id -> id == mainUserId);
         if (!existsInContactList) {
-            ContactsDataBase.addContact(contactId);
+            ContactsDataBase.addContact(contactId,mainUserId);
         }
     }
     private void displayCurrentMessage(int messageId) throws Exception {
@@ -439,13 +442,9 @@ public class MainChatController extends MainContactController {
 
         if (currentMessageType == TextMessageType.REPLY_WITH_TEXT) {
             return "reply_with_text";
-        } else if (currentMessageType == TextMessageType.EDIT_WITH_TEXT) {
-            String previousMessageType = (String) ChatsDataBase.getMessage(getEditWrapperId()).get(7);
-            return previousMessageType;
         } else {
             return "text";
         }
-
     }
     private void removePotentialWrapper() {
         Node wrapper = mainAnchorPane.lookupAll("*").stream()
@@ -504,16 +503,18 @@ public class MainChatController extends MainContactController {
             fadeOut.playFromStart();
         }
     }
-
-
-
-
+    private void moveContactPaneUp() {
+        AnchorPane contactAnchorPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+contactId);
+        mainContactsVBox.getChildren().remove(contactAnchorPane);
+        mainContactsVBox.getChildren().add(0,contactAnchorPane);
+    }
 
 
     // Picture Sending
     public void loadPicture() throws IOException {
          String chosenPicturePath = openFileChooserAndGetPath();
-         //PictureWindow.showWindow(chosenPicturePath);
+         PictureWindow pictureWindow = new PictureWindow(this,chosenPicturePath);
+         if (chosenPicturePath != null) pictureWindow.showWindow();
     }
     protected final String openFileChooserAndGetPath() {
         FileChooser fileChooser = new FileChooser();
@@ -529,21 +530,6 @@ public class MainChatController extends MainContactController {
             return null;
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

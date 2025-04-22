@@ -5,6 +5,7 @@ import com.messenger.main.ChatMessage;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,27 +32,6 @@ public class ChatsDataBase {
             }
         }
         return "";
-    }
-    public static List<Object> getLastMessageWithId(int mainUserId,int contactId) throws SQLException {
-        List<Object> lastMessageWithId = new ArrayList<>();
-        String statement = "SELECT message,message_id FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id DESC LIMIT 1";
-
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
-            PreparedStatement preparedStatement = connection.prepareStatement(statement);
-            preparedStatement.setInt(1,mainUserId);
-            preparedStatement.setInt(2,contactId);
-            preparedStatement.setInt(3,mainUserId);
-            preparedStatement.setInt(4,contactId);
-            ResultSet result = preparedStatement.executeQuery();
-            if (result.next()) {
-                lastMessageWithId.add(result.getString("message"));
-                lastMessageWithId.add(result.getInt("message_id"));
-                return lastMessageWithId;
-            }
-        }
-        lastMessageWithId.add(null);
-        lastMessageWithId.add(-1);
-        return lastMessageWithId;
     }
     public static String getLastMessageTime(int mainUserId,int contactId) throws SQLException {
         String statement = "SELECT message_time FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id DESC LIMIT 1";
@@ -147,7 +127,10 @@ public class ChatsDataBase {
                 message.add(result.getString("message"));
                 message.add(result.getBytes("picture"));
                 message.add((result.getInt("reply_message_id") == 0) ? (-1) : (result.getInt("reply_message_id")));
-                message.add(result.getString("message_time"));
+                Timestamp ts = result.getTimestamp("message_time");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                String formattedTime = sdf.format(ts);
+                message.add(formattedTime);
                 message.add(result.getString("message_type"));
                 message.add(result.getBoolean("received"));
             }
@@ -201,16 +184,16 @@ public class ChatsDataBase {
             preparedStatement.executeUpdate();
         }
     }
-    public static boolean messageExists(int senderId,int receiverId,int messageId) throws SQLException {
+    public static boolean messageExists(int mainUserId,int contactId,int messageId) throws SQLException {
         String statement = "SELECT * FROM chats WHERE message_id = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,messageId);
-            preparedStatement.setInt(2,senderId);
-            preparedStatement.setInt(3,receiverId);
-            preparedStatement.setInt(4,receiverId);
-            preparedStatement.setInt(5,senderId);
+            preparedStatement.setInt(2,mainUserId);
+            preparedStatement.setInt(3,contactId);
+            preparedStatement.setInt(4,contactId);
+            preparedStatement.setInt(5,mainUserId);
             ResultSet result = preparedStatement.executeQuery();
             if (result.next()) {
                 return true;

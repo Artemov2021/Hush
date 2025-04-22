@@ -47,7 +47,7 @@ public class ContactsDataBase extends MainWindowController {
                     }
                 }).toArray();
     }
-    public static void addContact(int contactId) throws SQLException {
+    public static void addContact(int user_id,int contact_id) throws SQLException {
         String statement = "INSERT INTO contacts (user_id,contact_id,last_interaction) VALUES (?,?,?)";
 
         LocalDateTime now = LocalDateTime.now();
@@ -56,8 +56,8 @@ public class ContactsDataBase extends MainWindowController {
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
-            preparedStatement.setInt(1, mainUserId);
-            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(1, user_id);
+            preparedStatement.setInt(2, contact_id);
             preparedStatement.setTimestamp(3, Timestamp.valueOf(formattedDateTimeNow)); // Insert the Timestamp
             preparedStatement.executeUpdate();
         }

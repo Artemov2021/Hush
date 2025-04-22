@@ -93,7 +93,7 @@ public class AddContactWindowController extends MainWindowController {
     private void addContact() throws SQLException, IOException {
         String identifier = addContactIdentifierField.getText().trim();
         int contactId = getIdentifierType(identifier).equals("name") ? UsersDataBase.getIdWithName(identifier) : UsersDataBase.getIdWithEmail(identifier);
-        ContactsDataBase.addContact(contactId);
+        ContactsDataBase.addContact(mainUserId,contactId);
         addContactPane(contactId);
     }
 
