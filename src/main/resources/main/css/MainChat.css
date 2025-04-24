@@ -196,6 +196,25 @@
     -fx-font-size: 14;
     -fx-text-fill: #CBCBCB;
 }
+.chat-wrapper-message:hover {
+    -fx-text-fill: white;
+}
+.chat-wrapper-photo-symbol {
+    -fx-background-image: url("../elements/replyWrapperPhotoSymbol.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-wrapper-photo-symbol-hovered {
+    -fx-background-image: url("../elements/replyWrapperPhotoSymbolHovered.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-wrapper-photo-title {
+    -fx-font-size: 14;
+    -fx-text-fill: #858585;
+}
+.chat-wrapper-photo-title-hovered {
+    -fx-font-size: 14;
+    -fx-text-fill: #D0D0D0;
+}
 .chat-wrapper-exit {
     -fx-background-image: url("../elements/wrapperExitDefault.png");
     -fx-background-repeat: no-repeat;

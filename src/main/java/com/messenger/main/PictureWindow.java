@@ -1,6 +1,7 @@
 package com.messenger.main;
 
 import com.messenger.database.ChatsDataBase;
+import com.messenger.database.ContactsDataBase;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.event.Event;
@@ -12,6 +13,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
@@ -40,6 +42,9 @@ public class PictureWindow extends MainChatController {
         this.mainAnchorPane = mainChatController.mainAnchorPane;
         this.contactId = mainChatController.contactId;
         this.chatVBox = mainChatController.chatVBox;
+        this.mainContactMessageLabel = mainChatController.mainContactMessageLabel;
+        this.mainContactsVBox = mainChatController.mainContactsVBox;
+        this.mainContactTimeLabel = mainChatController.mainContactTimeLabel;
     }
     public void showWindow() throws IOException {
         convertIntoPicture(picturePath);
@@ -179,7 +184,10 @@ public class PictureWindow extends MainChatController {
         }
 
         hideWindowSmoothly();
-
+        updateLastInteraction();
+        updateLastMessage();
+        updateLastMessageTime();
+        moveContactPaneUp();
     }
     private void handlePictureMessageSending() throws Exception {
         int messageId = insertPictureMessageIntoDB();
@@ -428,7 +436,43 @@ public class PictureWindow extends MainChatController {
         ChatMessage chatMessage = new ChatMessage(messageId);
         chatVBox.getChildren().add(chatMessage.render(mainChatController));
     }
+    public static String getMessageHours(String messageFullTime) {
+        // Define the input and output formats
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
+        // Parse the input string to LocalDateTime
+        LocalDateTime dateTime = LocalDateTime.parse(messageFullTime, inputFormatter);
+
+        // Format and return the output as a string
+        return dateTime.format(outputFormatter);
+    }
+    private void updateLastInteraction() throws SQLException {
+        ContactsDataBase.updateInteractionTime(mainUserId,contactId,getCurrentFullTime());
+    }
+    private void updateLastMessage() throws SQLException {
+        if (pictureSendingWindowTextField.getText().trim().isEmpty()) {
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.setStyle("-fx-text-fill: white");
+            mainContactMessageLabel.setText("Picture");
+        } else {
+            String lastMessage = ChatsDataBase.getLastMessage(mainUserId, contactId);
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
+            mainContactMessageLabel.setText(lastMessage);
+        }
+
+    }
+    private void updateLastMessageTime() {
+        mainContactTimeLabel.setText(getMessageHours(getCurrentFullTime()));
+    }
+    private void moveContactPaneUp() {
+        AnchorPane contactPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+contactId);
+        mainContactsVBox.getChildren().remove(contactPane);
+        mainContactsVBox.getChildren().add(0,contactPane);
+    }
 
 
 

@@ -2,10 +2,7 @@ package com.messenger.main;
 
 import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
-import javafx.animation.FadeTransition;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
+import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -22,8 +19,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.*;
 import javafx.util.Duration;
 
 import java.io.ByteArrayInputStream;
@@ -55,12 +51,13 @@ public class ChatMessage extends MainChatController {
 
     private HBox messageHBox;
     private StackPane messageStackPane;
+    private VBox messageVBox;
+    private Label messagePictureLabel;
     private Label messageTextLabel;
     private StackPane messageReplyStackPane;
-    private Label messagePictureLabel;
+    private HBox messagePictureHBox;
     private Label messagePictureTimeLabel;
     private Label messageAvatarLabel;
-
 
     private MainChatController mainChatController;
 
@@ -90,6 +87,7 @@ public class ChatMessage extends MainChatController {
             case "text" -> buildTextMessage();
             case "reply_with_text" -> buildReplyWithTextMessage();
             case "picture" -> buildPictureMessage();
+            case "picture_with_text" -> buildPictureWithTextMessage();
             default -> throw new Exception();
         };
     }
@@ -116,8 +114,21 @@ public class ChatMessage extends MainChatController {
     private HBox buildPictureMessage() throws IOException, SQLException, ParseException {
         setMessageHBox();
         setMessageStackPane();
+        setMessageVBox();
+        setMessagePictureHBox();
         setMessagePictureLabel();
         setMessagePictureTimeLabel();
+        setMessageAvatar();
+        return messageHBox;
+    }
+    private HBox buildPictureWithTextMessage() throws IOException, SQLException, ParseException {
+        setMessageHBox();
+        setMessageStackPane();
+        setMessageTimeLabel();
+        setMessageVBox();
+        setMessagePictureHBox();
+        setMessagePictureLabel();
+        setMessageTextLabel();
         setMessageAvatar();
         return messageHBox;
     }
@@ -147,23 +158,37 @@ public class ChatMessage extends MainChatController {
         });
         messageHBox.getChildren().add(messageStackPane);
     }
+    private void setMessageVBox() {
+        messageVBox = new VBox();
+        messageStackPane.getChildren().add(messageVBox);
+    }
     private void setMessageTextLabel() {
         Insets padding = getTextLabelPadding();
         messageTextLabel = new Label(message_text);
-        StackPane.setAlignment(messageTextLabel,Pos.TOP_LEFT);
+        StackPane.setAlignment(messageTextLabel,Pos.BOTTOM_LEFT);
         messageTextLabel.setId("messageTextLabel"+id);
         messageTextLabel.setWrapText(true);
         messageTextLabel.getStyleClass().add("chat-message-text-label");
-        StackPane.setMargin(messageTextLabel,padding);
-        messageStackPane.getChildren().add(messageTextLabel);
+        if (type.equals("picture_with_text")) {
+            VBox.setMargin(messageTextLabel,padding);
+            messageVBox.getChildren().add(messageTextLabel);
+        } else {
+            StackPane.setMargin(messageTextLabel,padding);
+            messageStackPane.getChildren().add(messageTextLabel);
+        }
     }
     private void setMessageTimeLabel() {
         String messageTime = getMessageTime(time);
         Label timeLabel = new Label(messageTime);
         timeLabel.getStyleClass().add("chat-time-label");
-        StackPane.setAlignment(timeLabel,Pos.BOTTOM_RIGHT);
         StackPane.setMargin(timeLabel,new Insets(0,10,4,0));
+        StackPane.setAlignment(timeLabel,Pos.BOTTOM_RIGHT);
         messageStackPane.getChildren().add(timeLabel);
+    }
+    private void setMessagePictureHBox() {
+        messagePictureHBox = new HBox();
+        messagePictureHBox.setAlignment(Pos.TOP_CENTER);
+        messageVBox.getChildren().add(messagePictureHBox);
     }
     private void setReplyStackPane() throws SQLException {
         short minWidth = 80;
@@ -223,8 +248,8 @@ public class ChatMessage extends MainChatController {
         }
     }
     private void setMessagePictureLabel() throws IOException {
-        short maxWidth = 352;
-        short maxHeight = 420;
+        short maxWidth = 408;
+        short maxHeight = 440;
         byte minHeight = 40;
 
         messagePictureLabel = new Label();
@@ -250,7 +275,7 @@ public class ChatMessage extends MainChatController {
 
         StackPane imageContainer = new StackPane(imageView);
         messagePictureLabel.setGraphic(imageContainer);
-        messageStackPane.getChildren().add(messagePictureLabel);
+        messagePictureHBox.getChildren().add(messagePictureLabel);
 
         image.progressProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal.doubleValue() >= 1.0) {
@@ -282,19 +307,70 @@ public class ChatMessage extends MainChatController {
                 imageContainer.setPrefWidth(scaledWidth);
                 imageContainer.setPrefHeight(scaledHeight);
 
-                Rectangle clip = new Rectangle(scaledWidth, scaledHeight);
-                clip.setArcWidth(22); // 11px radius
-                clip.setArcHeight(22);
-                imageContainer.setClip(clip);
+                if (type.equals("picture_with_text") && messageStackPane.getWidth() <= scaledWidth) {
+                    SVGPath svgClip = new SVGPath();
+                    svgClip.setContent(
+                            "M0,11 " +                              // Move down from top-left
+                                    "Q0,0 11,0 " +                          // Top-left corner curve
+                                    "H" + (scaledWidth - 11) + " " +        // Line to before top-right curve
+                                    "Q" + scaledWidth + ",0 " + scaledWidth + ",11 " + // Top-right corner curve
+                                    "V" + scaledHeight + " " +              // Line down right side
+                                    "H0 Z"                                  // Line to left and close path
+                    );
+                    imageContainer.setClip(svgClip);
+                } else if (type.equals("picture_with_text") && messageStackPane.getWidth() > scaledWidth) {
+                    messagePictureHBox.setPadding(new Insets(10,0,0,0));
+                } else if (type.equals("picture")) {
+                    Rectangle clip = new Rectangle(scaledWidth, scaledHeight);
+                    clip.setArcWidth(22);
+                    clip.setArcHeight(22);
+                    imageContainer.setClip(clip);
+                }
             }
         });
     }
     private void setMessagePictureTimeLabel() {
-        messagePictureTimeLabel = new Label("12:23");
+        messagePictureTimeLabel = new Label(getMessageTime(time));
+        messagePictureTimeLabel.setVisible(false);
         messagePictureTimeLabel.getStyleClass().add("chat-picture-message-time-label");
         HBox.setMargin(messagePictureTimeLabel,(mainUserId == sender_id) ? new Insets(0,10,0,0) : new Insets(0,0,0,10));
         int messageHBoxIndex = (mainUserId == sender_id) ? 0 : messageHBox.getChildren().size();
         messageHBox.getChildren().add(messageHBoxIndex,messagePictureTimeLabel);
+
+
+
+        messagePictureTimeLabel.setOpacity(0);
+        messagePictureTimeLabel.setTranslateX(18); // Start slightly off-screen (right side)
+
+// Transitions
+        TranslateTransition slideIn = new TranslateTransition(Duration.millis(200), messagePictureTimeLabel);
+        slideIn.setFromX(18);
+        slideIn.setToX(0);
+
+        TranslateTransition slideOut = new TranslateTransition(Duration.millis(200), messagePictureTimeLabel);
+        slideOut.setFromX(0);
+        slideOut.setToX(18);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), messagePictureTimeLabel);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), messagePictureTimeLabel);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+
+        // Hover events
+        messagePictureLabel.setOnMouseEntered(e -> {
+            messagePictureTimeLabel.setVisible(true);
+            slideIn.playFromStart();
+            fadeIn.playFromStart();
+        });
+
+        messagePictureLabel.setOnMouseExited(e -> {
+            slideOut.playFromStart();
+            fadeOut.playFromStart();
+            fadeOut.setOnFinished(ev -> messagePictureTimeLabel.setVisible(false));
+        });
     }
     private void setMessageAvatar() throws SQLException, ParseException {
         messageAvatarLabel = new Label();
@@ -302,6 +378,7 @@ public class ChatMessage extends MainChatController {
         setAvatarLabel();
         int messageHBoxIndex = (mainUserId == sender_id) ? messageHBox.getChildren().size() : 0;
         messageHBox.getChildren().add(messageHBoxIndex, messageAvatarLabel);
+
         HBox.setMargin(messageAvatarLabel,(mainUserId == sender_id) ? new Insets(0,115, 0, 0) : new Insets(0,0,0,105));
 
         if (shouldRemovePreviousAvatar()) {
@@ -327,18 +404,22 @@ public class ChatMessage extends MainChatController {
 
     private Insets getTextLabelPadding() {
         return switch (type) {
-            case "text" -> new Insets(9,50,7,13);
+            case "text" -> new Insets(5,50,9,13);
             case "reply_with_text" -> new Insets(48,50,7,12);
+            case "picture_with_text" -> new Insets (8,50,7,13);
             default -> null;
         };
     }
 
 
     private int calculatePreviousMessageId() throws SQLException {
-        return ChatsDataBase.getPreviousMessageId(id,sender_id,receiver_id);
+        return ChatsDataBase.getPreviousMessageId(sender_id,receiver_id,id);
     }
     private void setPotentialDateLabel() throws ParseException, SQLException {
-        boolean isFirstMessage = chatVBox.getChildren().isEmpty();
+        boolean isFirstMessage = chatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .map(node -> node.getId())
+                .noneMatch(id -> id != null && id.startsWith("messageHBox"));
         boolean isPreviousMessageOneDay = !isFirstMessage && messagesHaveOneDayDifference((String) ChatsDataBase.getMessage(previousMessageId).get(6),time);
 
         if (isFirstMessage || isPreviousMessageOneDay) {

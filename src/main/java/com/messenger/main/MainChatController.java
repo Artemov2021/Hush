@@ -464,6 +464,9 @@ public class MainChatController extends MainContactController {
     }
     private void updateLastMessage() {
         String currentMessage = chatTextField.getText().trim();
+        mainContactMessageLabel.setStyle("");
+        mainContactMessageLabel.getStyleClass().clear();
+        mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
         mainContactMessageLabel.setText(currentMessage);
     }
     private void updateLastMessageTime() {
@@ -515,6 +518,7 @@ public class MainChatController extends MainContactController {
          String chosenPicturePath = openFileChooserAndGetPath();
          PictureWindow pictureWindow = new PictureWindow(this,chosenPicturePath);
          if (chosenPicturePath != null) pictureWindow.showWindow();
+
     }
     protected final String openFileChooserAndGetPath() {
         FileChooser fileChooser = new FileChooser();

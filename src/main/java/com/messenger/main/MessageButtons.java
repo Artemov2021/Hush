@@ -12,6 +12,7 @@ import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -43,6 +44,7 @@ public class MessageButtons extends MainChatController {
        this.mainContactMessageLabel = mainChatController.mainContactMessageLabel;
        this.mainContactTimeLabel = mainChatController.mainContactTimeLabel;
        this.contactId = mainChatController.contactId;
+       this.chatScrollPane = mainChatController.chatScrollPane;
     }
 
     public void showMessageButtons(int clickPlaceX,int clickPlaceY,int messageId) {
@@ -178,8 +180,8 @@ public class MessageButtons extends MainChatController {
 
         Pane messageButtonsBackground = new Pane();
         messageButtonsBackground.setCursor(Cursor.HAND);
-        messageButtonsBackground.setPrefWidth(107);
-        messageButtonsBackground.setPrefHeight(42);
+        messageButtonsBackground.setPrefWidth(104);
+        messageButtonsBackground.setPrefHeight(41);
         messageButtonsBackground.setLayoutX(clickPlaceX);
         messageButtonsBackground.setLayoutY((clickPlaceY >= 900) ? (clickPlaceY - 42) : clickPlaceY);
         messageButtonsBackground.getStyleClass().add("chat-message-buttons-background");
@@ -189,8 +191,8 @@ public class MessageButtons extends MainChatController {
         Pane replyPane = new Pane();
         replyPane.setPrefWidth(96);
         replyPane.setPrefHeight(33);
-        replyPane.setLayoutX(5);
-        replyPane.setLayoutY(5);
+        replyPane.setLayoutX(4);
+        replyPane.setLayoutY(4);
         replyPane.getStyleClass().add("chat-message-buttons-small-pane");
         messageButtonsBackground.getChildren().add(replyPane);
         replyPane.setOnMouseClicked(clickEvent -> {
@@ -218,6 +220,7 @@ public class MessageButtons extends MainChatController {
     }
     private void setReplyWrapper(int senderId, int messageId) throws SQLException {
         deletePreviousReplyWrapper();
+        deletePreviousEditWrapper();
         setTextFieldFocused();
         setVBoxBottomPadding(65);
         raiseScrollDownButton();
@@ -246,23 +249,68 @@ public class MessageButtons extends MainChatController {
         replyWrapperName.setLayoutY(6);
         replyWrapperBackground.getChildren().add(replyWrapperName);
 
-        String message = (String) ChatsDataBase.getMessage(messageId).get(3);
-        Label replyWrapperMessage = new Label(message);
-        replyWrapperMessage.setCursor(Cursor.HAND);
-        replyWrapperMessage.getStyleClass().add("chat-wrapper-message");
-        replyWrapperMessage.setLayoutX(80);
-        replyWrapperMessage.setLayoutY(31);
-        replyWrapperMessage.setMaxWidth(400);
-        replyWrapperMessage.setMaxHeight(17);
-        replyWrapperMessage.setOnMouseClicked(clickEvent -> {
-            if (clickEvent.getButton() == MouseButton.PRIMARY) {
-                HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
-                double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
-                smoothScrollTo(hboxPosition,0.4);
-                fadeOutBackgroundColor(repliedmessageHBox);
-            }
-        });
-        replyWrapperBackground.getChildren().add(replyWrapperMessage);
+        boolean messageHasPicture = ChatsDataBase.getMessage(messageId).get(4) != null;
+        if (messageHasPicture) {
+            Pane replyWrapperMessagePictureGroup = new Pane();
+            replyWrapperMessagePictureGroup.setLayoutX(80);
+            replyWrapperMessagePictureGroup.setLayoutY(32);
+            replyWrapperMessagePictureGroup.setCursor(Cursor.HAND);
+
+            Label replyWrapperMessagePhotoSymbol = new Label();
+            replyWrapperMessagePhotoSymbol.getStyleClass().add("chat-wrapper-photo-symbol");
+            replyWrapperMessagePhotoSymbol.setLayoutY(3);
+            replyWrapperMessagePhotoSymbol.setPrefWidth(13);
+            replyWrapperMessagePhotoSymbol.setPrefHeight(13);
+            replyWrapperMessagePictureGroup.getChildren().add(replyWrapperMessagePhotoSymbol);
+
+            Label replyWrapperMessagePhotoTitle = new Label("Photo");
+            replyWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title");
+            replyWrapperMessagePhotoTitle.setLayoutX(18);
+            replyWrapperMessagePhotoTitle.setMaxWidth(40);
+            replyWrapperMessagePhotoTitle.setMaxHeight(17);
+            replyWrapperMessagePictureGroup.getChildren().add(replyWrapperMessagePhotoTitle);
+
+            replyWrapperBackground.getChildren().add(replyWrapperMessagePictureGroup);
+            replyWrapperMessagePictureGroup.setOnMouseClicked(clickEvent -> {
+                if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                    HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+                    double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
+                    smoothScrollTo(hboxPosition,0.4);
+                    fadeOutBackgroundColor(repliedmessageHBox);
+                }
+            });
+            replyWrapperMessagePictureGroup.setOnMouseEntered(clickEvent -> {
+                replyWrapperMessagePhotoSymbol.getStyleClass().clear();
+                replyWrapperMessagePhotoSymbol.getStyleClass().add("chat-wrapper-photo-symbol-hovered");
+                replyWrapperMessagePhotoTitle.getStyleClass().clear();
+                replyWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title-hovered");
+            });
+            replyWrapperMessagePictureGroup.setOnMouseExited(clickEvent -> {
+                replyWrapperMessagePhotoSymbol.getStyleClass().clear();
+                replyWrapperMessagePhotoSymbol.getStyleClass().add("chat-wrapper-photo-symbol");
+                replyWrapperMessagePhotoTitle.getStyleClass().clear();
+                replyWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title");
+            });
+        } else {
+            String message = (String) ChatsDataBase.getMessage(messageId).get(3);
+            Label replyWrapperMessage = new Label(message);
+            replyWrapperMessage.setCursor(Cursor.HAND);
+            replyWrapperMessage.getStyleClass().add("chat-wrapper-message");
+            replyWrapperMessage.setLayoutX(80);
+            replyWrapperMessage.setLayoutY(31);
+            replyWrapperMessage.setMaxWidth(400);
+            replyWrapperMessage.setMaxHeight(17);
+            replyWrapperMessage.setOnMouseClicked(clickEvent -> {
+                if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                    HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+                    double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
+                    smoothScrollTo(hboxPosition,0.4);
+                    fadeOutBackgroundColor(repliedmessageHBox);
+                }
+            });
+            replyWrapperBackground.getChildren().add(replyWrapperMessage);
+        }
+
 
         Label wrapperExit = new Label();
         wrapperExit.setCursor(Cursor.HAND);
@@ -287,6 +335,7 @@ public class MessageButtons extends MainChatController {
     }
     private void setEditWrapper(int senderId,int messageId) throws SQLException {
         deletePreviousEditWrapper();
+        deletePreviousReplyWrapper();
         setTextFieldFocused();
         setVBoxBottomPadding(65);
         raiseScrollDownButton();
@@ -315,23 +364,69 @@ public class MessageButtons extends MainChatController {
         editWrapperName.setLayoutY(6);
         editWrapperBackground.getChildren().add(editWrapperName);
 
-        String message = (String) ChatsDataBase.getMessage(messageId).get(3);
-        Label editWrapperMessage = new Label(message);
-        editWrapperMessage.setCursor(Cursor.HAND);
-        editWrapperMessage.getStyleClass().add("chat-wrapper-message");
-        editWrapperMessage.setLayoutX(79);
-        editWrapperMessage.setLayoutY(31);
-        editWrapperMessage.setMaxWidth(400);
-        editWrapperMessage.setMaxHeight(17);
-        editWrapperMessage.setOnMouseClicked(clickEvent -> {
-            if (clickEvent.getButton() == MouseButton.PRIMARY) {
-                HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
-                double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
-                smoothScrollTo(hboxPosition,0.4);
-                fadeOutBackgroundColor(repliedmessageHBox);
-            }
-        });
-        editWrapperBackground.getChildren().add(editWrapperMessage);
+        boolean messageHasPicture = ChatsDataBase.getMessage(messageId).get(4) != null;
+        if (messageHasPicture) {
+            Pane editWrapperMessagePictureGroup = new Pane();
+            editWrapperMessagePictureGroup.setLayoutX(80);
+            editWrapperMessagePictureGroup.setLayoutY(32);
+            editWrapperMessagePictureGroup.setCursor(Cursor.HAND);
+
+            Label editWrapperMessagePhotoSymbol = new Label();
+            editWrapperMessagePhotoSymbol.getStyleClass().add("chat-wrapper-photo-symbol");
+            editWrapperMessagePhotoSymbol.setLayoutY(3);
+            editWrapperMessagePhotoSymbol.setPrefWidth(13);
+            editWrapperMessagePhotoSymbol.setPrefHeight(13);
+            editWrapperMessagePictureGroup.getChildren().add(editWrapperMessagePhotoSymbol);
+
+            Label editWrapperMessagePhotoTitle = new Label("Photo");
+            editWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title");
+            editWrapperMessagePhotoTitle.setLayoutX(18);
+            editWrapperMessagePhotoTitle.setMaxWidth(40);
+            editWrapperMessagePhotoTitle.setMaxHeight(17);
+            editWrapperMessagePictureGroup.getChildren().add(editWrapperMessagePhotoTitle);
+
+            editWrapperBackground.getChildren().add(editWrapperMessagePictureGroup);
+            editWrapperMessagePictureGroup.setOnMouseClicked(clickEvent -> {
+                if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                    HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+                    double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
+                    smoothScrollTo(hboxPosition,0.4);
+                    fadeOutBackgroundColor(repliedmessageHBox);
+                }
+            });
+            editWrapperMessagePictureGroup.setOnMouseEntered(clickEvent -> {
+                editWrapperMessagePhotoSymbol.getStyleClass().clear();
+                editWrapperMessagePhotoSymbol.getStyleClass().add("chat-wrapper-photo-symbol-hovered");
+                editWrapperMessagePhotoTitle.getStyleClass().clear();
+                editWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title-hovered");
+            });
+            editWrapperMessagePictureGroup.setOnMouseExited(clickEvent -> {
+                editWrapperMessagePhotoSymbol.getStyleClass().clear();
+                editWrapperMessagePhotoSymbol.getStyleClass().add("chat-wrapper-photo-symbol");
+                editWrapperMessagePhotoTitle.getStyleClass().clear();
+                editWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title");
+            });
+        } else {
+            String message = (String) ChatsDataBase.getMessage(messageId).get(3);
+            Label editWrapperMessage = new Label(message);
+            editWrapperMessage.setCursor(Cursor.HAND);
+            editWrapperMessage.getStyleClass().add("chat-wrapper-message");
+            editWrapperMessage.setLayoutX(79);
+            editWrapperMessage.setLayoutY(31);
+            editWrapperMessage.setMaxWidth(400);
+            editWrapperMessage.setMaxHeight(17);
+            editWrapperMessage.setOnMouseClicked(clickEvent -> {
+                if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                    HBox repliedmessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+                    double hboxPosition = getCenteredScrollPosition(repliedmessageHBox);
+                    smoothScrollTo(hboxPosition,0.4);
+                    fadeOutBackgroundColor(repliedmessageHBox);
+                }
+            });
+            editWrapperBackground.getChildren().add(editWrapperMessage);
+        }
+
+
 
         Label wrapperExit = new Label();
         wrapperExit.setCursor(Cursor.HAND);
@@ -555,27 +650,54 @@ public class MessageButtons extends MainChatController {
     }
     private void moveMessageAvatarBack(int messageId,int senderId,int receiverId) throws SQLException {
         HBox targetMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
-        HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId));
+        HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId));
 
         boolean hasAvatarLabel = targetMessageHBox.lookup("#messageAvatarLabel"+messageId) != null;
-        boolean isSameSender = (previousMessageHBox != null) && senderId == (int) ChatsDataBase.getMessage(ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId)).get(1);
-        boolean previousMessageNoAvatarLabel = (previousMessageHBox != null) && previousMessageHBox.lookup("#messageAvatarLabel"+ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId)) == null;
+        boolean isSameSender = (previousMessageHBox != null) && senderId == (int) ChatsDataBase.getMessage(ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId)).get(1);
+        boolean previousMessageNoAvatarLabel = (previousMessageHBox != null) && previousMessageHBox.lookup("#messageAvatarLabel"+ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId)) == null;
 
         if (hasAvatarLabel && isSameSender && previousMessageNoAvatarLabel) {
-            addNewAvatarLabel(previousMessageHBox,ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId),senderId);
+            addNewAvatarLabel(previousMessageHBox,ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId),senderId);
         }
     }
     private void changeLastMessage(int messageId) throws SQLException {
-        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,mainUserId,contactId);
-        if (ChatsDataBase.messageExists(mainUserId,contactId,previousMessageId)) {
-            String previousMessage = (String) ChatsDataBase.getMessage(previousMessageId).get(3);
-            mainContactMessageLabel.setText(previousMessage);
-        } else {
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId);
+        int nextMessageId = ChatsDataBase.getNextMessageId(mainUserId,contactId,messageId);
+        boolean previousMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,previousMessageId);
+        boolean nextMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,nextMessageId);
+        boolean previousMessageIsPicture = previousMessageExists && ChatsDataBase.getMessage(previousMessageId).get(4) != null;
+        boolean previousMessageHasText = previousMessageExists && ChatsDataBase.getMessage(previousMessageId).get(3) != null;
+        boolean lastMessageIsPicture = ChatsDataBase.getMessage(ChatsDataBase.getLastMessageId(mainUserId,contactId)).get(4) != null;
+        boolean lastMessageHasText = ChatsDataBase.getMessage(ChatsDataBase.getLastMessageId(mainUserId,contactId)).get(3) != null;
+
+        if (!previousMessageExists && !nextMessageExists) {
             mainContactMessageLabel.setText("");
+        } else if (!nextMessageExists && previousMessageIsPicture && !previousMessageHasText) {
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.setStyle("-fx-text-fill: white");
+            mainContactMessageLabel.setText("Picture");
+        } else if (!nextMessageExists && (!previousMessageIsPicture || previousMessageIsPicture && previousMessageHasText)){
+            String previousLastMessage = (String) ChatsDataBase.getMessage(previousMessageId).get(3);
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
+            mainContactMessageLabel.setText(previousLastMessage);
+        } else if (nextMessageExists && lastMessageIsPicture && !lastMessageHasText) {
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.setStyle("-fx-text-fill: white");
+            mainContactMessageLabel.setText("Picture");
+        } else if (nextMessageExists && (!lastMessageIsPicture || lastMessageIsPicture && lastMessageHasText)) {
+            String lastMessage = ChatsDataBase.getLastMessage(mainUserId, contactId);
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
+            mainContactMessageLabel.setText(lastMessage);
         }
     }
     private void changeLastMessageTime(int messageId,int senderId,int receiverId) throws SQLException {
-        int previousMessageId = ChatsDataBase.getPreviousMessageId(messageId,senderId,receiverId);
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(senderId,receiverId,messageId);
         if (ChatsDataBase.messageExists(mainUserId,contactId,previousMessageId)) {
             String previousMessageTime = getMessageTime(previousMessageId);
             mainContactTimeLabel.setText(previousMessageTime);

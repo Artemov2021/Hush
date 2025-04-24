@@ -219,7 +219,7 @@ public class ChatsDataBase {
         }
         return ids;
     }
-    public static int getPreviousMessageId(int messageId,int mainUserId,int contactId) throws SQLException {
+    public static int getPreviousMessageId(int mainUserId,int contactId,int messageId) throws SQLException {
         String getMessageIdStatement = "SELECT message_id \n" +
                 "FROM chats \n" +
                 "WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) \n" +
@@ -242,6 +242,28 @@ public class ChatsDataBase {
                         return previousMessageId; // Return the previous message_id
                     }
                 }
+        }
+        return -1; // Return -1 if no previous message is found
+    }
+    public static int getNextMessageId(int mainUserId,int contactId,int messageId) throws SQLException {
+        String getMessageIdStatement = "SELECT message_id FROM chats WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND message_id > ?;";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            // Second Query: Get previous message_id
+            PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(3, contactId);
+            preparedStatement.setInt(4, mainUserId);
+            preparedStatement.setInt(5, messageId); // Now correctly setting the last parameter
+
+            ResultSet messageIdResult = preparedStatement.executeQuery();
+            if (messageIdResult.next()) {
+                int nextMessageId = messageIdResult.getInt(1);
+                if (!messageIdResult.wasNull()) {
+                    return nextMessageId; // Return the previous message_id
+                }
+            }
         }
         return -1; // Return -1 if no previous message is found
     }
