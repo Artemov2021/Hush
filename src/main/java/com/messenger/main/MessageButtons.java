@@ -157,7 +157,7 @@ public class MessageButtons extends MainChatController {
 
         Label deleteText = new Label("Delete");
         deleteText.setLayoutX(34);
-        deleteText.setLayoutY(6);
+        deleteText.setLayoutY(7);
         deleteText.getStyleClass().add("chat-message-buttons-text");
         deletePane.getChildren().add(deleteText);
 
@@ -265,7 +265,7 @@ public class MessageButtons extends MainChatController {
 
             Label replyWrapperMessagePhotoTitle = new Label("Photo");
             replyWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title");
-            replyWrapperMessagePhotoTitle.setLayoutX(18);
+            replyWrapperMessagePhotoTitle.setLayoutX(17);
             replyWrapperMessagePhotoTitle.setMaxWidth(40);
             replyWrapperMessagePhotoTitle.setMaxHeight(17);
             replyWrapperMessagePictureGroup.getChildren().add(replyWrapperMessagePhotoTitle);
@@ -380,7 +380,7 @@ public class MessageButtons extends MainChatController {
 
             Label editWrapperMessagePhotoTitle = new Label("Photo");
             editWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title");
-            editWrapperMessagePhotoTitle.setLayoutX(18);
+            editWrapperMessagePhotoTitle.setLayoutX(17);
             editWrapperMessagePhotoTitle.setMaxWidth(40);
             editWrapperMessagePhotoTitle.setMaxHeight(17);
             editWrapperMessagePictureGroup.getChildren().add(editWrapperMessagePhotoTitle);
@@ -644,7 +644,7 @@ public class MessageButtons extends MainChatController {
     private void deleteMessageInChat(int messageId,int senderId,int receiverId) throws SQLException {
         moveMessageAvatarBack(messageId,senderId,receiverId);
         changeLastMessage(messageId);
-        changeLastMessageTime(messageId,senderId,receiverId);
+        changeLastMessageTime(messageId);
         deleteDateLabel(messageId);
         removeMessageHBox(messageId);
     }
@@ -696,13 +696,20 @@ public class MessageButtons extends MainChatController {
             mainContactMessageLabel.setText(lastMessage);
         }
     }
-    private void changeLastMessageTime(int messageId,int senderId,int receiverId) throws SQLException {
-        int previousMessageId = ChatsDataBase.getPreviousMessageId(senderId,receiverId,messageId);
-        if (ChatsDataBase.messageExists(mainUserId,contactId,previousMessageId)) {
+    private void changeLastMessageTime(int messageId) throws SQLException {
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId);
+        int nextMessageId = ChatsDataBase.getNextMessageId(mainUserId,contactId,messageId);
+        boolean previousMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,previousMessageId);
+        boolean nextMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,nextMessageId);
+
+        if (!previousMessageExists && !nextMessageExists) {
+            mainContactTimeLabel.setText("");
+        } else if (!nextMessageExists) {
             String previousMessageTime = getMessageTime(previousMessageId);
             mainContactTimeLabel.setText(previousMessageTime);
-        } else {
-            mainContactTimeLabel.setText("");
+        } else if (!previousMessageExists || (previousMessageExists && nextMessageExists)){
+            int lastMessageId = ChatsDataBase.getLastMessageId(mainUserId,contactId);
+            mainContactTimeLabel.setText(getMessageTime(lastMessageId));
         }
     }
     private String getMessageTime(int messageId) throws SQLException {
@@ -719,11 +726,14 @@ public class MessageButtons extends MainChatController {
 
             LocalDate messageDate = LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day));
             LocalDate today = LocalDate.now();
+            LocalDate yesterday = today.minusDays(1); // Calculate yesterday's date
 
             if (messageDate.isEqual(today)) {
                 return time; // Show only HH:mm if it's today
+            } else if (messageDate.isEqual(yesterday)) {
+                return "yesterday"; // Show "yesterday" if the date is yesterday
             } else {
-                return (day + "." + month + "." + year); // Show full date if not today
+                return day + "." + month + "." + year; // Show full date if not today
             }
         } else {
             return ""; // Default to empty if no match
@@ -798,15 +808,15 @@ public class MessageButtons extends MainChatController {
                 .map(id -> (HBox) chatVBox.lookup("#messageHBox" + id))
                 .filter(Objects::nonNull).toList();
 
-        List<StackPane> messageessageStackPane = foundHBoxes.stream()
+        List<StackPane> messageStackPane = foundHBoxes.stream()
                 .flatMap(hbox -> hbox.getChildren().stream()) // Get all children of each HBox
                 .filter(node -> node instanceof StackPane) // Keep only StackPane elements
                 .filter(node -> node.getId() != null && node.getId().startsWith("messageStackPane")) // Filter by ID prefix
                 .map(node -> (StackPane) node) // Cast to StackPane
                 .toList(); // Collect as List
 
-        List<StackPane> replyMessageStackPane = messageessageStackPane.stream()
-                .flatMap(messageStackPane -> messageStackPane.getChildren().stream()) // Get all children of each HBox
+        List<StackPane> replyMessageStackPane = messageStackPane.stream()
+                .flatMap(messageStackPane1 -> messageStackPane1.getChildren().stream()) // Get all children of each HBox
                 .filter(node -> node instanceof StackPane) // Keep only StackPane elements
                 .filter(node -> node.getId() != null && node.getId().startsWith("messageReplyStackPane")) // Filter by ID prefix
                 .map(node -> (StackPane) node) // Cast to StackPane
@@ -821,6 +831,26 @@ public class MessageButtons extends MainChatController {
             replyStackPane.getChildren().add(repliedMessageDeletedMessage);
             replyStackPane.setOnMouseClicked(null);
             replyStackPane.setCursor(Cursor.DEFAULT);
+        }
+
+        List<StackPane> replyPictureMessageStackPanes = messageStackPane.stream()
+                .flatMap(replyPictureMessageStackPane -> replyPictureMessageStackPane.getChildren().stream()) // Get all children
+                .filter(node -> node instanceof VBox)
+                .flatMap(vbox -> ((VBox) vbox).getChildren().stream())
+                .filter(node -> node instanceof StackPane) // Keep only StackPane elements
+                .filter(node -> node.getId() != null && node.getId().startsWith("messageReplyStackPane")) // Filter by ID prefix
+                .map(node -> (StackPane) node) // Cast to StackPane
+                .toList(); // Collect as List
+
+        for (StackPane replyPictureStackPane: replyPictureMessageStackPanes) {
+            replyPictureStackPane.getChildren().clear();
+            Label repliedMessageDeletedMessage = new Label("(deleted message)");
+            repliedMessageDeletedMessage.getStyleClass().add((senderId == mainUserId) ? "chat-message-user-deleted-message" : "chat-message-contact-deleted-message");
+            StackPane.setAlignment(repliedMessageDeletedMessage, Pos.TOP_LEFT);
+            StackPane.setMargin(repliedMessageDeletedMessage,new Insets(10,8,5,8));
+            replyPictureStackPane.getChildren().add(repliedMessageDeletedMessage);
+            replyPictureStackPane.setOnMouseClicked(null);
+            replyPictureStackPane.setCursor(Cursor.DEFAULT);
         }
     }
     public void deletePotentialWrapper(int messageId) {

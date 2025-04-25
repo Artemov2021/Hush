@@ -88,6 +88,8 @@ public class ChatMessage extends MainChatController {
             case "reply_with_text" -> buildReplyWithTextMessage();
             case "picture" -> buildPictureMessage();
             case "picture_with_text" -> buildPictureWithTextMessage();
+            case "reply_with_picture" -> buildReplyWithPictureMessage();
+            case "reply_with_picture_and_text" -> buildReplyWithPictureAndTextMessage();
             default -> throw new Exception();
         };
     }
@@ -102,7 +104,7 @@ public class ChatMessage extends MainChatController {
         setMessageAvatar();
         return messageHBox;
     }
-    private HBox buildReplyWithTextMessage() throws SQLException, ParseException {
+    private HBox buildReplyWithTextMessage() throws SQLException, ParseException, IOException {
         setMessageHBox();
         setMessageStackPane();
         setReplyStackPane();
@@ -126,6 +128,29 @@ public class ChatMessage extends MainChatController {
         setMessageStackPane();
         setMessageTimeLabel();
         setMessageVBox();
+        setMessagePictureHBox();
+        setMessagePictureLabel();
+        setMessageTextLabel();
+        setMessageAvatar();
+        return messageHBox;
+    }
+    private HBox buildReplyWithPictureMessage() throws SQLException, IOException, ParseException {
+        setMessageHBox();
+        setMessageStackPane();
+        setMessageVBox();
+        setReplyStackPane();
+        setMessagePictureHBox();
+        setMessagePictureLabel();
+        setMessagePictureTimeLabel();
+        setMessageAvatar();
+        return messageHBox;
+    }
+    private HBox buildReplyWithPictureAndTextMessage() throws SQLException, IOException, ParseException {
+        setMessageHBox();
+        setMessageStackPane();
+        setMessageTimeLabel();
+        setMessageVBox();
+        setReplyStackPane();
         setMessagePictureHBox();
         setMessagePictureLabel();
         setMessageTextLabel();
@@ -160,6 +185,7 @@ public class ChatMessage extends MainChatController {
     }
     private void setMessageVBox() {
         messageVBox = new VBox();
+        messageVBox.setMouseTransparent(false);
         messageStackPane.getChildren().add(messageVBox);
     }
     private void setMessageTextLabel() {
@@ -169,7 +195,7 @@ public class ChatMessage extends MainChatController {
         messageTextLabel.setId("messageTextLabel"+id);
         messageTextLabel.setWrapText(true);
         messageTextLabel.getStyleClass().add("chat-message-text-label");
-        if (type.equals("picture_with_text")) {
+        if (type.equals("picture_with_text") || type.equals("reply_with_picture_and_text")) {
             VBox.setMargin(messageTextLabel,padding);
             messageVBox.getChildren().add(messageTextLabel);
         } else {
@@ -189,14 +215,15 @@ public class ChatMessage extends MainChatController {
         messagePictureHBox = new HBox();
         messagePictureHBox.setAlignment(Pos.TOP_CENTER);
         messageVBox.getChildren().add(messagePictureHBox);
+        messagePictureHBox.setMouseTransparent(false);
     }
-    private void setReplyStackPane() throws SQLException {
+    private void setReplyStackPane() throws SQLException, IOException {
         short minWidth = 80;
         short prefHeight = 37;
         short maxHeight = 37;
         String messageReplyPaneStyle = (mainUserId == sender_id) ? "chat-message-user-reply-pane" : "chat-message-contact-reply-pane";
         boolean repliedMessageExists = ChatsDataBase.messageExists(sender_id,receiver_id,reply_message_id);
-        boolean isRepliedMessagePicture = repliedMessageExists && ((String) ChatsDataBase.getMessage(reply_message_id).get(7)).contains("picture");
+        boolean isRepliedMessagePicture = repliedMessageExists && (ChatsDataBase.getMessage(reply_message_id).get(4)) != null;
 
         messageReplyStackPane = new StackPane();
         messageReplyStackPane.setId("messageReplyStackPane"+id);
@@ -206,9 +233,13 @@ public class ChatMessage extends MainChatController {
         messageReplyStackPane.setMaxHeight(maxHeight);
         messageReplyStackPane.getStyleClass().add(messageReplyPaneStyle);
         StackPane.setAlignment(messageReplyStackPane,Pos.TOP_LEFT);
-        StackPane.setMargin(messageReplyStackPane,new Insets(7,7,0,7));
-        messageStackPane.getChildren().add(messageReplyStackPane);
-
+        if (type.equals("reply_with_picture") || type.equals("reply_with_picture_and_text")) {
+            VBox.setMargin(messageReplyStackPane,new Insets(7,7,0,7));
+            messageVBox.getChildren().add(messageReplyStackPane);
+        } else {
+            StackPane.setMargin(messageReplyStackPane,new Insets(7,7,0,7));
+            messageStackPane.getChildren().add(messageReplyStackPane);
+        }
 
         if (!repliedMessageExists) {
             Label repliedMessageDeletedMessage = new Label("(deleted message)");
@@ -217,7 +248,103 @@ public class ChatMessage extends MainChatController {
             StackPane.setMargin(repliedMessageDeletedMessage,new Insets(10,8,5,8));
             messageReplyStackPane.getChildren().add(repliedMessageDeletedMessage);
         } else if (isRepliedMessagePicture) {
-            // TODO
+            // -------------------------------------------------------
+            // replied message picture label
+            short maxReplyPictureWidth = 50;
+            short maxReplyPictureHeight = 24;
+            short minHeight = 24;
+
+            Label replyPictureLabel = new Label();
+            StackPane.setAlignment(replyPictureLabel,Pos.TOP_LEFT);
+            StackPane.setMargin(replyPictureLabel,new Insets(7,0,0,7));
+
+            File tempFile = File.createTempFile("tempImage", ".png");
+            tempFile.deleteOnExit();
+
+            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                byte[] repliedMessagePicture = (byte[]) ChatsDataBase.getMessage(reply_message_id).get(4);
+                fos.write(repliedMessagePicture);
+            }
+
+            Image image = new Image(tempFile.toURI().toString(), true);
+            ImageView imageView = new ImageView(image);
+            imageView.setSmooth(true);
+            imageView.setCache(true);
+            imageView.setPreserveRatio(true); // Keep aspect ratio
+
+            StackPane imageContainer = new StackPane(imageView);
+            replyPictureLabel.setGraphic(imageContainer);
+            messageReplyStackPane.getChildren().add(replyPictureLabel);
+
+            image.progressProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal.doubleValue() >= 1.0) {
+                    try {
+                        double originalWidth = image.getWidth();
+                        double originalHeight = image.getHeight();
+
+                        // Scaling to fit max width & max height
+                        double scaleX = maxReplyPictureWidth / originalWidth;
+                        double scaleY = maxReplyPictureHeight / originalHeight;
+                        double scale = Math.min(1.0, Math.min(scaleX, scaleY)); // Don't scale up
+
+                        double scaledWidth = originalWidth * scale;
+                        double scaledHeight = originalHeight * scale;
+
+                        // Enforce minimum height of 40px
+                        if (scaledHeight < minHeight) {
+                            double minHeightScale = minHeight / originalHeight;
+                            scaledHeight = minHeight;
+                            scaledWidth = originalWidth * minHeightScale;
+                            // Optional: If that causes width > maxAllowedWidth, clamp it again
+                            if (scaledWidth > maxReplyPictureWidth) {
+                                scaledWidth = maxReplyPictureWidth;
+                                scaledHeight = originalHeight * (maxReplyPictureWidth / originalWidth);
+                            }
+                        }
+
+                        imageView.setFitWidth(scaledWidth); // Height handled via preserveRatio
+
+                        imageContainer.setPrefWidth(scaledWidth);
+                        imageContainer.setPrefHeight(scaledHeight);
+
+                        Rectangle clip = new Rectangle(scaledWidth, scaledHeight);
+                        clip.setArcWidth(8);
+                        clip.setArcHeight(8);
+                        imageContainer.setClip(clip);
+
+                        String repliedMessageName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessage(reply_message_id).get(1));
+                        Label messageReplyNameLabel = new Label(repliedMessageName);
+                        messageReplyNameLabel.getStyleClass().add("chat-message-reply-name");
+                        messageReplyNameLabel.setMouseTransparent(true);
+                        StackPane.setAlignment(messageReplyNameLabel,Pos.TOP_LEFT);
+                        StackPane.setMargin(messageReplyNameLabel,new Insets(4,8,0,scaledWidth + 16));
+                        messageReplyStackPane.getChildren().add(messageReplyNameLabel);
+
+                        Label messageReplyMessagePhotoSymbol = new Label();
+                        messageReplyMessagePhotoSymbol.setPrefWidth(11);
+                        messageReplyMessagePhotoSymbol.setPrefHeight(11);
+                        messageReplyMessagePhotoSymbol.getStyleClass().add((mainUserId == sender_id) ? "chat-message-user-reply-photo-symbol" : "chat-message-contact-reply-photo-symbol");
+                        messageReplyMessagePhotoSymbol.setMouseTransparent(true);
+                        StackPane.setAlignment(messageReplyMessagePhotoSymbol,Pos.TOP_LEFT);
+                        StackPane.setMargin(messageReplyMessagePhotoSymbol,new Insets(20,8,0,scaledWidth + 16));
+                        messageReplyStackPane.getChildren().add(messageReplyMessagePhotoSymbol);
+
+                        Label messageReplyMessagePhotoTitle = new Label("Photo");
+                        messageReplyMessagePhotoTitle.getStyleClass().add((mainUserId == sender_id) ? "chat-message-user-reply-message" : "chat-message-contact-reply-message");
+                        messageReplyMessagePhotoTitle.setMouseTransparent(true);
+                        StackPane.setAlignment(messageReplyMessagePhotoTitle,Pos.TOP_LEFT);
+                        StackPane.setMargin(messageReplyMessagePhotoTitle,new Insets(18,8,0,scaledWidth + 30));
+                        messageReplyStackPane.getChildren().add(messageReplyMessagePhotoTitle);
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+
+
+                }
+            });
+            // -------------------------------------------------------
+
+
         } else {
             String repliedMessageName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessage(reply_message_id).get(1));
             Label messageReplyNameLabel = new Label(repliedMessageName);
@@ -259,6 +386,11 @@ public class ChatMessage extends MainChatController {
                 showFullyMessagePicture();
             }
         });
+        if (type.equals("reply_with_picture")) {
+            HBox.setMargin(messagePictureLabel,new Insets(8,9,8,9));
+        } else if (type.equals("reply_with_picture_and_text")) {
+            HBox.setMargin(messagePictureLabel,new Insets(8,9,0,9));
+        }
 
         File tempFile = File.createTempFile("tempImage", ".png");
         tempFile.deleteOnExit();
@@ -325,6 +457,11 @@ public class ChatMessage extends MainChatController {
                     clip.setArcWidth(22);
                     clip.setArcHeight(22);
                     imageContainer.setClip(clip);
+                } else if (type.equals("reply_with_picture") || type.equals("reply_with_picture_and_text")) {
+                    Rectangle clip = new Rectangle(scaledWidth, scaledHeight);
+                    clip.setArcWidth(14);
+                    clip.setArcHeight(14);
+                    imageContainer.setClip(clip);
                 }
             }
         });
@@ -337,19 +474,17 @@ public class ChatMessage extends MainChatController {
         int messageHBoxIndex = (mainUserId == sender_id) ? 0 : messageHBox.getChildren().size();
         messageHBox.getChildren().add(messageHBoxIndex,messagePictureTimeLabel);
 
-
-
+        byte moveDistance = 17;
         messagePictureTimeLabel.setOpacity(0);
-        messagePictureTimeLabel.setTranslateX(18); // Start slightly off-screen (right side)
+        messagePictureTimeLabel.setTranslateX((mainUserId == sender_id) ? moveDistance : -moveDistance); // Start slightly off-screen (right side)
 
-// Transitions
         TranslateTransition slideIn = new TranslateTransition(Duration.millis(200), messagePictureTimeLabel);
-        slideIn.setFromX(18);
+        slideIn.setFromX((mainUserId == sender_id) ? moveDistance : -moveDistance);
         slideIn.setToX(0);
 
         TranslateTransition slideOut = new TranslateTransition(Duration.millis(200), messagePictureTimeLabel);
         slideOut.setFromX(0);
-        slideOut.setToX(18);
+        slideOut.setToX((mainUserId == sender_id) ? moveDistance : -moveDistance);
 
         FadeTransition fadeIn = new FadeTransition(Duration.millis(200), messagePictureTimeLabel);
         fadeIn.setFromValue(0);
@@ -359,14 +494,13 @@ public class ChatMessage extends MainChatController {
         fadeOut.setFromValue(1);
         fadeOut.setToValue(0);
 
-        // Hover events
-        messagePictureLabel.setOnMouseEntered(e -> {
+        messageStackPane.setOnMouseEntered(e -> {
             messagePictureTimeLabel.setVisible(true);
             slideIn.playFromStart();
             fadeIn.playFromStart();
         });
 
-        messagePictureLabel.setOnMouseExited(e -> {
+        messageStackPane.setOnMouseExited(e -> {
             slideOut.playFromStart();
             fadeOut.playFromStart();
             fadeOut.setOnFinished(ev -> messagePictureTimeLabel.setVisible(false));
@@ -406,7 +540,7 @@ public class ChatMessage extends MainChatController {
         return switch (type) {
             case "text" -> new Insets(5,50,9,13);
             case "reply_with_text" -> new Insets(48,50,7,12);
-            case "picture_with_text" -> new Insets (8,50,7,13);
+            case "picture_with_text", "reply_with_picture_and_text" -> new Insets (8,50,7,13);
             default -> null;
         };
     }

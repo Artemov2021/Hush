@@ -160,6 +160,14 @@
     -fx-font-size: 11;
     -fx-text-fill: #7E7D82;
 }
+.chat-message-user-reply-photo-symbol {
+    -fx-background-image: url("../elements/replyMessagePhotoSymbolUser.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-message-contact-reply-photo-symbol {
+    -fx-background-image: url("../elements/replyMessagePhotoSymbolContact.png");
+    -fx-background-repeat: no-repeat;
+}
 .chat-message-user-deleted-message {
     -fx-font-siez: 12;
     -fx-text-fill: #9B9AA3;
@@ -168,6 +176,7 @@
     -fx-font-size: 12;
     -fx-text-fill: #7E7D82;
 }
+
 /* Picture Time Label */
 .chat-picture-message-time-label {
     -fx-background-color: rgba(30,30,33,86);

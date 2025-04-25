@@ -135,9 +135,12 @@ public class MainContactController extends MainWindowController {
 
             LocalDate messageDate = LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day));
             LocalDate today = LocalDate.now();
+            LocalDate yesterday = today.minusDays(1); // Calculate yesterday's date
 
             if (messageDate.isEqual(today)) {
                 mainContactTimeLabel.setText(time); // Show only HH:mm if it's today
+            } else if (messageDate.isEqual(yesterday)) {
+                mainContactTimeLabel.setText("yesterday"); // Show "yesterday" if the date is yesterday
             } else {
                 mainContactTimeLabel.setText(day + "." + month + "." + year); // Show full date if not today
             }
