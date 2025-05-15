@@ -39,7 +39,7 @@ public class MainContactController extends MainWindowController {
     @FXML private Label mainContactNameLabel;
     @FXML protected Label mainContactMessageLabel;
     @FXML protected Label mainContactTimeLabel;
-    MainWindowController mainWindowController;
+    private MainWindowController mainWindowController;
 
     protected int contactId;
 

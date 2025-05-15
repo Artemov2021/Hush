@@ -82,7 +82,7 @@ public class MessageButtons extends MainChatController {
         messageButtonsBackground.getChildren().add(replyPane);
         replyPane.setOnMouseClicked(clickEvent -> {
             try {
-                int messageSenderId = (int) ChatsDataBase.getMessage(messageId).get(1);
+                int messageSenderId = (int) ChatsDataBase.getMessage(mainUserId,contactId,messageId).sender_id;
                 setReplyWrapper(messageSenderId,messageId);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -113,7 +113,7 @@ public class MessageButtons extends MainChatController {
         editPane.getStyleClass().add("chat-message-buttons-small-pane");
         editPane.setOnMouseClicked(clickEvent -> {
             try {
-                int messageSenderId = (int) ChatsDataBase.getMessage(messageId).get(1);
+                int messageSenderId = ChatsDataBase.getMessage(mainUserId,contactId,messageId).sender_id;
                 setEditWrapper(messageSenderId,messageId);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -197,7 +197,7 @@ public class MessageButtons extends MainChatController {
         messageButtonsBackground.getChildren().add(replyPane);
         replyPane.setOnMouseClicked(clickEvent -> {
             try {
-                int messageSenderId = (int) ChatsDataBase.getMessage(messageId).get(1);
+                int messageSenderId = (int) ChatsDataBase.getMessage(mainUserId,contactId,messageId).sender_id;
                 setReplyWrapper(messageSenderId,messageId);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -249,7 +249,7 @@ public class MessageButtons extends MainChatController {
         replyWrapperName.setLayoutY(6);
         replyWrapperBackground.getChildren().add(replyWrapperName);
 
-        boolean messageHasPicture = ChatsDataBase.getMessage(messageId).get(4) != null;
+        boolean messageHasPicture = ChatsDataBase.getMessage(mainUserId,contactId,messageId).picture != null;
         if (messageHasPicture) {
             Pane replyWrapperMessagePictureGroup = new Pane();
             replyWrapperMessagePictureGroup.setLayoutX(80);
@@ -292,7 +292,7 @@ public class MessageButtons extends MainChatController {
                 replyWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title");
             });
         } else {
-            String message = (String) ChatsDataBase.getMessage(messageId).get(3);
+            String message = ChatsDataBase.getMessage(mainUserId,contactId,messageId).message_text;
             Label replyWrapperMessage = new Label(message);
             replyWrapperMessage.setCursor(Cursor.HAND);
             replyWrapperMessage.getStyleClass().add("chat-wrapper-message");
@@ -364,7 +364,7 @@ public class MessageButtons extends MainChatController {
         editWrapperName.setLayoutY(6);
         editWrapperBackground.getChildren().add(editWrapperName);
 
-        boolean messageHasPicture = ChatsDataBase.getMessage(messageId).get(4) != null;
+        boolean messageHasPicture = ChatsDataBase.getMessage(mainUserId,contactId,messageId).picture != null;
         if (messageHasPicture) {
             Pane editWrapperMessagePictureGroup = new Pane();
             editWrapperMessagePictureGroup.setLayoutX(80);
@@ -407,7 +407,7 @@ public class MessageButtons extends MainChatController {
                 editWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title");
             });
         } else {
-            String message = (String) ChatsDataBase.getMessage(messageId).get(3);
+            String message = (String) ChatsDataBase.getMessage(mainUserId,contactId,messageId).message_text;
             Label editWrapperMessage = new Label(message);
             editWrapperMessage.setCursor(Cursor.HAND);
             editWrapperMessage.getStyleClass().add("chat-wrapper-message");
@@ -651,9 +651,10 @@ public class MessageButtons extends MainChatController {
     private void moveMessageAvatarBack(int messageId,int senderId,int receiverId) throws SQLException {
         HBox targetMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
         HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId));
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId);
 
         boolean hasAvatarLabel = targetMessageHBox.lookup("#messageAvatarLabel"+messageId) != null;
-        boolean isSameSender = (previousMessageHBox != null) && senderId == (int) ChatsDataBase.getMessage(ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId)).get(1);
+        boolean isSameSender = (previousMessageHBox != null) && senderId == (int) ChatsDataBase.getMessage(mainUserId,contactId,previousMessageId).sender_id;
         boolean previousMessageNoAvatarLabel = (previousMessageHBox != null) && previousMessageHBox.lookup("#messageAvatarLabel"+ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId)) == null;
 
         if (hasAvatarLabel && isSameSender && previousMessageNoAvatarLabel) {
@@ -665,10 +666,10 @@ public class MessageButtons extends MainChatController {
         int nextMessageId = ChatsDataBase.getNextMessageId(mainUserId,contactId,messageId);
         boolean previousMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,previousMessageId);
         boolean nextMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,nextMessageId);
-        boolean previousMessageIsPicture = previousMessageExists && ChatsDataBase.getMessage(previousMessageId).get(4) != null;
-        boolean previousMessageHasText = previousMessageExists && ChatsDataBase.getMessage(previousMessageId).get(3) != null;
-        boolean lastMessageIsPicture = ChatsDataBase.getMessage(ChatsDataBase.getLastMessageId(mainUserId,contactId)).get(4) != null;
-        boolean lastMessageHasText = ChatsDataBase.getMessage(ChatsDataBase.getLastMessageId(mainUserId,contactId)).get(3) != null;
+        boolean previousMessageIsPicture = previousMessageExists && ChatsDataBase.getMessage(mainUserId,contactId,previousMessageId).picture != null;
+        boolean previousMessageHasText = previousMessageExists && ChatsDataBase.getMessage(mainUserId,contactId,previousMessageId).message_text != null;
+        boolean lastMessageIsPicture = ChatsDataBase.getMessage(mainUserId,contactId,ChatsDataBase.getLastMessageId(mainUserId,contactId)).picture != null;
+        boolean lastMessageHasText = ChatsDataBase.getMessage(mainUserId,contactId,ChatsDataBase.getLastMessageId(mainUserId,contactId)).message_text != null;
 
         if (!previousMessageExists && !nextMessageExists) {
             mainContactMessageLabel.setText("");
@@ -678,7 +679,7 @@ public class MessageButtons extends MainChatController {
             mainContactMessageLabel.setStyle("-fx-text-fill: white");
             mainContactMessageLabel.setText("Picture");
         } else if (!nextMessageExists && (!previousMessageIsPicture || previousMessageIsPicture && previousMessageHasText)){
-            String previousLastMessage = (String) ChatsDataBase.getMessage(previousMessageId).get(3);
+            String previousLastMessage = ChatsDataBase.getMessage(mainUserId,contactId,previousMessageId).message_text;
             mainContactMessageLabel.setStyle("");
             mainContactMessageLabel.getStyleClass().clear();
             mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
@@ -713,7 +714,7 @@ public class MessageButtons extends MainChatController {
         }
     }
     private String getMessageTime(int messageId) throws SQLException {
-        String lastMessageFullDate = (String) ChatsDataBase.getMessage(messageId).get(6);
+        String lastMessageFullDate = ChatsDataBase.getMessage(mainUserId,contactId,messageId).time;
         String pattern = "(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}:\\d{2})"; // Extracts YYYY, MM, DD, HH:mm
         Pattern compiledPattern = Pattern.compile(pattern);
         Matcher matcher = compiledPattern.matcher(lastMessageFullDate);
@@ -740,7 +741,7 @@ public class MessageButtons extends MainChatController {
         }
     }
     private void deleteDateLabel(int messageId) throws SQLException {
-        String messageTime = (String) ChatsDataBase.getMessage(messageId).get(6);
+        String messageTime = ChatsDataBase.getMessage(mainUserId,contactId,messageId).time;
         Label dateLabel = (Label) chatVBox.lookup("#dateLabel"+getDateLabelDate(messageTime));
 
         boolean isThereMessageOnSameDate = ChatsDataBase.isThereMessagesOnSameDay(mainUserId,contactId,messageId,messageTime);

@@ -19,6 +19,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
+import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,6 +46,7 @@ public class PictureWindow extends MainChatController {
         this.mainContactMessageLabel = mainChatController.mainContactMessageLabel;
         this.mainContactsVBox = mainChatController.mainContactsVBox;
         this.mainContactTimeLabel = mainChatController.mainContactTimeLabel;
+        this.chatTextField = mainChatController.chatTextField;
     }
     public void showWindow() throws IOException {
         convertIntoPicture(picturePath);
@@ -122,6 +124,8 @@ public class PictureWindow extends MainChatController {
         pictureSendingWindowOverlay.getChildren().add(pictureSendingWindowChangePicture);
 
         pictureSendingWindowTextField = new TextField();
+        pictureSendingWindowTextField.setText(chatTextField.getText());
+        chatTextField.setText("");
         pictureSendingWindowTextField.setContextMenu(new ContextMenu());
         pictureSendingWindowTextField.getStyleClass().add("picture-sending-window-textfield");
         pictureSendingWindowTextField.setPromptText("Add a comment...");
@@ -181,20 +185,21 @@ public class PictureWindow extends MainChatController {
             handlePictureMessageEditing();
         } else {
             handlePictureMessageSending();
+            updateLastInteraction();
+            updateLastMessageTime();
+            moveContactPaneUp();
         }
 
+        updateLastMessage(); // TODO
         hideWindowSmoothly();
-        updateLastInteraction();
-        updateLastMessage();
-        updateLastMessageTime();
-        moveContactPaneUp();
     }
     private void handlePictureMessageSending() throws Exception {
         int messageId = insertPictureMessageIntoDB();
         displayPictureMessage(messageId);
     }
-    private void handlePictureMessageEditing() {
-
+    private void handlePictureMessageEditing() throws Exception {
+        editPictureMessageInDB();
+        editPictureMessageInChat();
     }
 
 
@@ -406,6 +411,16 @@ public class PictureWindow extends MainChatController {
                 .findFirst()
                 .orElse(-1);
     }
+    private int getEditWrapperId() {
+        return mainAnchorPane.getChildren().stream()
+                .map(Node::getId)
+                .filter(id -> id != null && id.startsWith("editWrapper"))
+                .map(id -> id.replaceAll("\\D+", ""))
+                .filter(num -> !num.isEmpty())
+                .mapToInt(Integer::parseInt)
+                .findFirst()
+                .orElse(-1);
+    }
     private String getCurrentFullTime() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
         return LocalDateTime.now().format(formatter);
@@ -432,8 +447,49 @@ public class PictureWindow extends MainChatController {
 
         return ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyMessageId,messageTime,messageType,received);
     }
+    private void editPictureMessageInDB() throws SQLException {
+        int editedMessageId = getEditWrapperId();
+        boolean editedMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,editedMessageId);
+        String newMessage = pictureSendingWindowTextField.getText().trim().isEmpty() ? null :  pictureSendingWindowTextField.getText().trim();
+        String newMessageType = getEditedMessageType();
+
+        if (!editedMessageExists) {
+            return;
+        }
+
+        ChatsDataBase.editMessage(editedMessageId,newMessage,picture,newMessageType);
+    }
+    private void editPictureMessageInChat() throws Exception {
+        int editedMessageId = getEditWrapperId();
+        boolean editedMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,editedMessageId);
+
+        if (!editedMessageExists) {
+            return;
+        }
+
+        ChatMessage chatMessage = ChatsDataBase.getMessage(mainUserId,contactId,editedMessageId);
+        chatMessage.reload(mainChatController);
+    }
+    private String getEditedMessageType() throws SQLException {
+        int editedMessageId = getEditWrapperId();
+        String originalMessageType = ChatsDataBase.getMessage(mainUserId,contactId,editedMessageId).type;
+        pictureMessageType newPictureMessageType = getPictureMessageType();
+
+        if (newPictureMessageType == pictureMessageType.EDIT_WITH_PICTURE && originalMessageType.contains("reply")) {
+            return "reply_with_picture";
+        } else if (newPictureMessageType == pictureMessageType.EDIT_WITH_PICTURE) {
+            return "picture";
+        } else if (newPictureMessageType == pictureMessageType.EDIT_WITH_PICTURE_AND_TEXT && originalMessageType.contains("reply")) {
+            return "reply_with_picture_and_text";
+        } else if (newPictureMessageType == pictureMessageType.EDIT_WITH_PICTURE_AND_TEXT) {
+            return "picture_with_text";
+        } else {
+            return null;
+        }
+
+    }
     private void displayPictureMessage(int messageId) throws Exception {
-        ChatMessage chatMessage = new ChatMessage(messageId);
+        ChatMessage chatMessage = ChatsDataBase.getMessage(mainUserId,contactId,messageId);
         chatVBox.getChildren().add(chatMessage.render(mainChatController));
     }
     public static String getMessageHours(String messageFullTime) {
@@ -473,8 +529,5 @@ public class PictureWindow extends MainChatController {
         mainContactsVBox.getChildren().remove(contactPane);
         mainContactsVBox.getChildren().add(0,contactPane);
     }
-
-
-
 
 }

@@ -414,7 +414,5 @@ public class SettingsWindowController extends MainWindowController {
         }
     }
 
-
-
 }
 

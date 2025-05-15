@@ -65,6 +65,22 @@ public class ChatsDataBase {
         }
         return -1;
     }
+    public static int getFirstMessageId(int mainUserId, int contactId) throws SQLException {
+        String statement = "SELECT message_id FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id ASC LIMIT 1";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(3, mainUserId);
+            preparedStatement.setInt(4, contactId);
+            ResultSet result = preparedStatement.executeQuery();
+            if (result.next()) {
+                return result.getInt("message_id");
+            }
+        }
+        return -1;
+    }
     public static int addMessage(int senderId,int receiverId, String message,byte[] picture,int replyMessageId,String messageTime,String messageType,boolean received) throws SQLException {
         String statement = "INSERT INTO chats (sender_id,receiver_id,message,picture,reply_message_id,message_time,message_type,received) VALUES (?,?,?,?,?,?,?,?)";
         InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
@@ -97,45 +113,128 @@ public class ChatsDataBase {
         ArrayList<ChatMessage> messages = new ArrayList<>();
         String statement = "SELECT * FROM chats WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY message_time ASC;";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
-            preparedStatement.setInt(1,mainUserId);
-            preparedStatement.setInt(2,contactId);
-            preparedStatement.setInt(3,contactId);
-            preparedStatement.setInt(4,mainUserId);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(3, contactId);
+            preparedStatement.setInt(4, mainUserId);
             ResultSet result = preparedStatement.executeQuery();
+
+            ArrayList<ChatMessage> tempMessages = new ArrayList<>();
+
+            // First load all messages and their IDs
             while (result.next()) {
-                int messageId = result.getInt("message_id");
-                ChatMessage message = new ChatMessage(messageId);
+                ChatMessage message = new ChatMessage(result); // Temp nextMessageId, will update later
+                tempMessages.add(message);
+            }
+
+            // Now set the nextMessageId for each message
+            for (int i = 0; i < tempMessages.size(); i++) {
+                ChatMessage message = tempMessages.get(i);
+
+                if (i > 0) {
+                    ChatMessage previousMessage = tempMessages.get(i - 1);
+                    message.setPreviousMessageData(previousMessage);
+                } else {
+                    message.setPreviousMessageData(null);
+                }
+
+                if (i < tempMessages.size() - 1) {
+                    ChatMessage nextMessage = tempMessages.get(i + 1);
+                    message.setNextMessageData(nextMessage);
+                } else {
+                    message.setNextMessageData(null);
+                }
+
                 messages.add(message);
             }
         }
         return messages;
     }
-    public static ArrayList<Object> getMessage(int messageId) throws SQLException {
-        ArrayList<Object> message = new ArrayList<>();
+    public static ChatMessage getMessage(int mainUserId,int contactId,int messageId) throws SQLException {
+        ChatMessage message = null;
         String statement = "SELECT * FROM chats WHERE message_id = ?";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,messageId);
             ResultSet result = preparedStatement.executeQuery();
-            while (result.next()) {
-                message.add(result.getInt("message_id"));
-                message.add(result.getInt("sender_id"));
-                message.add(result.getInt("receiver_id"));
-                message.add(result.getString("message"));
-                message.add(result.getBytes("picture"));
-                message.add((result.getInt("reply_message_id") == 0) ? (-1) : (result.getInt("reply_message_id")));
-                Timestamp ts = result.getTimestamp("message_time");
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                String formattedTime = sdf.format(ts);
-                message.add(formattedTime);
-                message.add(result.getString("message_type"));
-                message.add(result.getBoolean("received"));
+            if (result.next()) {
+                message = new ChatMessage(result);
+                message.setPreviousMessageDataWithList(getPreviousMessage(mainUserId,contactId,messageId));
+                message.setNextMessageDataWithList(getNextMessage(mainUserId,contactId,messageId));
             }
         }
         return message;
+    }
+    public static List<Object> getPreviousMessage(int mainUserId,int contactId,int messageId) throws SQLException {
+        List<Object> previousMessage = new ArrayList<>();
+        String getMessageIdStatement = "SELECT * \n" +
+                "FROM chats \n" +
+                "WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) \n" +
+                "AND message_id < ?\n" +
+                "ORDER BY message_id DESC;";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            // Second Query: Get previous message_id
+            PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(3, contactId);
+            preparedStatement.setInt(4, mainUserId);
+            preparedStatement.setInt(5, messageId); // Now correctly setting the last parameter
+
+            ResultSet messageResult = preparedStatement.executeQuery();
+            if (messageResult.next()) {
+                previousMessage.add(messageResult.getInt("message_id"));
+                previousMessage.add(messageResult.getInt("sender_id"));
+                previousMessage.add(messageResult.getInt("receiver_id"));
+                previousMessage.add(messageResult.getString("message"));
+                previousMessage.add(messageResult.getBytes("picture"));
+                previousMessage.add((messageResult.getInt("reply_message_id") == 0) ? (-1) : (messageResult.getInt("reply_message_id")));
+                Timestamp ts = messageResult.getTimestamp("message_time");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                String formattedTime = sdf.format(ts);
+                previousMessage.add(formattedTime);
+                previousMessage.add(messageResult.getString("message_type"));
+                previousMessage.add(messageResult.getBoolean("received"));
+                return previousMessage;
+            }
+        }
+        return null;
+    }
+    public static List<Object> getNextMessage(int mainUserId,int contactId,int messageId) throws SQLException {
+        List<Object> previousMessage = new ArrayList<>();
+        String getMessageIdStatement = "SELECT * FROM chats WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND message_id > ?;";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            // Second Query: Get previous message_id
+            PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(3, contactId);
+            preparedStatement.setInt(4, mainUserId);
+            preparedStatement.setInt(5, messageId); // Now correctly setting the last parameter
+
+            ResultSet messageResult = preparedStatement.executeQuery();
+            if (messageResult.next()) {
+                previousMessage.add(messageResult.getInt("message_id"));
+                previousMessage.add(messageResult.getInt("sender_id"));
+                previousMessage.add(messageResult.getInt("receiver_id"));
+                previousMessage.add(messageResult.getString("message"));
+                previousMessage.add(messageResult.getBytes("picture"));
+                previousMessage.add((messageResult.getInt("reply_message_id") == 0) ? (-1) : (messageResult.getInt("reply_message_id")));
+                Timestamp ts = messageResult.getTimestamp("message_time");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                String formattedTime = sdf.format(ts);
+                previousMessage.add(formattedTime);
+                previousMessage.add(messageResult.getString("message_type"));
+                previousMessage.add(messageResult.getBoolean("received"));
+                return previousMessage;
+            }
+        }
+        return null;
     }
     public static int getSenderIdWithMessageId(int messageId) throws SQLException {
         String statement = "SELECT sender_id FROM chats WHERE message_id = ?";
@@ -163,15 +262,16 @@ public class ChatsDataBase {
         }
         return -1;
     }
-    public static void editMessage(int messageId,String newMessage,byte[] picture) throws SQLException {
-        String statement = "UPDATE chats SET message = ?,picture = ? WHERE message_id = ?";
+    public static void editMessage(int messageId,String newMessage,byte[] picture,String newMessageType) throws SQLException {
+        String statement = "UPDATE chats SET message = ?,picture = ?,message_type = ? WHERE message_id = ?";
         InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setString(1,newMessage);
             preparedStatement.setBlob(2,inputStreamPicture);
-            preparedStatement.setInt(3,messageId);
+            preparedStatement.setString(3,newMessageType);
+            preparedStatement.setInt(4,messageId);
             preparedStatement.executeUpdate();
         }
     }

@@ -3,9 +3,11 @@ package com.messenger.main;
 import com.messenger.database.ChatsDataBase;
 import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
+import com.messenger.design.ChatLoadingCircle;
 import com.messenger.design.ScrollPaneEffect;
 import javafx.animation.*;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.scene.control.*;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -22,6 +24,8 @@ import javafx.scene.Cursor;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -37,20 +41,24 @@ public class MainChatController extends MainContactController {
     @FXML protected ScrollPane chatScrollPane;
     @FXML private Label chatMainAvatar;
     @FXML private Label chatMainName;
-    @FXML protected VBox chatVBox;
-    @FXML private TextField chatTextField;
+    @FXML public VBox chatVBox;
+    @FXML protected TextField chatTextField;
     @FXML private Label chatAddPictureButton;
     @FXML protected Label scrollDownButton;
     @FXML private Label sendMessageButton;
 
+    protected byte[] mainUserDataBaseAvatar;
+    protected byte[] contactDataBaseAvatar;
+    protected ImageView mainUserMessageAvatar;
+    protected ImageView contactMessageAvatar;
 
     // Chat Interface Initialization, Chat Loading
     public void setChatContactId(int contactId) {
         this.contactId = contactId;
     }
-    public void injectMainUIElements(MainWindowController source) {
-        this.mainAnchorPane = source.mainAnchorPane;
-        this.mainContactsVBox = source.mainContactsVBox;
+    public void injectMainUIElements(MainWindowController mainWindowController) {
+        this.mainAnchorPane = mainWindowController.mainAnchorPane;
+        this.mainContactsVBox = mainWindowController.mainContactsVBox;
     }
     public void injectContactUIElements(MainContactController mainContactController) {
         this.mainContactMessageLabel = mainContactController.mainContactMessageLabel;
@@ -58,9 +66,11 @@ public class MainChatController extends MainContactController {
     }
     public final void initializeChat() throws Exception {
         initializeChatInterface();
+        setAvatarsCache();
         loadChat();
+        setChatLazyLoadingListener();
+        //scrollLoadedChatDown();
     }
-
 
     // Chat Interface Initialization
     private void initializeChatInterface() throws SQLException {
@@ -72,7 +82,6 @@ public class MainChatController extends MainContactController {
         applyScrollBarEffect(chatScrollPane);
         setMessageSpacing(5);
         setChatTextFieldFocus();
-        scrollToTheBottom();
         setScrollDownButtonListener();
         setSendMessageListener();
         removeTextFieldContextMenu();
@@ -133,11 +142,6 @@ public class MainChatController extends MainContactController {
             if (chatTextField.isVisible() && !chatTextField.isDisabled()) {
                 chatTextField.requestFocus();
             }
-        });
-    }
-    public void scrollToTheBottom() {
-        Platform.runLater(() -> {
-            chatScrollPane.setVvalue(1);
         });
     }
     public void smoothScrollToTheBottom() {
@@ -270,7 +274,7 @@ public class MainChatController extends MainContactController {
 
     // Chat Loading
     private void loadChat() throws Exception {
-        boolean chatIsEmpty = ChatsDataBase.getAllMessages(mainUserId,contactId).isEmpty();
+        boolean chatIsEmpty = ChatsDataBase.getAllMessages(mainUserId, contactId).isEmpty();
 
         if (chatIsEmpty) {
             setCurrentDateLabel();
@@ -279,14 +283,63 @@ public class MainChatController extends MainContactController {
         }
     }
     public void loadChatHistory() throws Exception {
-        List<ChatMessage> allMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
-        for (ChatMessage message: allMessages) {
-            chatVBox.getChildren().add(message.render(this));
+        List<ChatMessage> allReversedMessages = new ArrayList<>(ChatsDataBase.getAllMessages(mainUserId,contactId)).reversed();
+        List<Node> firstNodesToLoad = getFirstChatNodesToLoad(allReversedMessages);
+
+        chatVBox.getChildren().addAll(firstNodesToLoad);
+
+
+
+
+
+        chatVBox.layoutBoundsProperty().addListener((obs, oldBounds, newBounds) -> {
+            System.out.println("Height of the VBox after layout: " + newBounds.getHeight());
+        });
+    }
+    private List<Node> getFirstChatNodesToLoad(List<ChatMessage> allReversedMessages) throws Exception {
+        List<Node> firstNodes = new ArrayList<>();
+
+        int maxChatVBoxHeight = 1600;
+        double totalHeight = 0;
+
+        VBox dummyVBox = new VBox();
+        mainAnchorPane.getChildren().add(dummyVBox);
+        dummyVBox.setVisible(false);
+
+        for (ChatMessage message: allReversedMessages) {
+            if (totalHeight < maxChatVBoxHeight) {
+                HBox loadedMessage = message.load(this,allReversedMessages);
+                dummyVBox.getChildren().add(loadedMessage);
+                loadedMessage.applyCss();
+                loadedMessage.autosize();
+                int nodeHeight = (int) loadedMessage.getBoundsInParent().getHeight();
+                dummyVBox.getChildren().clear();
+
+                firstNodes.addFirst(loadedMessage);
+                totalHeight += nodeHeight;
+
+                if (isDateLabelRequired(allReversedMessages,message)) {
+                    String messageFullDate = message.time;
+                    String labelDate = getDateForDateLabel(messageFullDate);
+                    firstNodes.addFirst(getChatDateLabel(labelDate,messageFullDate));
+                    short dateLabelHeight = 27;
+                    totalHeight += dateLabelHeight;
+                }
+            } else {
+                break;
+            }
         }
+
+        return firstNodes;
     }
 
 
     // Chat Loading: Small Functions
+    private void scrollLoadedChatDown() {
+        chatVBox.heightProperty().addListener((observable, oldValue, newValue) -> {
+            chatScrollPane.setVvalue(1.0);
+        });
+    }
     private void setCurrentDateLabel() {
         LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);
@@ -295,10 +348,60 @@ public class MainChatController extends MainContactController {
     }
     private void setChatDateLabel(String date) {
         Label chatDateLabel = new Label(date);
-        chatDateLabel.setId("dateLabel");
+        chatDateLabel.setId("dateLabel"+getLabelIdCurrentDate(getCurrentFullTime()));
         chatDateLabel.getStyleClass().add("chat-date-label");
         VBox.setMargin(chatDateLabel,new Insets(8,0,8,0));
         chatVBox.getChildren().add(chatDateLabel);
+    }
+    private void setAvatarsCache() throws SQLException {
+        mainUserDataBaseAvatar = UsersDataBase.getAvatarWithId(mainUserId);
+        contactDataBaseAvatar = UsersDataBase.getAvatarWithId(contactId);
+    }
+    private String getLabelIdCurrentDate(String messageTime) {
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        LocalDateTime dateTime = LocalDateTime.parse(messageTime, inputFormatter);
+
+        return dateTime.toLocalDate().toString(); // Outputs in yyyy-MM-dd format
+    }
+    private Label getChatDateLabel(String date,String messageFullDate) {
+        Label chatDateLabel = new Label(date);
+        chatDateLabel.setId("dateLabel"+getLabelIdCurrentDate(messageFullDate));
+        chatDateLabel.getStyleClass().add("chat-date-label");
+        VBox.setMargin(chatDateLabel,new Insets(8,0,8,0));
+        return chatDateLabel;
+    }
+    private boolean isDateLabelRequired(List<ChatMessage> allMessages,ChatMessage message) throws SQLException, ParseException {
+        ChatMessage nextMessage = getNextMessage(allMessages,message);
+        boolean nextMessageExists = (nextMessage != null);
+        String nextMessageTime = nextMessageExists ? nextMessage.time : null;
+
+        boolean isFirstMessage = ChatsDataBase.getFirstMessageId(mainUserId,contactId) == message.id;
+        boolean isNextMessageOneDay = nextMessageExists && messagesHaveOneDayDifference(nextMessageTime,message.time);
+        return isFirstMessage || isNextMessageOneDay;
+    }
+    private ChatMessage getNextMessage(List<ChatMessage> allMessages,ChatMessage message) {
+        int messageIndex = allMessages.indexOf(message);
+
+        if (messageIndex != -1 && messageIndex < allMessages.size() - 1) {
+            return allMessages.get(messageIndex + 1);
+        } else {
+            return null; // No next object exists (either not found or it's the last)
+        }
+    }
+
+
+    // Chat Lazy Loading
+    private void setChatLazyLoadingListener() {
+        chatScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.doubleValue() == 0.0) {
+                boolean hasLoadingCircle = chatVBox.getChildren().stream()
+                        .anyMatch(node -> "chatLoadingCircle".equals(node.getId()));
+                if (!hasLoadingCircle) {
+                    ChatLoadingCircle chatLoadingCircle = new ChatLoadingCircle(this);
+                    chatLoadingCircle.addLoadingCircle();
+                }
+            }
+        });
     }
 
 
@@ -337,6 +440,38 @@ public class MainChatController extends MainContactController {
         updateLastMessageTime();
         moveContactPaneUp();
     }
+    private boolean messagesHaveOneDayDifference(String previousMessageFullDate, String currentMessageFullDate) throws ParseException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-MM-dd"); // Only extracts the date
+
+        Date date1 = dateFormat.parse(previousMessageFullDate);
+        Date date2 = dateFormat.parse(currentMessageFullDate);
+
+        // Extract only the day part (YYYY-MM-DD)
+        String day1 = dayFormat.format(date1);
+        String day2 = dayFormat.format(date2);
+
+        return !day1.equals(day2); // True if the dates are different
+    }
+    private String getDateForDateLabel(String fullDate) {
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.GERMAN);
+
+        // Parse input date
+        LocalDateTime dateTime = LocalDateTime.parse(fullDate, inputFormatter);
+        LocalDate date = dateTime.toLocalDate(); // Extract only date
+
+        // Get current year
+        int currentYear = LocalDate.now().getYear();
+
+        // Format output
+        String formattedDate = date.format(outputFormatter);
+        if (date.getYear() != currentYear) {
+            formattedDate += " " + date.getYear();
+        }
+
+        return formattedDate;
+    }
     private void finalizeMessageFlow() {
         removePotentialWrapper();
         moveBackScrollDownButton();
@@ -358,8 +493,9 @@ public class MainChatController extends MainContactController {
     private void editChosenMessageInDB() throws SQLException {
         String currentMessage = chatTextField.getText().trim();
         int chosenMessageId = getEditWrapperId();
+        String oldMessageType = ChatsDataBase.getMessage(mainUserId,contactId,chosenMessageId).type;
 
-        ChatsDataBase.editMessage(chosenMessageId,currentMessage,null);
+        ChatsDataBase.editMessage(chosenMessageId,currentMessage,null,oldMessageType);
     }
     private void editChosenMessageInChat() {
         String currentMessage = chatTextField.getText().trim();
@@ -400,7 +536,7 @@ public class MainChatController extends MainContactController {
         }
     }
     private void displayCurrentMessage(int messageId) throws Exception {
-        ChatMessage currentMessage = new ChatMessage(messageId);
+        ChatMessage currentMessage = ChatsDataBase.getMessage(mainUserId,contactId,messageId);
         chatVBox.getChildren().add(currentMessage.render(this));
     }
     private int getReplyWrapperId() {
@@ -534,11 +670,5 @@ public class MainChatController extends MainContactController {
             return null;
         }
     }
-
-
-
-
-
-
 
 }

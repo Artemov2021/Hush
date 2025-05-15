@@ -31,7 +31,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 public class MainWindowController {
-    @FXML protected AnchorPane mainAnchorPane;
+    @FXML public AnchorPane mainAnchorPane;
     @FXML protected Label mainAvatarLabel;
     @FXML protected Label mainNameLabel;
     @FXML protected Label mainEmailLabel;

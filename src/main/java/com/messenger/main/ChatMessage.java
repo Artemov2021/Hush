@@ -26,16 +26,14 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 public class ChatMessage extends MainChatController {
     public int id;
@@ -47,7 +45,28 @@ public class ChatMessage extends MainChatController {
     public String time;
     public String type;
     public boolean received;
+
+
     public int previousMessageId;
+    public int previousMessageSenderId;
+    public int previousMessageReceiverId;
+    public String previousMessageMessageText;
+    public byte[] previousMessagePicture;
+    public int previousMessageReplyMessageId;
+    public String previousMessageTime;
+    public String previousMessageType;
+    public boolean previousMessageReceived;
+
+
+    public int nextMessageId;
+    public int nextMessageSenderId;
+    public int nextMessageReceiverId;
+    public String nextMessageMessageText;
+    public byte[] nextMessagePicture;
+    public int nextMessageReplyMessageId;
+    public String nextMessageTime;
+    public String nextMessageType;
+    public boolean nextMessageReceived;
 
     private HBox messageHBox;
     private StackPane messageStackPane;
@@ -58,31 +77,39 @@ public class ChatMessage extends MainChatController {
     private HBox messagePictureHBox;
     private Label messagePictureTimeLabel;
     private Label messageAvatarLabel;
+    private Label previewPictureMessage;
 
     private MainChatController mainChatController;
+    private List<ChatMessage> allMessages;
 
-    public ChatMessage(int messageId) throws SQLException {
-        ArrayList<Object> messageList = ChatsDataBase.getMessage(messageId);
-        this.id = (int) messageList.get(0);
-        this.sender_id = (int) messageList.get(1);
-        this.receiver_id = (int) messageList.get(2);
-        this.message_text = (String) messageList.get(3);
-        this.picture = (byte[]) messageList.get(4);
-        this.reply_message_id = (int) messageList.get(5);
-        this.time = (String) messageList.get(6);
-        this.type = (String) messageList.get(7);
-        this.received = (boolean) messageList.get(8);
-        this.previousMessageId = calculatePreviousMessageId();
+
+    public ChatMessage(ResultSet result) throws SQLException {
+        this.id = result.getInt("message_id");
+        this.sender_id = result.getInt("sender_id");
+        this.receiver_id = result.getInt("receiver_id");
+        this.message_text = result.getString("message");
+        this.picture = result.getBytes("picture");
+        this.reply_message_id = result.getInt("reply_message_id");
+        this.time = result.getString("message_time"); // (use correct column)
+        this.type = result.getString("message_type");
+        this.received = result.getBoolean("received");
     }
     private void injectChatElements(MainChatController mainChatController) {
         this.mainChatController = mainChatController;
         this.chatVBox = mainChatController.chatVBox;
         this.chatScrollPane = mainChatController.chatScrollPane;
         this.mainAnchorPane = mainChatController.mainAnchorPane;
+        this.contactId = mainChatController.contactId;
+        this.mainUserDataBaseAvatar = mainChatController.mainUserDataBaseAvatar;
+        this.mainUserMessageAvatar = mainChatController.mainUserMessageAvatar;
+        this.contactDataBaseAvatar = mainChatController.contactDataBaseAvatar;
+        this.contactMessageAvatar = mainChatController.contactMessageAvatar;
     }
-    public HBox render(MainChatController mainChatController) throws Exception {
+    public HBox load(MainChatController mainChatController,List<ChatMessage> allMessages) throws Exception {
+        // no date label
+        this.allMessages = allMessages;
         injectChatElements(mainChatController);
-        setPotentialDateLabel();
+        setMessageHBox();
         return switch (type) {
             case "text" -> buildTextMessage();
             case "reply_with_text" -> buildReplyWithTextMessage();
@@ -93,7 +120,82 @@ public class ChatMessage extends MainChatController {
             default -> throw new Exception();
         };
     }
+    public HBox render(MainChatController mainChatController) throws Exception {
+        injectChatElements(mainChatController);
+        setPotentialDateLabel();
+        setMessageHBox();
+        return switch (type) {
+            case "text" -> buildTextMessage();
+            case "reply_with_text" -> buildReplyWithTextMessage();
+            case "picture" -> buildPictureMessage();
+            case "picture_with_text" -> buildPictureWithTextMessage();
+            case "reply_with_picture" -> buildReplyWithPictureMessage();
+            case "reply_with_picture_and_text" -> buildReplyWithPictureAndTextMessage();
+            default -> throw new Exception();
+        };
+    }
+    public void reload(MainChatController mainChatController) throws Exception {
+        injectChatElements(mainChatController);
+        messageHBox = (HBox) chatVBox.lookup("#messageHBox"+id);
+        messageHBox.getChildren().clear();
+        switch (type) {
+            case "picture" -> buildPictureMessage();
+            case "picture_with_text" -> buildPictureWithTextMessage();
+            case "reply_with_picture" -> buildReplyWithPictureMessage();
+            case "reply_with_picture_and_text" -> buildReplyWithPictureAndTextMessage();
+            default -> throw new Exception();
+        }
+    }
 
+
+    public void setPreviousMessageData(ChatMessage previousMessage) {
+        boolean previousMessageExists = (previousMessage != null);
+        this.previousMessageId = previousMessageExists ? previousMessage.id : -1;
+        this.previousMessageSenderId = previousMessageExists ? previousMessage.sender_id : -1;
+        this.previousMessageReceiverId = previousMessageExists ? previousMessage.receiver_id : -1;
+        this.previousMessageMessageText = previousMessageExists ? previousMessage.message_text : null;
+        this.previousMessagePicture = previousMessageExists ? previousMessage.picture : null;
+        this.previousMessageReplyMessageId = previousMessageExists ? previousMessage.reply_message_id : -1;
+        this.previousMessageTime = previousMessageExists ? previousMessage.time : null;
+        this.previousMessageType = previousMessageExists ? previousMessage.type : null;
+        this.previousMessageReceived = previousMessageExists && previousMessage.received;
+    }
+    public void setNextMessageData(ChatMessage nextMessage) {
+        boolean nextMessageExists = (nextMessage != null);
+        this.nextMessageId = nextMessageExists ? nextMessage.id : -1;
+        this.nextMessageSenderId = nextMessageExists ? nextMessage.sender_id : -1;
+        this.nextMessageReceiverId = nextMessageExists ? nextMessage.receiver_id : -1;
+        this.nextMessageMessageText = nextMessageExists ? nextMessage.message_text : null;
+        this.nextMessagePicture = nextMessageExists ? nextMessage.picture : null;
+        this.nextMessageReplyMessageId = nextMessageExists ? nextMessage.reply_message_id : -1;
+        this.nextMessageTime = nextMessageExists ? nextMessage.time : null;
+        this.nextMessageType = nextMessageExists ? nextMessage.type : null;
+        this.nextMessageReceived = nextMessageExists && nextMessage.received;
+    }
+    public void setPreviousMessageDataWithList(List<Object> previousMessage) throws SQLException {
+        boolean previousMessageExists = (previousMessage != null);
+        this.previousMessageId = previousMessageExists ? (int) previousMessage.get(0) : -1;
+        this.previousMessageSenderId = previousMessageExists ? (int) previousMessage.get(1) : -1;
+        this.previousMessageReceiverId = previousMessageExists ? (int) previousMessage.get(2) : -1;
+        this.previousMessageMessageText = previousMessageExists ? (String) previousMessage.get(3) : null;
+        this.previousMessagePicture = previousMessageExists ? (byte[]) previousMessage.get(4) : null;
+        this.previousMessageReplyMessageId = previousMessageExists ? (int) previousMessage.get(5) : -1;
+        this.previousMessageTime = previousMessageExists ? (String) previousMessage.get(6) : null;
+        this.previousMessageType = previousMessageExists ? (String) previousMessage.get(7) : null;
+        this.previousMessageReceived = previousMessageExists && (boolean) previousMessage.get(8);
+    }
+    public void setNextMessageDataWithList(List<Object> nextMessage) {
+        boolean nextMessageExists = (nextMessage != null);
+        this.nextMessageId = nextMessageExists ? (int) nextMessage.get(0) : -1;
+        this.nextMessageSenderId = nextMessageExists ? (int) nextMessage.get(1) : -1;
+        this.nextMessageReceiverId = nextMessageExists ? (int) nextMessage.get(2) : -1;
+        this.nextMessageMessageText = nextMessageExists ? (String) nextMessage.get(3) : null;
+        this.nextMessagePicture = nextMessageExists ? (byte[]) nextMessage.get(4) : null;
+        this.nextMessageReplyMessageId = nextMessageExists ? (int) nextMessage.get(5) : -1;
+        this.nextMessageTime = nextMessageExists ? (String) nextMessage.get(6) : null;
+        this.nextMessageType = nextMessageExists ? (String) nextMessage.get(7) : null;
+        this.nextMessageReceived = nextMessageExists && (boolean) nextMessage.get(8);
+    }
 
     // Message Building
     private HBox buildTextMessage() throws SQLException, ParseException {
@@ -105,7 +207,6 @@ public class ChatMessage extends MainChatController {
         return messageHBox;
     }
     private HBox buildReplyWithTextMessage() throws SQLException, ParseException, IOException {
-        setMessageHBox();
         setMessageStackPane();
         setReplyStackPane();
         setMessageTextLabel();
@@ -114,7 +215,6 @@ public class ChatMessage extends MainChatController {
         return messageHBox;
     }
     private HBox buildPictureMessage() throws IOException, SQLException, ParseException {
-        setMessageHBox();
         setMessageStackPane();
         setMessageVBox();
         setMessagePictureHBox();
@@ -124,7 +224,6 @@ public class ChatMessage extends MainChatController {
         return messageHBox;
     }
     private HBox buildPictureWithTextMessage() throws IOException, SQLException, ParseException {
-        setMessageHBox();
         setMessageStackPane();
         setMessageTimeLabel();
         setMessageVBox();
@@ -135,7 +234,6 @@ public class ChatMessage extends MainChatController {
         return messageHBox;
     }
     private HBox buildReplyWithPictureMessage() throws SQLException, IOException, ParseException {
-        setMessageHBox();
         setMessageStackPane();
         setMessageVBox();
         setReplyStackPane();
@@ -146,7 +244,6 @@ public class ChatMessage extends MainChatController {
         return messageHBox;
     }
     private HBox buildReplyWithPictureAndTextMessage() throws SQLException, IOException, ParseException {
-        setMessageHBox();
         setMessageStackPane();
         setMessageTimeLabel();
         setMessageVBox();
@@ -221,9 +318,10 @@ public class ChatMessage extends MainChatController {
         short minWidth = 80;
         short prefHeight = 37;
         short maxHeight = 37;
+        ChatMessage repliedMessage = getRepliedMessage();
+        boolean repliedMessageExists = (repliedMessage != null);
         String messageReplyPaneStyle = (mainUserId == sender_id) ? "chat-message-user-reply-pane" : "chat-message-contact-reply-pane";
-        boolean repliedMessageExists = ChatsDataBase.messageExists(sender_id,receiver_id,reply_message_id);
-        boolean isRepliedMessagePicture = repliedMessageExists && (ChatsDataBase.getMessage(reply_message_id).get(4)) != null;
+        boolean isRepliedMessagePicture = repliedMessageExists && (repliedMessage.picture != null);
 
         messageReplyStackPane = new StackPane();
         messageReplyStackPane.setId("messageReplyStackPane"+id);
@@ -233,6 +331,7 @@ public class ChatMessage extends MainChatController {
         messageReplyStackPane.setMaxHeight(maxHeight);
         messageReplyStackPane.getStyleClass().add(messageReplyPaneStyle);
         StackPane.setAlignment(messageReplyStackPane,Pos.TOP_LEFT);
+
         if (type.equals("reply_with_picture") || type.equals("reply_with_picture_and_text")) {
             VBox.setMargin(messageReplyStackPane,new Insets(7,7,0,7));
             messageVBox.getChildren().add(messageReplyStackPane);
@@ -262,7 +361,7 @@ public class ChatMessage extends MainChatController {
             tempFile.deleteOnExit();
 
             try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-                byte[] repliedMessagePicture = (byte[]) ChatsDataBase.getMessage(reply_message_id).get(4);
+                byte[] repliedMessagePicture = repliedMessage.picture;
                 fos.write(repliedMessagePicture);
             }
 
@@ -312,7 +411,7 @@ public class ChatMessage extends MainChatController {
                         clip.setArcHeight(8);
                         imageContainer.setClip(clip);
 
-                        String repliedMessageName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessage(reply_message_id).get(1));
+                        String repliedMessageName = UsersDataBase.getNameWithId(repliedMessage.sender_id);
                         Label messageReplyNameLabel = new Label(repliedMessageName);
                         messageReplyNameLabel.getStyleClass().add("chat-message-reply-name");
                         messageReplyNameLabel.setMouseTransparent(true);
@@ -346,7 +445,7 @@ public class ChatMessage extends MainChatController {
 
 
         } else {
-            String repliedMessageName = UsersDataBase.getNameWithId((int) ChatsDataBase.getMessage(reply_message_id).get(1));
+            String repliedMessageName = UsersDataBase.getNameWithId(repliedMessage.sender_id);
             Label messageReplyNameLabel = new Label(repliedMessageName);
             messageReplyNameLabel.getStyleClass().add("chat-message-reply-name");
             messageReplyNameLabel.setMouseTransparent(true);
@@ -354,7 +453,7 @@ public class ChatMessage extends MainChatController {
             StackPane.setMargin(messageReplyNameLabel,new Insets(4,8,0,8));
             messageReplyStackPane.getChildren().add(messageReplyNameLabel);
 
-            String repliedMessageText = (String) (ChatsDataBase.getMessage(reply_message_id)).get(3);
+            String repliedMessageText = repliedMessage.message_text;
             Label messageReplyMessageLabel = new Label(repliedMessageText);
             messageReplyMessageLabel.getStyleClass().add((mainUserId == sender_id) ? "chat-message-user-reply-message" : "chat-message-contact-reply-message");
             messageReplyMessageLabel.setMouseTransparent(true);
@@ -386,12 +485,6 @@ public class ChatMessage extends MainChatController {
                 showFullyMessagePicture();
             }
         });
-        if (type.equals("reply_with_picture")) {
-            HBox.setMargin(messagePictureLabel,new Insets(8,9,8,9));
-        } else if (type.equals("reply_with_picture_and_text")) {
-            HBox.setMargin(messagePictureLabel,new Insets(8,9,0,9));
-        }
-
         File tempFile = File.createTempFile("tempImage", ".png");
         tempFile.deleteOnExit();
 
@@ -399,70 +492,70 @@ public class ChatMessage extends MainChatController {
             fos.write(picture);
         }
 
-        Image image = new Image(tempFile.toURI().toString(), true);
+        Image image = new Image(tempFile.toURI().toString(), false); // sync load
         ImageView imageView = new ImageView(image);
         imageView.setSmooth(true);
         imageView.setCache(true);
-        imageView.setPreserveRatio(true); // Keep aspect ratio
+        imageView.setPreserveRatio(true);
+
+        // 🔧 Scale immediately since image is loaded
+        double originalWidth = image.getWidth();
+        double originalHeight = image.getHeight();
+
+        // Scaling to fit max dimensions
+        double scaleX = maxWidth / originalWidth;
+        double scaleY = maxHeight / originalHeight;
+        double scale = Math.min(1.0, Math.min(scaleX, scaleY)); // Don't scale up
+
+        double scaledWidth = originalWidth * scale;
+        double scaledHeight = originalHeight * scale;
+
+        // Enforce minimum height
+        if (scaledHeight < minHeight) {
+            double minHeightScale = minHeight / originalHeight;
+            scaledHeight = minHeight;
+            scaledWidth = originalWidth * minHeightScale;
+            if (scaledWidth > maxWidth) {
+                scaledWidth = maxWidth;
+                scaledHeight = originalHeight * (maxWidth / originalWidth);
+            }
+        }
+
+        imageView.setFitWidth(scaledWidth); // preserveRatio will set height
+        imageView.setPreserveRatio(true);
 
         StackPane imageContainer = new StackPane(imageView);
+        imageContainer.setPrefSize(scaledWidth, scaledHeight);
+
         messagePictureLabel.setGraphic(imageContainer);
         messagePictureHBox.getChildren().add(messagePictureLabel);
 
-        image.progressProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal.doubleValue() >= 1.0) {
-                double originalWidth = image.getWidth();
-                double originalHeight = image.getHeight();
-
-                // Scaling to fit max width & max height
-                double scaleX = maxWidth / originalWidth;
-                double scaleY = maxHeight / originalHeight;
-                double scale = Math.min(1.0, Math.min(scaleX, scaleY)); // Don't scale up
-
-                double scaledWidth = originalWidth * scale;
-                double scaledHeight = originalHeight * scale;
-
-                // Enforce minimum height of 40px
-                if (scaledHeight < minHeight) {
-                    double minHeightScale = minHeight / originalHeight;
-                    scaledHeight = minHeight;
-                    scaledWidth = originalWidth * minHeightScale;
-                    // Optional: If that causes width > maxAllowedWidth, clamp it again
-                    if (scaledWidth > maxWidth) {
-                        scaledWidth = maxWidth;
-                        scaledHeight = originalHeight * (maxWidth / originalWidth);
-                    }
-                }
-
-                imageView.setFitWidth(scaledWidth); // Height handled via preserveRatio
-
-                imageContainer.setPrefWidth(scaledWidth);
-                imageContainer.setPrefHeight(scaledHeight);
-
-                if (type.equals("picture_with_text") && messageStackPane.getWidth() <= scaledWidth) {
-                    SVGPath svgClip = new SVGPath();
-                    svgClip.setContent(
-                            "M0,11 " +                              // Move down from top-left
-                                    "Q0,0 11,0 " +                          // Top-left corner curve
-                                    "H" + (scaledWidth - 11) + " " +        // Line to before top-right curve
-                                    "Q" + scaledWidth + ",0 " + scaledWidth + ",11 " + // Top-right corner curve
-                                    "V" + scaledHeight + " " +              // Line down right side
-                                    "H0 Z"                                  // Line to left and close path
-                    );
-                    imageContainer.setClip(svgClip);
-                } else if (type.equals("picture_with_text") && messageStackPane.getWidth() > scaledWidth) {
-                    messagePictureHBox.setPadding(new Insets(10,0,0,0));
-                } else if (type.equals("picture")) {
-                    Rectangle clip = new Rectangle(scaledWidth, scaledHeight);
-                    clip.setArcWidth(22);
-                    clip.setArcHeight(22);
-                    imageContainer.setClip(clip);
-                } else if (type.equals("reply_with_picture") || type.equals("reply_with_picture_and_text")) {
-                    Rectangle clip = new Rectangle(scaledWidth, scaledHeight);
-                    clip.setArcWidth(14);
-                    clip.setArcHeight(14);
-                    imageContainer.setClip(clip);
-                }
+        int finalScaledWidth = (int) Math.round(scaledWidth);
+        int finalScaledHeight = (int) Math.round(scaledHeight);
+        messageStackPane.layoutBoundsProperty().addListener((obs, oldBounds, newBounds) -> {
+            if (type.equals("picture_with_text") && finalScaledWidth >= messageStackPane.getWidth()) {
+                SVGPath svgClip = new SVGPath();
+                svgClip.setContent(
+                        "M0,11 " +                              // Move down from top-left
+                                "Q0,0 11,0 " +                          // Top-left corner curve
+                                "H" + (finalScaledWidth - 11) + " " +        // Line to before top-right curve
+                                "Q" + finalScaledWidth + ",0 " + finalScaledWidth + ",11 " + // Top-right corner curve
+                                "V" + finalScaledHeight + " " +              // Line down right side
+                                "H0 Z"                                  // Line to left and close path
+                );
+                imageContainer.setClip(svgClip);
+            } else if (type.equals("picture_with_text") && finalScaledWidth < messageStackPane.getWidth()) {
+                messagePictureHBox.setPadding(new Insets(10,0,0,0));
+            } else if (type.equals("picture")) {
+                Rectangle clip = new Rectangle(finalScaledWidth, finalScaledHeight);
+                clip.setArcWidth(22);
+                clip.setArcHeight(22);
+                imageContainer.setClip(clip);
+            } else if (type.equals("reply_with_picture") || type.equals("reply_with_picture_and_text")) {
+                Rectangle clip = new Rectangle(finalScaledWidth, finalScaledHeight);
+                clip.setArcWidth(14);
+                clip.setArcHeight(14);
+                imageContainer.setClip(clip);
             }
         });
     }
@@ -507,13 +600,17 @@ public class ChatMessage extends MainChatController {
         });
     }
     private void setMessageAvatar() throws SQLException, ParseException {
-        messageAvatarLabel = new Label();
-        messageAvatarLabel.setId("messageAvatarLabel" + id);
-        setAvatarLabel();
-        int messageHBoxIndex = (mainUserId == sender_id) ? messageHBox.getChildren().size() : 0;
-        messageHBox.getChildren().add(messageHBoxIndex, messageAvatarLabel);
+        if (isAvatarRequired()) {
+            messageAvatarLabel = new Label();
+            messageAvatarLabel.setId("messageAvatarLabel" + id);
+            setAvatarLabel();
+            int messageHBoxIndex = (mainUserId == sender_id) ? messageHBox.getChildren().size() : 0;
+            messageHBox.getChildren().add(messageHBoxIndex, messageAvatarLabel);
 
-        HBox.setMargin(messageAvatarLabel,(mainUserId == sender_id) ? new Insets(0,115, 0, 0) : new Insets(0,0,0,105));
+            HBox.setMargin(messageAvatarLabel,(mainUserId == sender_id) ? new Insets(0,115, 0, 0) : new Insets(0,0,0,105));
+        } else {
+            HBox.setMargin(messageStackPane,(mainUserId == sender_id) ? new Insets(0, 168, 0, 0) : new Insets(0,0,0,158));
+        }
 
         if (shouldRemovePreviousAvatar()) {
             removePreviousAvatar();
@@ -535,32 +632,19 @@ public class ChatMessage extends MainChatController {
 
 
 
-
-    private Insets getTextLabelPadding() {
-        return switch (type) {
-            case "text" -> new Insets(5,50,9,13);
-            case "reply_with_text" -> new Insets(48,50,7,12);
-            case "picture_with_text", "reply_with_picture_and_text" -> new Insets (8,50,7,13);
-            default -> null;
-        };
-    }
-
-
-    private int calculatePreviousMessageId() throws SQLException {
-        return ChatsDataBase.getPreviousMessageId(sender_id,receiver_id,id);
-    }
-    private void setPotentialDateLabel() throws ParseException, SQLException {
+    private void setPotentialDateLabel() throws SQLException, ParseException {
         boolean isFirstMessage = chatVBox.getChildren().stream()
                 .filter(node -> node instanceof HBox)
                 .map(node -> node.getId())
                 .noneMatch(id -> id != null && id.startsWith("messageHBox"));
-        boolean isPreviousMessageOneDay = !isFirstMessage && messagesHaveOneDayDifference((String) ChatsDataBase.getMessage(previousMessageId).get(6),time);
+        boolean isPreviousMessageOneDay = !isFirstMessage && messagesHaveOneDayDifference(ChatsDataBase.getMessage(mainUserId,contactId,previousMessageId).time,time);
 
         if (isFirstMessage || isPreviousMessageOneDay) {
 
             String labelDate = getDateForDateLabel(time);
             setChatDateLabel(labelDate);
-        }
+
+            }
     }
     private void setChatDateLabel(String date) {
         Label chatDateLabel = new Label(date);
@@ -568,6 +652,12 @@ public class ChatMessage extends MainChatController {
         chatDateLabel.getStyleClass().add("chat-date-label");
         VBox.setMargin(chatDateLabel,new Insets(8,0,8,0));
         chatVBox.getChildren().add(chatDateLabel);
+    }
+    private String getLabelIdCurrentDate() {
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        LocalDateTime dateTime = LocalDateTime.parse(time, inputFormatter);
+
+        return dateTime.toLocalDate().toString(); // Outputs in yyyy-MM-dd format
     }
     private String getDateForDateLabel(String fullDate) {
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
@@ -588,11 +678,35 @@ public class ChatMessage extends MainChatController {
 
         return formattedDate;
     }
-    private String getLabelIdCurrentDate() {
-        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-        LocalDateTime dateTime = LocalDateTime.parse(time, inputFormatter);
+    private ChatMessage getRepliedMessage() throws SQLException {
+        if (allMessages == null) {
+            return ChatsDataBase.getMessage(mainUserId,contactId,reply_message_id);
+        } else {
+            for (ChatMessage message: allMessages) {
+                if (message.id == reply_message_id) {
+                    return message;
+                }
+            }
+        }
+        return null;
+    }
+    private Insets getTextLabelPadding() {
+        return switch (type) {
+            case "text" -> new Insets(5,50,9,13);
+            case "reply_with_text" -> new Insets(48,50,7,12);
+            case "picture_with_text", "reply_with_picture_and_text" -> new Insets (8,50,7,13);
+            default -> null;
+        };
+    }
+    private boolean isAvatarRequired() throws SQLException, ParseException {
+        int lastMessageId = (allMessages == null) ? ChatsDataBase.getLastMessageId(mainUserId,contactId) : allMessages.getFirst().id;
+        boolean nextMessageExists = nextMessageId != -1;
+        int nextMessageSender = nextMessageExists ? nextMessageSenderId : -1;
 
-        return dateTime.toLocalDate().toString(); // Outputs in yyyy-MM-dd format
+        boolean isLastMessage = (lastMessageId == id);
+        boolean nextMessageIsForeign = nextMessageExists && (nextMessageSender != sender_id);
+        boolean nextMessageIsOneDay = nextMessageExists && messagesHaveOneDayDifference(time,nextMessageTime);
+        return isLastMessage || nextMessageIsForeign || nextMessageIsOneDay;
     }
     private static String getMessageTime(String fullDate) {
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
@@ -641,33 +755,56 @@ public class ChatMessage extends MainChatController {
         return convertToTopLevelAnchorPaneCoordinates(node.getParent(), pointInParent.getX(), pointInParent.getY());
     }
     private void setAvatarLabel() throws SQLException {
-        byte[] blobBytes = UsersDataBase.getAvatarWithId(sender_id);
-        if (blobBytes == null) {
+        boolean isAvatarOfUser = (sender_id == mainUserId);
+        boolean hasUserAvatar = (mainUserDataBaseAvatar != null);
+        boolean isUserAvatarAlreadyLoaded = (mainUserMessageAvatar != null);
+
+        boolean isAvatarOfContact = (sender_id == contactId);
+        boolean hasContactAvatar = (contactDataBaseAvatar != null);
+        boolean isContactAvatarAlreadyLoaded = (contactMessageAvatar != null);
+
+        if ((isAvatarOfUser && !hasUserAvatar) || (isAvatarOfContact && !hasContactAvatar)) {
+
             messageAvatarLabel.getStyleClass().clear();
             messageAvatarLabel.getStyleClass().add("chat-message-default-avatar");
             messageAvatarLabel.setPrefHeight(40);
             messageAvatarLabel.setPrefWidth(40);
-            return;
+        } else if ((isAvatarOfUser && hasUserAvatar && !isUserAvatarAlreadyLoaded) || (isAvatarOfContact && hasContactAvatar && !isContactAvatarAlreadyLoaded)) {
+            byte[] avatar = UsersDataBase.getAvatarWithId(sender_id);
+            ByteArrayInputStream byteStream = new ByteArrayInputStream(avatar);
+            mainUserMessageAvatar = new ImageView(new Image(byteStream));
+            mainUserMessageAvatar.setFitHeight(40);
+            mainUserMessageAvatar.setFitWidth(40);
+            mainUserMessageAvatar.setSmooth(true);
+            messageAvatarLabel.setGraphic(mainUserMessageAvatar);
+            Circle clip = new Circle();
+            clip.setLayoutX(20);
+            clip.setLayoutY(20);
+            clip.setRadius(20);
+            messageAvatarLabel.setClip(clip);
+        } else if ((isAvatarOfUser && hasUserAvatar && isUserAvatarAlreadyLoaded) || (isAvatarOfContact && hasContactAvatar && isContactAvatarAlreadyLoaded)) {
+            messageAvatarLabel.setGraphic(mainUserMessageAvatar);
+            Circle clip = new Circle();
+            clip.setLayoutX(20);
+            clip.setLayoutY(20);
+            clip.setRadius(20);
+            messageAvatarLabel.setClip(clip);
         }
-        ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
-        ImageView imageView = new ImageView(new Image(byteStream));
-        imageView.setFitHeight(40);
-        imageView.setFitWidth(40);
-        imageView.setSmooth(true);
-        messageAvatarLabel.setGraphic(imageView);
-        Circle clip = new Circle();
-        clip.setLayoutX(20);
-        clip.setLayoutY(20);
-        clip.setRadius(20);
-        messageAvatarLabel.setClip(clip);
     }
     private boolean shouldRemovePreviousAvatar() throws SQLException, ParseException {
-        boolean isFirstMessage = !chatVBox.getChildren().stream()
-                .anyMatch(node -> node.getId() != null && node.getId().startsWith("messageHBox"));
-        boolean isPreviousMessageForeign = previousMessageId != -1 && (sender_id != (int) ChatsDataBase.getMessage(previousMessageId).get(1));
-        boolean isPreviousMessageOneDay =  previousMessageId != -1 && messagesHaveOneDayDifference((String) ChatsDataBase.getMessage(previousMessageId).get(6),time);
+        boolean previousMessageExists = previousMessageId != -1;
+        boolean isChatEmpty = chatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .map(node -> (HBox) node)
+                .noneMatch(hbox -> {
+                    String id = hbox.getId();
+                    return id != null && id.startsWith("messageHBox");
+                });
+        boolean isFirstMessage = (allMessages == null) ? (ChatsDataBase.getFirstMessageId(mainUserId,contactId) == id) : (allMessages.get(0).id == id);
+        boolean isPreviousMessageForeign = previousMessageExists && (sender_id != previousMessageSenderId);
+        boolean isPreviousMessageOneDay =  previousMessageExists && messagesHaveOneDayDifference(previousMessageTime,time);
 
-        return !isFirstMessage && !isPreviousMessageForeign && !isPreviousMessageOneDay;
+        return !isChatEmpty && !isFirstMessage && !isPreviousMessageForeign && !isPreviousMessageOneDay;
     }
     private void removePreviousAvatar() {
         HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+previousMessageId);
@@ -776,6 +913,8 @@ public class ChatMessage extends MainChatController {
         imageView.setSmooth(true);
         fullyPicturePreview.setGraphic(imageView);
 
+        StackPane messageFullPicturePane = new StackPane();
+
         // Ensure the layout is updated before centering
         Platform.runLater(() -> {
             // Recalculate layout position after image rendering
@@ -783,16 +922,39 @@ public class ChatMessage extends MainChatController {
             double initialHeight = imageView.getLayoutBounds().getHeight();
 
             // Correct centering calculations
-            fullyPicturePreview.setLayoutX((1920 - initialWidth) / 2.0);
-            fullyPicturePreview.setLayoutY((1009 - initialHeight) / 2.0);
+            double pictureLayoutX = (1920 - initialWidth) / 2.0;
+            double pictureLayoutY = (1009 - initialHeight) / 2.0;
 
-            backgroundPane.getChildren().add(fullyPicturePreview);
+            messageFullPicturePane.setLayoutX(pictureLayoutX);
+            messageFullPicturePane.setLayoutY(pictureLayoutY);
+
+            messageFullPicturePane.getChildren().add(fullyPicturePreview);
+            backgroundPane.getChildren().add(messageFullPicturePane);
+            messageFullPicturePane.getScene().getStylesheets().add(getClass().getResource("/main/css/MainChat.css").toExternalForm());
 
             // Call the zoom listener and pass the initial values for the image view
-            setZoomListener(backgroundPane, imageView, fullyPicturePreview);
+            setZoomListener(backgroundPane, imageView,messageFullPicturePane);
+
+            if (message_text != null) {
+                previewPictureMessage = new Label(message_text);
+                previewPictureMessage.setOnMouseClicked(Event::consume);
+                previewPictureMessage.getStyleClass().add("chat-picture-message-preview-message-text");
+                previewPictureMessage.setPrefWidth(Region.USE_COMPUTED_SIZE);
+                previewPictureMessage.setMaxWidth(Region.USE_PREF_SIZE);
+                previewPictureMessage.setAlignment(Pos.CENTER);
+                StackPane.setAlignment(previewPictureMessage,Pos.BOTTOM_CENTER);
+                StackPane.setMargin(previewPictureMessage,new Insets(0,0,6,0));
+                messageFullPicturePane.getChildren().add(previewPictureMessage);
+
+                double messagePrefWidth = previewPictureMessage.prefWidth(-1);
+                if (messagePrefWidth >= (initialWidth - 40)) {
+                    previewPictureMessage.setVisible(false);
+                }
+            }
+
         });
     }
-    private void setZoomListener(Pane backgroundPane, ImageView fullyPicturePreview, Label fullyPicturePreviewLabel) {
+    private void setZoomListener(Pane backgroundPane, ImageView fullyPicturePreview,StackPane pictureMessagePane) {
         backgroundPane.setOnScroll(scrollEvent -> {
             double deltaY = scrollEvent.getDeltaY();  // Get the direction of the scroll
 
@@ -820,8 +982,15 @@ public class ChatMessage extends MainChatController {
             double newLayoutY = (1009 - imageHeight) / 2.0;
 
             // Update layout to keep it centered
-            fullyPicturePreviewLabel.setLayoutX(newLayoutX);
-            fullyPicturePreviewLabel.setLayoutY(newLayoutY);
+            pictureMessagePane.setLayoutX(newLayoutX);
+            pictureMessagePane.setLayoutY(newLayoutY);
+
+            double messagePrefWidth = (previewPictureMessage != null) ? previewPictureMessage.prefWidth(-1) : 0;
+            if (messagePrefWidth >= (newWidth - 40)) {
+                previewPictureMessage.setVisible(false);
+            } else if (previewPictureMessage != null) {
+                previewPictureMessage.setVisible(true);
+            }
         });
     }
 }
