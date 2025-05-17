@@ -26,19 +26,19 @@ public class ChatLoadingCircle {
     }
 
     public void addLoadingCircle() {
-        double radius = 13;
+        double radius = 11;
 
         // Background circle centered at (0, 0)
         Circle backgroundCircle = new Circle(0, 0, radius);
         backgroundCircle.setStroke(Color.web("#2b2831"));
-        backgroundCircle.setStrokeWidth(6);
+        backgroundCircle.setStrokeWidth(5);
         backgroundCircle.setFill(Color.TRANSPARENT);
 
         // Arc also centered at (0, 0)
         Arc arc = new Arc(0, 0, radius, radius, 0, 60);
         arc.setType(ArcType.OPEN);
         arc.setStroke(Color.WHITE);
-        arc.setStrokeWidth(6);
+        arc.setStrokeWidth(5);
         arc.setStrokeLineCap(StrokeLineCap.ROUND);
         arc.setFill(Color.TRANSPARENT);
 

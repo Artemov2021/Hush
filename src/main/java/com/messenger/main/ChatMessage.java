@@ -28,6 +28,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -90,7 +91,9 @@ public class ChatMessage extends MainChatController {
         this.message_text = result.getString("message");
         this.picture = result.getBytes("picture");
         this.reply_message_id = result.getInt("reply_message_id");
-        this.time = result.getString("message_time"); // (use correct column)
+        Timestamp timestamp = result.getTimestamp("message_time");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        this.time = formatter.format(timestamp);
         this.type = result.getString("message_type");
         this.received = result.getBoolean("received");
     }
@@ -552,6 +555,7 @@ public class ChatMessage extends MainChatController {
                 clip.setArcHeight(22);
                 imageContainer.setClip(clip);
             } else if (type.equals("reply_with_picture") || type.equals("reply_with_picture_and_text")) {
+                messagePictureHBox.setPadding(new Insets(9,9,9,9));
                 Rectangle clip = new Rectangle(finalScaledWidth, finalScaledHeight);
                 clip.setArcWidth(14);
                 clip.setArcHeight(14);
@@ -618,20 +622,7 @@ public class ChatMessage extends MainChatController {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // Small Functions
     private void setPotentialDateLabel() throws SQLException, ParseException {
         boolean isFirstMessage = chatVBox.getChildren().stream()
                 .filter(node -> node instanceof HBox)
@@ -694,7 +685,8 @@ public class ChatMessage extends MainChatController {
         return switch (type) {
             case "text" -> new Insets(5,50,9,13);
             case "reply_with_text" -> new Insets(48,50,7,12);
-            case "picture_with_text", "reply_with_picture_and_text" -> new Insets (8,50,7,13);
+            case "picture_with_text" -> new Insets (8,50,7,13);
+            case "reply_with_picture_and_text" -> new Insets(0,50,7,13);
             default -> null;
         };
     }
@@ -717,6 +709,11 @@ public class ChatMessage extends MainChatController {
     private boolean messagesHaveOneDayDifference(String previousMessageFullDate, String currentMessageFullDate) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-MM-dd"); // Only extracts the date
+
+        if (allMessages == null) {
+            System.out.println("Previous message time: "+previousMessageFullDate);
+            System.out.println("Current message time: "+currentMessageFullDate);
+        }
 
         Date date1 = dateFormat.parse(previousMessageFullDate);
         Date date2 = dateFormat.parse(currentMessageFullDate);
@@ -800,11 +797,12 @@ public class ChatMessage extends MainChatController {
                     String id = hbox.getId();
                     return id != null && id.startsWith("messageHBox");
                 });
+        boolean isChatLoading = allMessages != null;
         boolean isFirstMessage = (allMessages == null) ? (ChatsDataBase.getFirstMessageId(mainUserId,contactId) == id) : (allMessages.get(0).id == id);
         boolean isPreviousMessageForeign = previousMessageExists && (sender_id != previousMessageSenderId);
         boolean isPreviousMessageOneDay =  previousMessageExists && messagesHaveOneDayDifference(previousMessageTime,time);
 
-        return !isChatEmpty && !isFirstMessage && !isPreviousMessageForeign && !isPreviousMessageOneDay;
+        return !isChatEmpty && !isChatLoading && !isFirstMessage && !isPreviousMessageForeign && !isPreviousMessageOneDay;
     }
     private void removePreviousAvatar() {
         HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+previousMessageId);

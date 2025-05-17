@@ -400,4 +400,75 @@ public class ChatsDataBase {
 
         return false;
     }
+    public static boolean hasMoreMessages(int mainUserId, int contactId,int lastMessageId) throws SQLException {
+        String getMessageIdStatement = "SELECT * \n" +
+                "FROM chats \n" +
+                "WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) \n" +
+                "AND message_id < ?\n" +
+                "ORDER BY message_id DESC;";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            // Second Query: Get previous message_id
+            PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(3, contactId);
+            preparedStatement.setInt(4, mainUserId);
+            preparedStatement.setInt(5, lastMessageId); // Now correctly setting the last parameter
+
+            ResultSet messageResult = preparedStatement.executeQuery();
+            if (messageResult.next()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public static List<ChatMessage> getAllLeftMessages(int mainUserId,int contactId,int lastMessageId) throws SQLException {
+        ArrayList<ChatMessage> previousMessages = new ArrayList<>();
+        String statement = "SELECT * \n" +
+                "FROM chats \n" +
+                "WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) \n" +
+                "AND message_id < ?\n" +
+                "ORDER BY message_id ASC;";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(3, contactId);
+            preparedStatement.setInt(4, mainUserId);
+            preparedStatement.setInt(5,lastMessageId);
+            ResultSet result = preparedStatement.executeQuery();
+
+            ArrayList<ChatMessage> tempMessages = new ArrayList<>();
+
+            // First load all messages and their IDs
+            while (result.next()) {
+                ChatMessage message = new ChatMessage(result); // Temp nextMessageId, will update later
+                tempMessages.add(message);
+            }
+
+            // Now set the nextMessageId for each message
+            for (int i = 0; i < tempMessages.size(); i++) {
+                ChatMessage message = tempMessages.get(i);
+
+                if (i > 0) {
+                    ChatMessage previousMessage = tempMessages.get(i - 1);
+                    message.setPreviousMessageData(previousMessage);
+                } else {
+                    message.setPreviousMessageData(null);
+                }
+
+                if (i < tempMessages.size() - 1) {
+                    ChatMessage nextMessage = tempMessages.get(i + 1);
+                    message.setNextMessageData(nextMessage);
+                } else {
+                    message.setNextMessageData(null);
+                }
+
+                previousMessages.add(message);
+            }
+        }
+        return previousMessages;
+    }
 }

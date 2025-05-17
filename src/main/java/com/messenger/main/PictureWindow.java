@@ -62,7 +62,7 @@ public class PictureWindow extends MainChatController {
             }
         });
         Platform.runLater(() -> {
-            pictureSendingWindowBackground.getScene().getStylesheets().add(PictureWindow.class.getResource("/main/css/MainWindow.css").toExternalForm());
+            pictureSendingWindowBackground.getScene().getStylesheets().add(PictureWindow.class.getResource("/main/css/MainChat.css").toExternalForm());
         });
         mainAnchorPane.getChildren().add(pictureSendingWindowBackground);
 

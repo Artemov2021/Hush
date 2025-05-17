@@ -5,6 +5,7 @@ import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.ChatLoadingCircle;
 import com.messenger.design.ScrollPaneEffect;
+import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
@@ -52,6 +53,8 @@ public class MainChatController extends MainContactController {
     protected ImageView mainUserMessageAvatar;
     protected ImageView contactMessageAvatar;
 
+    private boolean isMessageTooLongVisible = false;
+
     // Chat Interface Initialization, Chat Loading
     public void setChatContactId(int contactId) {
         this.contactId = contactId;
@@ -68,6 +71,7 @@ public class MainChatController extends MainContactController {
         initializeChatInterface();
         setAvatarsCache();
         loadChat();
+        scrollDown();
         setChatLazyLoadingListener();
         //scrollLoadedChatDown();
     }
@@ -335,11 +339,6 @@ public class MainChatController extends MainContactController {
 
 
     // Chat Loading: Small Functions
-    private void scrollLoadedChatDown() {
-        chatVBox.heightProperty().addListener((observable, oldValue, newValue) -> {
-            chatScrollPane.setVvalue(1.0);
-        });
-    }
     private void setCurrentDateLabel() {
         LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);
@@ -394,11 +393,17 @@ public class MainChatController extends MainContactController {
     private void setChatLazyLoadingListener() {
         chatScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal.doubleValue() == 0.0) {
-                boolean hasLoadingCircle = chatVBox.getChildren().stream()
-                        .anyMatch(node -> "chatLoadingCircle".equals(node.getId()));
-                if (!hasLoadingCircle) {
-                    ChatLoadingCircle chatLoadingCircle = new ChatLoadingCircle(this);
-                    chatLoadingCircle.addLoadingCircle();
+                try {
+                    boolean hasMoreMessages = hasMoreMessages();
+                    boolean hasLoadingCircle = chatVBox.getChildren().stream()
+                            .anyMatch(node -> "chatLoadingCircle".equals(node.getId()));
+                    if (!hasLoadingCircle && hasMoreMessages) {
+                        //ChatLoadingCircle chatLoadingCircle = new ChatLoadingCircle(this);
+                        //chatLoadingCircle.addLoadingCircle();
+                        loadMoreMessages();
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             }
         });
@@ -417,17 +422,25 @@ public class MainChatController extends MainContactController {
     private void sendCurrentMessage() throws Exception {
         TextMessageType currentMessageType = getCurrentMessageType();
 
-        if (currentMessageType == TextMessageType.EDIT_WITH_TEXT) {
-            processMessageEdit();
-        } else {
-            processMessageSend();
+        try {
+            if (currentMessageType == TextMessageType.EDIT_WITH_TEXT) {
+                processMessageEdit();
+            } else {
+                processMessageSend();
+            }
+
+            finalizeMessageFlow();
+        } catch (IllegalArgumentException e) {
+            showMessageTooLongException();
         }
 
-        finalizeMessageFlow();
     }
 
 
-    // Message Sending: Small Functions
+    // Small Functions
+    private void scrollDown() {
+        chatScrollPane.setVvalue(1.0);
+    }
     private void processMessageEdit() throws SQLException {
         editChosenMessage();
         updatePotentialLastMessage();
@@ -480,7 +493,9 @@ public class MainChatController extends MainContactController {
     }
     private void insertAndDisplayMessage() throws Exception {
         int currentMessageId = insertCurrentMessageIntoDB();
-        displayCurrentMessage(currentMessageId);
+        if (currentMessageId != -1) {
+            displayCurrentMessage(currentMessageId);
+        }
     }
     private boolean getCurrentMessageValidity() {
         String currentMessage = chatTextField.getText().trim();
@@ -526,7 +541,12 @@ public class MainChatController extends MainContactController {
         String messageType = getConvertedCurrentDBMessageType();
         boolean received = false;
 
-        return ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyMessageId,messageTime,messageType,received);
+        boolean isMessageTooLong = (message.length() >= 1000);
+        if (isMessageTooLong) {
+            throw new IllegalArgumentException();
+        } else {
+            return ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyMessageId,messageTime,messageType,received);
+        }
     }
     private void ensureUserInContacts(int contactId) throws SQLException {
         int[] contactListOfContact = ContactsDataBase.getContactsIdList(contactId);
@@ -647,7 +667,130 @@ public class MainChatController extends MainContactController {
         mainContactsVBox.getChildren().remove(contactAnchorPane);
         mainContactsVBox.getChildren().add(0,contactAnchorPane);
     }
+    private boolean hasMoreMessages() throws SQLException {
+        int lastMessageId = chatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .findFirst()
+                .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
+                .get();
+        boolean hasMoreMessages = ChatsDataBase.hasMoreMessages(mainUserId,contactId,lastMessageId);
+        return hasMoreMessages;
+    }
+    private void loadMoreMessages() throws Exception {
+        // get ALL left messages
+        // reverse them
+        int lastMessageId = chatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .findFirst()
+                .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
+                .get();
+        List<ChatMessage> allLeftReversedMessages = new ArrayList<>(ChatsDataBase.getAllLeftMessages(mainUserId,contactId,lastMessageId)).reversed();
+        List<Node> nodesToLoad = new ArrayList<>();
 
+        int maxChatVBoxHeight = 1600;
+        double totalHeight = 0;
+
+        VBox dummyVBox = new VBox();
+        mainAnchorPane.getChildren().add(dummyVBox);
+        dummyVBox.setVisible(false);
+
+        for (ChatMessage message: allLeftReversedMessages) {
+            if (totalHeight < maxChatVBoxHeight) {
+                HBox loadedMessage = message.load(this,allLeftReversedMessages);
+                dummyVBox.getChildren().add(loadedMessage);
+                loadedMessage.applyCss();
+                loadedMessage.autosize();
+                int nodeHeight = (int) loadedMessage.getBoundsInParent().getHeight();
+                dummyVBox.getChildren().clear();
+
+                nodesToLoad.addFirst(loadedMessage);
+                totalHeight += nodeHeight;
+
+                if (isDateLabelRequired(allLeftReversedMessages,message)) {
+                    String messageFullDate = message.time;
+                    String labelDate = getDateForDateLabel(messageFullDate);
+                    nodesToLoad.addFirst(getChatDateLabel(labelDate,messageFullDate));
+                    short dateLabelHeight = 27;
+                    totalHeight += dateLabelHeight;
+                }
+            } else {
+                break;
+            }
+        }
+
+        double oldHeight = chatVBox.getHeight(); // before inserting
+
+        chatVBox.getChildren().addAll(0,nodesToLoad);
+
+        Platform.runLater(() -> {
+            double newHeight = chatVBox.getHeight(); // after inserting
+            double delta = newHeight - oldHeight;
+
+            // Adjust scroll by delta
+            double currentScroll = chatScrollPane.getVvalue();
+            double contentHeight = chatVBox.getHeight();
+            double newScroll = currentScroll + delta / contentHeight;
+            chatScrollPane.setVvalue(newScroll);
+        });
+
+    }
+    private void showMessageTooLongException() {
+        if (isMessageTooLongVisible) {
+            return; // Prevent multiple alerts
+        }
+
+        Label errorMessage = new Label("Text is too long!");
+        errorMessage.getStyleClass().add("chat-message-too-long-exception-label");
+        errorMessage.setLayoutX(1137);
+        errorMessage.setLayoutY(905);
+        errorMessage.setTranslateY(30);
+        errorMessage.getStylesheets().add(getClass().getResource("/main/css/MainChat.css").toExternalForm());
+        mainAnchorPane.getChildren().add(errorMessage);
+
+        isMessageTooLongVisible = true;
+
+        byte moveDistance = 10;
+        errorMessage.setOpacity(0);
+        errorMessage.setTranslateY(moveDistance);
+
+        // Slide & fade in
+        TranslateTransition slideIn = new TranslateTransition(Duration.millis(200), errorMessage);
+        slideIn.setFromY(moveDistance);
+        slideIn.setToY(0);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), errorMessage);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+
+        // Slide & fade out
+        TranslateTransition slideOut = new TranslateTransition(Duration.millis(200), errorMessage);
+        slideOut.setFromY(0);
+        slideOut.setToY(moveDistance);
+
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), errorMessage);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+
+        // Play fade/slide in
+        errorMessage.setVisible(true);
+        slideIn.play();
+        fadeIn.play();
+
+        // After 2 seconds, fade and slide out, then remove the label
+        PauseTransition delay = new PauseTransition(Duration.seconds(2));
+        delay.setOnFinished(e -> {
+            slideOut.play();
+            fadeOut.play();
+
+            // Remove the node from the UI after the transition ends
+            fadeOut.setOnFinished(event -> {
+                mainAnchorPane.getChildren().remove(errorMessage);
+                isMessageTooLongVisible = false; // Reset flag only when it disappears
+            });
+        });
+
+        delay.play();
+    }
 
     // Picture Sending
     public void loadPicture() throws IOException {
