@@ -3,6 +3,8 @@ package com.messenger.main;
 import com.messenger.database.ChatsDataBase;
 import com.messenger.database.ContactsDataBase;
 import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.scene.Cursor;
@@ -36,6 +38,7 @@ public class PictureWindow extends MainChatController {
     private byte[] picture;
 
     private MainChatController mainChatController;
+    private boolean isMessageTooLongVisible;
 
     public PictureWindow(MainChatController mainChatController,String picturePath) {
         this.mainChatController = mainChatController;
@@ -179,19 +182,23 @@ public class PictureWindow extends MainChatController {
 
 
     private void sendPicture() throws Exception {
-        pictureMessageType pictureMessageType = getPictureMessageType();
+        try {
+            pictureMessageType pictureMessageType = getPictureMessageType();
 
-        if (pictureMessageType == PictureWindow.pictureMessageType.EDIT_WITH_PICTURE || pictureMessageType == PictureWindow.pictureMessageType.EDIT_WITH_PICTURE_AND_TEXT) {
-            handlePictureMessageEditing();
-        } else {
-            handlePictureMessageSending();
-            updateLastInteraction();
-            updateLastMessageTime();
-            moveContactPaneUp();
+            if (pictureMessageType == PictureWindow.pictureMessageType.EDIT_WITH_PICTURE || pictureMessageType == PictureWindow.pictureMessageType.EDIT_WITH_PICTURE_AND_TEXT) {
+                handlePictureMessageEditing();
+            } else {
+                handlePictureMessageSending();
+                updateLastInteraction();
+                updateLastMessageTime();
+                moveContactPaneUp();
+            }
+
+            updateLastMessage(); // TODO
+            hideWindowSmoothly();
+        } catch (IllegalArgumentException e) {
+            showMessageTooLongException();
         }
-
-        updateLastMessage(); // TODO
-        hideWindowSmoothly();
     }
     private void handlePictureMessageSending() throws Exception {
         int messageId = insertPictureMessageIntoDB();
@@ -444,8 +451,12 @@ public class PictureWindow extends MainChatController {
         String messageTime = getCurrentFullTime();
         String messageType = pictureMessageType.toString().toLowerCase();
         boolean received = false;
-
-        return ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyMessageId,messageTime,messageType,received);
+        
+        if (message != null && message.length() >= 1000) {
+            throw new IllegalArgumentException();
+        } else {
+            return ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyMessageId,messageTime,messageType,received);
+        }
     }
     private void editPictureMessageInDB() throws SQLException {
         int editedMessageId = getEditWrapperId();
@@ -457,7 +468,11 @@ public class PictureWindow extends MainChatController {
             return;
         }
 
-        ChatsDataBase.editMessage(editedMessageId,newMessage,picture,newMessageType);
+        if (newMessage != null && newMessage.length() >= 1000) {
+            throw new IllegalArgumentException();
+        } else {
+            ChatsDataBase.editMessage(editedMessageId,newMessage,picture,newMessageType);
+        }
     }
     private void editPictureMessageInChat() throws Exception {
         int editedMessageId = getEditWrapperId();
@@ -528,6 +543,63 @@ public class PictureWindow extends MainChatController {
         AnchorPane contactPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+contactId);
         mainContactsVBox.getChildren().remove(contactPane);
         mainContactsVBox.getChildren().add(0,contactPane);
+    }
+    private void showMessageTooLongException() {
+        if (isMessageTooLongVisible) {
+            return; // Prevent multiple alerts
+        }
+
+        Label errorMessage = new Label("Text is too long!");
+        errorMessage.getStyleClass().add("chat-message-too-long-exception-label");
+        errorMessage.setLayoutX(875);
+        errorMessage.setLayoutY(720);
+        errorMessage.setTranslateY(30);
+        errorMessage.getStylesheets().add(getClass().getResource("/main/css/MainChat.css").toExternalForm());
+        mainAnchorPane.getChildren().add(errorMessage);
+
+        isMessageTooLongVisible = true;
+
+        byte moveDistance = -15;
+        errorMessage.setOpacity(0);
+        errorMessage.setTranslateY(moveDistance);
+
+        // Slide & fade in
+        TranslateTransition slideIn = new TranslateTransition(Duration.millis(200), errorMessage);
+        slideIn.setFromY(moveDistance);
+        slideIn.setToY(0);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), errorMessage);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+
+        // Slide & fade out
+        TranslateTransition slideOut = new TranslateTransition(Duration.millis(200), errorMessage);
+        slideOut.setFromY(0);
+        slideOut.setToY(moveDistance);
+
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), errorMessage);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+
+        // Play fade/slide in
+        errorMessage.setVisible(true);
+        slideIn.play();
+        fadeIn.play();
+
+        // After 2 seconds, fade and slide out, then remove the label
+        PauseTransition delay = new PauseTransition(Duration.seconds(2));
+        delay.setOnFinished(e -> {
+            slideOut.play();
+            fadeOut.play();
+
+            // Remove the node from the UI after the transition ends
+            fadeOut.setOnFinished(event -> {
+                mainAnchorPane.getChildren().remove(errorMessage);
+                isMessageTooLongVisible = false; // Reset flag only when it disappears
+            });
+        });
+
+        delay.play();
     }
 
 }

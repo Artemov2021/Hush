@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class MainChatController extends MainContactController {
@@ -510,7 +511,12 @@ public class MainChatController extends MainContactController {
         int chosenMessageId = getEditWrapperId();
         String oldMessageType = ChatsDataBase.getMessage(mainUserId,contactId,chosenMessageId).type;
 
-        ChatsDataBase.editMessage(chosenMessageId,currentMessage,null,oldMessageType);
+        boolean isMessageTooLong = (currentMessage.length() >= 1000);
+        if (isMessageTooLong) {
+            throw new IllegalArgumentException();
+        } else {
+            ChatsDataBase.editMessage(chosenMessageId, currentMessage, null, oldMessageType);
+        }
     }
     private void editChosenMessageInChat() {
         String currentMessage = chatTextField.getText().trim();
@@ -739,17 +745,28 @@ public class MainChatController extends MainContactController {
             return; // Prevent multiple alerts
         }
 
+        boolean hasWrapper = mainAnchorPane.getChildren().stream()
+                .map(Node::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet())
+                .stream()
+                .anyMatch(id -> id.startsWith("#eplyWrapper")) ||
+                mainAnchorPane.getChildren().stream()
+                        .map(Node::getId)
+                        .filter(Objects::nonNull)
+                        .anyMatch(id -> id.startsWith("editWrapper"));
+
         Label errorMessage = new Label("Text is too long!");
         errorMessage.getStyleClass().add("chat-message-too-long-exception-label");
         errorMessage.setLayoutX(1137);
-        errorMessage.setLayoutY(905);
+        errorMessage.setLayoutY(hasWrapper ? 850 : 905);
         errorMessage.setTranslateY(30);
         errorMessage.getStylesheets().add(getClass().getResource("/main/css/MainChat.css").toExternalForm());
         mainAnchorPane.getChildren().add(errorMessage);
 
         isMessageTooLongVisible = true;
 
-        byte moveDistance = 10;
+        byte moveDistance = 15;
         errorMessage.setOpacity(0);
         errorMessage.setTranslateY(moveDistance);
 

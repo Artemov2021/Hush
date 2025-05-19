@@ -307,7 +307,7 @@
     -fx-prompt-text-fill: #8A8893;
     -fx-background-color: #2C2B30;
     -fx-background-radius: 10;
-    -fx-padding: 0 10 0 16;
+    -fx-padding: 0 14 0 14;
 }
 .picture-sending-window-send-button {
     -fx-background-image: url("../elements/sendPictureButtonDefault.png");
