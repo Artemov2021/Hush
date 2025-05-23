@@ -399,8 +399,8 @@ public class MainChatController extends MainContactController {
                     boolean hasLoadingCircle = chatVBox.getChildren().stream()
                             .anyMatch(node -> "chatLoadingCircle".equals(node.getId()));
                     if (!hasLoadingCircle && hasMoreMessages) {
-                        //ChatLoadingCircle chatLoadingCircle = new ChatLoadingCircle(this);
-                        //chatLoadingCircle.addLoadingCircle();
+//                        ChatLoadingCircle chatLoadingCircle = new ChatLoadingCircle(this);
+//                        chatLoadingCircle.addLoadingCircle();
                         loadMoreMessages();
                     }
                 } catch (Exception e) {
@@ -693,7 +693,7 @@ public class MainChatController extends MainContactController {
         List<ChatMessage> allLeftReversedMessages = new ArrayList<>(ChatsDataBase.getAllLeftMessages(mainUserId,contactId,lastMessageId)).reversed();
         List<Node> nodesToLoad = new ArrayList<>();
 
-        int maxChatVBoxHeight = 1600;
+        int maxChatVBoxHeight = 8000;
         double totalHeight = 0;
 
         VBox dummyVBox = new VBox();
@@ -724,19 +724,19 @@ public class MainChatController extends MainContactController {
             }
         }
 
-        double oldHeight = chatVBox.getHeight(); // before inserting
+        double oldHeight = chatVBox.getHeight(); // Height before adding
 
-        chatVBox.getChildren().addAll(0,nodesToLoad);
+        chatVBox.getChildren().addAll(0, nodesToLoad);
 
+// Let layout happen, then adjust scroll
         Platform.runLater(() -> {
-            double newHeight = chatVBox.getHeight(); // after inserting
+            double newHeight = chatVBox.getHeight(); // Height after adding
             double delta = newHeight - oldHeight;
 
-            // Adjust scroll by delta
-            double currentScroll = chatScrollPane.getVvalue();
-            double contentHeight = chatVBox.getHeight();
-            double newScroll = currentScroll + delta / contentHeight;
-            chatScrollPane.setVvalue(newScroll);
+            // Scroll down by the exact pixel height of inserted content
+            chatScrollPane.setVvalue(
+                    chatScrollPane.getVvalue() + delta / (newHeight - chatScrollPane.getViewportBounds().getHeight())
+            );
         });
 
     }
