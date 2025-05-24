@@ -32,7 +32,7 @@
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Label>
-            <Label layoutX="1401.0" layoutY="21.0" prefHeight="39.0" prefWidth="46.0" styleClass="chat-search-lupe">
+            <Label fx:id="messageSearchingLupe" layoutX="1401.0" layoutY="21.0" prefHeight="39.0" prefWidth="46.0" styleClass="chat-search-lupe">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor></Label>

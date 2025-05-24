@@ -346,7 +346,54 @@
     -fx-background-image: url("../elements/changePictureButtonPressed.png");
     -fx-background-repeat: no-repeat;
 }
+/*-----------------------------------------------------------------------------*/
+/* Message Searching Field */
+.chat-message-search-overlay {
+    -fx-background-color: #1D1C20;
+    -fx-background-radius: 0 0 0 8;
 
+    -fx-border-color: black transparent transparent transparent;
+    -fx-border-width: 0.5 0 0 0;
+}
 
+.chat-message-search-field {
+    -fx-background-color: #2C2B30;
+    -fx-background-radius: 8;
+    -fx-font-size: 14.5;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #B0B0B0;
+    -fx-padding: 4 70 0 15;
+}
+
+.chat-message-search-counter {
+    -fx-font-size: 14.5;
+    -fx-text-fill: #B0B0B0;
+}
+
+.chat-message-search-up-button {
+    -fx-background-image: url("../elements/messageSearchUpDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-message-search-up-button:hover {
+    -fx-background-image: url("../elements/messageSearchUpFocused.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-message-search-down-button {
+    -fx-background-image: url("../elements/messageSearchDownDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-message-search-down-button:hover {
+    -fx-background-image: url("../elements/messageSearchDownFocused.png");
+    -fx-background-repeat: no-repeat;
+}
+
+.chat-message-search-exit-button {
+    -fx-background-image: url("../elements/messageSearchExitDefault.png");
+    -fx-background-repeat: no-repeat;
+}
+.chat-message-search-exit-button:hover {
+    -fx-background-image: url("../elements/messageSearchExitFocused.png");
+    -fx-background-repeat: no-repeat;
+}
 
 

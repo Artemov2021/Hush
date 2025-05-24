@@ -30,7 +30,7 @@
     -fx-border-color: #2C2A2F;
     -fx-text-fill: white;
     -fx-prompt-text-fill: #595664;
-    -fx-padding: 0 0 0 20;
+    -fx-padding: 0 15 0 20;
     -fx-cursor: text;
 }
 .add-contact-field:focused {

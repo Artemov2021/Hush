@@ -9,6 +9,7 @@ import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -48,6 +49,7 @@ public class MainChatController extends MainContactController {
     @FXML private Label chatAddPictureButton;
     @FXML protected Label scrollDownButton;
     @FXML private Label sendMessageButton;
+    @FXML private Label messageSearchingLupe;
 
     protected byte[] mainUserDataBaseAvatar;
     protected byte[] contactDataBaseAvatar;
@@ -91,6 +93,7 @@ public class MainChatController extends MainContactController {
         setSendMessageListener();
         removeTextFieldContextMenu();
         setAddPictureOnMouseAction();
+        setMessageSearchLupeOnMouseAction();
     }
     private void removeTitle() {
         Set<String> titlesToRemove = new HashSet<>(Arrays.asList("mainTitle", "mainSmallTitle", "logInTitle"));
@@ -217,6 +220,18 @@ public class MainChatController extends MainContactController {
                     loadPicture();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+    private void setMessageSearchLupeOnMouseAction() {
+        messageSearchingLupe.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                Node messageSearchOverlay = mainAnchorPane.lookup("#messageSearchOverlay");
+                if (messageSearchOverlay != null) {
+                    mainAnchorPane.getChildren().remove(messageSearchOverlay);
+                } else {
+                    showMessageSearchingField();
                 }
             }
         });
@@ -728,7 +743,7 @@ public class MainChatController extends MainContactController {
 
         chatVBox.getChildren().addAll(0, nodesToLoad);
 
-// Let layout happen, then adjust scroll
+        // Let layout happen, then adjust scroll
         Platform.runLater(() -> {
             double newHeight = chatVBox.getHeight(); // Height after adding
             double delta = newHeight - oldHeight;
@@ -808,6 +823,71 @@ public class MainChatController extends MainContactController {
 
         delay.play();
     }
+    private void showMessageSearchingField() {
+        Pane overlay = new Pane();
+        overlay.setId("messageSearchOverlay");
+        overlay.setPrefWidth(457);
+        overlay.setPrefHeight(70);
+        overlay.setLayoutX(1460);
+        overlay.setLayoutY(81);
+        overlay.getStyleClass().add("chat-message-search-overlay");
+        Platform.runLater(() -> {
+            overlay.getScene().getStylesheets().add(
+                    getClass().getResource("/main/css/MainChat.css").toExternalForm()
+            );
+        });
+        mainAnchorPane.getChildren().add(overlay);
+
+        TextField messageSearchTextField = new TextField();
+        messageSearchTextField.setPromptText("Search for a word...");
+        messageSearchTextField.setPrefWidth(270);
+        messageSearchTextField.setPrefHeight(46);
+        messageSearchTextField.setLayoutX(14);
+        messageSearchTextField.setLayoutY(11);
+        messageSearchTextField.getStyleClass().add("chat-message-search-field");
+        overlay.getChildren().add(messageSearchTextField);
+
+        Label counter = new Label("0/0");
+        counter.setAlignment(Pos.CENTER_RIGHT);
+        counter.setPrefWidth(45);
+        counter.setLayoutY(26);
+        counter.setLayoutX(225);
+        counter.getStyleClass().add("chat-message-search-counter");
+        overlay.getChildren().add(counter);
+
+        Label upButton = new Label();
+        upButton.setPrefWidth(42);
+        upButton.setPrefHeight(42);
+        upButton.setLayoutX(291);
+        upButton.setLayoutY(16);
+        upButton.getStyleClass().add("chat-message-search-up-button");
+        upButton.setCursor(Cursor.HAND);
+        overlay.getChildren().add(upButton);
+
+        Label downButton = new Label();
+        downButton.setPrefWidth(42);
+        downButton.setPrefHeight(42);
+        downButton.setLayoutX(330);
+        downButton.setLayoutY(16);
+        downButton.getStyleClass().add("chat-message-search-down-button");
+        downButton.setCursor(Cursor.HAND);
+        overlay.getChildren().add(downButton);
+
+        Label exitButton = new Label();
+        exitButton.setPrefWidth(42);
+        exitButton.setPrefHeight(42);
+        exitButton.setLayoutX(408);
+        exitButton.setLayoutY(16);
+        exitButton.getStyleClass().add("chat-message-search-exit-button");
+        exitButton.setCursor(Cursor.HAND);
+        overlay.getChildren().add(exitButton);
+        exitButton.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                mainAnchorPane.getChildren().remove(overlay);
+            }
+        });
+    }
+
 
     // Picture Sending
     public void loadPicture() throws IOException {
