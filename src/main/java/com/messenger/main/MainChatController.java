@@ -57,6 +57,7 @@ public class MainChatController extends MainContactController {
     protected ImageView contactMessageAvatar;
 
     private boolean isMessageTooLongVisible = false;
+    private ArrayList<Integer> foundMessageIds;
 
     // Chat Interface Initialization, Chat Loading
     public void setChatContactId(int contactId) {
@@ -303,42 +304,32 @@ public class MainChatController extends MainContactController {
         }
     }
     public void loadChatHistory() throws Exception {
-        List<ChatMessage> allReversedMessages = new ArrayList<>(ChatsDataBase.getAllMessages(mainUserId,contactId)).reversed();
-        List<Node> firstNodesToLoad = getFirstChatNodesToLoad(allReversedMessages);
+        List<ChatMessage> allMessages = new ArrayList<>(ChatsDataBase.getAllMessages(mainUserId,contactId));
+        List<Node> firstNodesToLoad = getFirstChatNodesToLoad(allMessages);
 
         chatVBox.getChildren().addAll(firstNodesToLoad);
 
 
-
-
-
-        chatVBox.layoutBoundsProperty().addListener((obs, oldBounds, newBounds) -> {
-            System.out.println("Height of the VBox after layout: " + newBounds.getHeight());
-        });
+//        chatVBox.layoutBoundsProperty().addListener((obs, oldBounds, newBounds) -> {
+//            System.out.println("Height of the VBox after layout: " + newBounds.getHeight());
+//        });
     }
-    private List<Node> getFirstChatNodesToLoad(List<ChatMessage> allReversedMessages) throws Exception {
-        List<Node> firstNodes = new ArrayList<>();
-
-        int maxChatVBoxHeight = 1600;
+    private List<Node> getFirstChatNodesToLoad(List<ChatMessage> allMessages) throws Exception {
+        int maxHeight = 1600;
         double totalHeight = 0;
 
-        VBox dummyVBox = new VBox();
-        mainAnchorPane.getChildren().add(dummyVBox);
-        dummyVBox.setVisible(false);
+        List<Node> firstNodes = new ArrayList<>();
 
-        for (ChatMessage message: allReversedMessages) {
-            if (totalHeight < maxChatVBoxHeight) {
-                HBox loadedMessage = message.load(this,allReversedMessages);
-                dummyVBox.getChildren().add(loadedMessage);
-                loadedMessage.applyCss();
-                loadedMessage.autosize();
-                int nodeHeight = (int) loadedMessage.getBoundsInParent().getHeight();
-                dummyVBox.getChildren().clear();
+        for (int i = allMessages.size()-1;i >= 0;i--) {
+            ChatMessage message = allMessages.get(i);
+            if (totalHeight < maxHeight) {
+                HBox loadedMessage = message.load(this,allMessages);
+                int nodeHeight = getMessageHeight(loadedMessage);
 
                 firstNodes.addFirst(loadedMessage);
                 totalHeight += nodeHeight;
 
-                if (isDateLabelRequired(allReversedMessages,message)) {
+                if (isDateLabelRequired(allMessages,message)) {
                     String messageFullDate = message.time;
                     String labelDate = getDateForDateLabel(messageFullDate);
                     firstNodes.addFirst(getChatDateLabel(labelDate,messageFullDate));
@@ -386,21 +377,28 @@ public class MainChatController extends MainContactController {
         return chatDateLabel;
     }
     private boolean isDateLabelRequired(List<ChatMessage> allMessages,ChatMessage message) throws SQLException, ParseException {
-        ChatMessage nextMessage = getNextMessage(allMessages,message);
-        boolean nextMessageExists = (nextMessage != null);
-        String nextMessageTime = nextMessageExists ? nextMessage.time : null;
+        ChatMessage previousMessage = getPreviousMessage(allMessages,message);
+        boolean previousMessageExists = (previousMessage != null);
+        String previousMessageTime = previousMessageExists ? previousMessage.time : null;
 
         boolean isFirstMessage = ChatsDataBase.getFirstMessageId(mainUserId,contactId) == message.id;
-        boolean isNextMessageOneDay = nextMessageExists && messagesHaveOneDayDifference(nextMessageTime,message.time);
-        return isFirstMessage || isNextMessageOneDay;
+        boolean isPreviousMessageOneDay = previousMessageExists && messagesHaveOneDayDifference(previousMessageTime,message.time);
+        //System.out.println("message id: "+message.id+", previous message one day: "+isPreviousMessageOneDay+", message time: "+message.time+", previous message time: "+previousMessageTime+"\n\n");
+        return isFirstMessage || isPreviousMessageOneDay;
     }
-    private ChatMessage getNextMessage(List<ChatMessage> allMessages,ChatMessage message) {
-        int messageIndex = allMessages.indexOf(message);
+    private ChatMessage getPreviousMessage(List<ChatMessage> allMessages,ChatMessage message) {
+        int messageIndex = -1;
+        for (int i = 0;i <= allMessages.size()-1;i++) {
+            if (allMessages.get(i).id == message.id) {
+                messageIndex = i;
+                break;
+            }
+        }
 
-        if (messageIndex != -1 && messageIndex < allMessages.size() - 1) {
-            return allMessages.get(messageIndex + 1);
+        if (messageIndex > 0) {
+            return allMessages.get(messageIndex - 1);
         } else {
-            return null; // No next object exists (either not found or it's the last)
+            return null; // No next object exists (either not found or it's the first message)
         }
     }
 
@@ -408,15 +406,11 @@ public class MainChatController extends MainContactController {
     // Chat Lazy Loading
     private void setChatLazyLoadingListener() {
         chatScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal.doubleValue() == 0.0) {
+            if (newVal.doubleValue() == 0.0 && !chatVBox.getChildren().isEmpty()) {
                 try {
                     boolean hasMoreMessages = hasMoreMessages();
-                    boolean hasLoadingCircle = chatVBox.getChildren().stream()
-                            .anyMatch(node -> "chatLoadingCircle".equals(node.getId()));
-                    if (!hasLoadingCircle && hasMoreMessages) {
-//                        ChatLoadingCircle chatLoadingCircle = new ChatLoadingCircle(this);
-//                        chatLoadingCircle.addLoadingCircle();
-                        loadMoreMessages();
+                    if (hasMoreMessages) {
+                        loadMoreMessagesUp();
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -697,37 +691,53 @@ public class MainChatController extends MainContactController {
         boolean hasMoreMessages = ChatsDataBase.hasMoreMessages(mainUserId,contactId,lastMessageId);
         return hasMoreMessages;
     }
-    private void loadMoreMessages() throws Exception {
-        // get ALL left messages
-        // reverse them
+    private int getMessageHeight(HBox message) {
+        VBox dummyVBox = new VBox();
+        mainAnchorPane.getChildren().add(dummyVBox);
+        dummyVBox.setVisible(false);
+
+        dummyVBox.getChildren().add(message);
+        message.applyCss();
+        message.autosize();
+        int nodeHeight = (int) message.getBoundsInParent().getHeight();
+        mainAnchorPane.getChildren().remove(dummyVBox);
+
+        return nodeHeight;
+    }
+    private void adjustScrollPosition(double oldChatVBoxHeight) {
+        Platform.runLater(() -> {
+            double newHeight = chatVBox.getHeight(); // Height after adding
+            double delta = newHeight - oldChatVBoxHeight;
+
+            // Scroll down by the exact pixel height of inserted content
+            chatScrollPane.setVvalue(
+                    chatScrollPane.getVvalue() + delta / (newHeight - chatScrollPane.getViewportBounds().getHeight())
+            );
+        });
+    }
+    private void loadMoreMessagesUp() throws Exception {
+        int maxHeight = 8000; // max additional height of new loaded messages
+        int totalHeight = 0;
+
         int lastMessageId = chatVBox.getChildren().stream()
                 .filter(node -> node instanceof HBox)
                 .findFirst()
                 .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
                 .get();
-        List<ChatMessage> allLeftReversedMessages = new ArrayList<>(ChatsDataBase.getAllLeftMessages(mainUserId,contactId,lastMessageId)).reversed();
+        List<ChatMessage> allMessages = new ArrayList<>(ChatsDataBase.getAllMessages(mainUserId,contactId));
+        List<ChatMessage> allLeftMessages = new ArrayList<>(ChatsDataBase.getAllLeftMessages(mainUserId,contactId,lastMessageId));
         List<Node> nodesToLoad = new ArrayList<>();
 
-        int maxChatVBoxHeight = 8000;
-        double totalHeight = 0;
-
-        VBox dummyVBox = new VBox();
-        mainAnchorPane.getChildren().add(dummyVBox);
-        dummyVBox.setVisible(false);
-
-        for (ChatMessage message: allLeftReversedMessages) {
-            if (totalHeight < maxChatVBoxHeight) {
-                HBox loadedMessage = message.load(this,allLeftReversedMessages);
-                dummyVBox.getChildren().add(loadedMessage);
-                loadedMessage.applyCss();
-                loadedMessage.autosize();
-                int nodeHeight = (int) loadedMessage.getBoundsInParent().getHeight();
-                dummyVBox.getChildren().clear();
+        for (int i = allLeftMessages.size()-1;i >= 0;i--) {
+            ChatMessage message = allLeftMessages.get(i);
+            if (totalHeight < maxHeight) {
+                HBox loadedMessage = message.load(this,allMessages);
+                int nodeHeight = getMessageHeight(loadedMessage);
 
                 nodesToLoad.addFirst(loadedMessage);
                 totalHeight += nodeHeight;
 
-                if (isDateLabelRequired(allLeftReversedMessages,message)) {
+                if (isDateLabelRequired(allMessages,message)) {
                     String messageFullDate = message.time;
                     String labelDate = getDateForDateLabel(messageFullDate);
                     nodesToLoad.addFirst(getChatDateLabel(labelDate,messageFullDate));
@@ -743,17 +753,7 @@ public class MainChatController extends MainContactController {
 
         chatVBox.getChildren().addAll(0, nodesToLoad);
 
-        // Let layout happen, then adjust scroll
-        Platform.runLater(() -> {
-            double newHeight = chatVBox.getHeight(); // Height after adding
-            double delta = newHeight - oldHeight;
-
-            // Scroll down by the exact pixel height of inserted content
-            chatScrollPane.setVvalue(
-                    chatScrollPane.getVvalue() + delta / (newHeight - chatScrollPane.getViewportBounds().getHeight())
-            );
-        });
-
+        adjustScrollPosition(oldHeight);
     }
     private void showMessageTooLongException() {
         if (isMessageTooLongVisible) {
@@ -828,7 +828,7 @@ public class MainChatController extends MainContactController {
         overlay.setId("messageSearchOverlay");
         overlay.setPrefWidth(457);
         overlay.setPrefHeight(70);
-        overlay.setLayoutX(1460);
+        overlay.setLayoutX(1461);
         overlay.setLayoutY(81);
         overlay.getStyleClass().add("chat-message-search-overlay");
         Platform.runLater(() -> {
@@ -846,8 +846,33 @@ public class MainChatController extends MainContactController {
         messageSearchTextField.setLayoutY(11);
         messageSearchTextField.getStyleClass().add("chat-message-search-field");
         overlay.getChildren().add(messageSearchTextField);
+        PauseTransition pause = new PauseTransition(Duration.millis(400));
+        pause.setOnFinished(event -> {
+            try {
+                String targetTrimmedMessageText = messageSearchTextField.getText().trim().toLowerCase();
+                foundMessageIds = ChatsDataBase.getFoundMessageIds(mainUserId,contactId,targetTrimmedMessageText);
+                boolean messagesExist = !foundMessageIds.isEmpty();
+                if (messagesExist && !targetTrimmedMessageText.isEmpty()) {
+                    loadChatWithFoundMessage(foundMessageIds.getFirst(),targetTrimmedMessageText);
+                    changeCounter(1,foundMessageIds.size());
+                } else {
+                    changeCounter(0,0);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        Platform.runLater(messageSearchTextField::requestFocus);
+        messageSearchTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            boolean isNewValueDifferent = !oldValue.trim().equals(newValue.trim());
+            boolean isNewValueEmpty = newValue.trim().isEmpty();
+            if (isNewValueDifferent && !isNewValueEmpty) {
+                pause.playFromStart();
+            }
+        });
 
         Label counter = new Label("0/0");
+        counter.setId("messageSearchCounter");
         counter.setAlignment(Pos.CENTER_RIGHT);
         counter.setPrefWidth(45);
         counter.setLayoutY(26);
@@ -886,6 +911,96 @@ public class MainChatController extends MainContactController {
                 mainAnchorPane.getChildren().remove(overlay);
             }
         });
+    }
+    private void clearChat() {
+        chatVBox.getChildren().clear();
+    }
+    private void changeCounter(int currentMessage,int foundMessages) {
+        Label counter = (Label) mainAnchorPane.lookup("#messageSearchCounter");
+        counter.setText(String.format("%d/%d",currentMessage,foundMessages));
+    }
+    private void loadChatWithFoundMessage(int foundMessageId,String targetMessage) throws Exception {
+        clearChat();
+        ArrayList<Node> newChatNode = new ArrayList<>();
+        ArrayList<ChatMessage> allMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
+
+        int maxPreviousHeight = 1000;
+        int previousTotalHeight = 0;
+        List<ChatMessage> previousMessages = ChatsDataBase.getAllLeftMessages(mainUserId,contactId,foundMessageId);
+        for (int i = previousMessages.size()-1;i >= 0;i--) {
+            ChatMessage message = previousMessages.get(i);
+            if (previousTotalHeight < maxPreviousHeight) {
+                HBox loadedMessage = message.load(this,allMessages);
+                int nodeHeight = getMessageHeight(loadedMessage);
+
+                newChatNode.addFirst(loadedMessage);
+                previousTotalHeight += nodeHeight;
+
+                if (isDateLabelRequired(allMessages,message)) {
+                    String messageFullDate = message.time;
+                    String labelDate = getDateForDateLabel(messageFullDate);
+                    newChatNode.addFirst(getChatDateLabel(labelDate,messageFullDate));
+                    short dateLabelHeight = 27;
+                    previousTotalHeight += dateLabelHeight;
+                }
+            } else {
+                break;
+            }
+        }
+
+        ChatMessage foundMessage = ChatsDataBase.getMessage(mainUserId,contactId,foundMessageId);
+        HBox loadedFoundMessage = foundMessage.load(this,allMessages);
+        if (isDateLabelRequired(allMessages,foundMessage)) {
+            String messageFullDate = foundMessage.time;
+            String labelDate = getDateForDateLabel(messageFullDate);
+            newChatNode.add(getChatDateLabel(labelDate,messageFullDate));
+        }
+        newChatNode.add(loadedFoundMessage);
+
+        int maxNextHeight = 1000;
+        int nextTotalHeight = 0;
+        List<ChatMessage> nextMessages = ChatsDataBase.getNextMessages(mainUserId,contactId,foundMessageId);
+        for (int i = 0;i <= nextMessages.size()-1;i++) {
+            ChatMessage message = nextMessages.get(i);
+            if (nextTotalHeight < maxNextHeight) {
+                if (isDateLabelRequired(allMessages,message)) {
+                    String messageFullDate = message.time;
+                    String labelDate = getDateForDateLabel(messageFullDate);
+                    newChatNode.add(getChatDateLabel(labelDate,messageFullDate));
+                    short dateLabelHeight = 27;
+                    previousTotalHeight += dateLabelHeight;
+                }
+
+                HBox loadedMessage = message.load(this,allMessages);
+                int nodeHeight = getMessageHeight(loadedMessage);
+
+                newChatNode.add(loadedMessage);
+                nextTotalHeight += nodeHeight;
+            } else {
+                break;
+            }
+        }
+
+        chatVBox.getChildren().addAll(newChatNode);
+
+        Platform.runLater(() -> {
+            double newChatPosition = getCenteredScrollPosition(loadedFoundMessage);
+            System.out.println(newChatPosition);
+            chatScrollPane.setVvalue(newChatPosition);
+        });
+    }
+    private double getCenteredScrollPosition(HBox targetHBox) {
+        double hboxY = targetHBox.localToScene(0, 0).getY(); // Y position of HBox in scene
+        double vboxY = chatVBox.localToScene(0, 0).getY(); // Y position of VBox in scene
+        double viewportHeight = chatScrollPane.getViewportBounds().getHeight(); // Viewport height
+        double totalHeight = chatVBox.getBoundsInLocal().getHeight(); // Total VBox height
+
+        // Compute scroll position to center the HBox
+        double position = (hboxY - vboxY - (viewportHeight / 2) + (targetHBox.getBoundsInLocal().getHeight() / 2))
+                / (totalHeight - viewportHeight);
+
+        // Ensure the value is between 0 and 1
+        return Math.max(0, Math.min(1, position));
     }
 
 

@@ -691,7 +691,7 @@ public class ChatMessage extends MainChatController {
         };
     }
     private boolean isAvatarRequired() throws SQLException, ParseException {
-        int lastMessageId = (allMessages == null) ? ChatsDataBase.getLastMessageId(mainUserId,contactId) : allMessages.getFirst().id;
+        int lastMessageId = (allMessages == null) ? ChatsDataBase.getLastMessageId(mainUserId,contactId) : allMessages.getLast().id;
         boolean nextMessageExists = nextMessageId != -1;
         int nextMessageSender = nextMessageExists ? nextMessageSenderId : -1;
 

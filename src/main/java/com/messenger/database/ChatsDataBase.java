@@ -367,6 +367,54 @@ public class ChatsDataBase {
         }
         return -1; // Return -1 if no previous message is found
     }
+    public static ArrayList<ChatMessage> getNextMessages(int mainUserId,int contactId,int messageId) throws SQLException {
+        ArrayList<ChatMessage> nextMessages = new ArrayList<>();
+        String statement = "SELECT * \n" +
+                "FROM chats \n" +
+                "WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) \n" +
+                "AND message_id > ?\n" +
+                "ORDER BY message_id ASC;";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(3, contactId);
+            preparedStatement.setInt(4, mainUserId);
+            preparedStatement.setInt(5,messageId);
+            ResultSet result = preparedStatement.executeQuery();
+
+            ArrayList<ChatMessage> tempMessages = new ArrayList<>();
+
+            // First load all messages and their IDs
+            while (result.next()) {
+                ChatMessage message = new ChatMessage(result); // Temp nextMessageId, will update later
+                tempMessages.add(message);
+            }
+
+            // Now set the nextMessageId for each message
+            for (int i = 0; i < tempMessages.size(); i++) {
+                ChatMessage message = tempMessages.get(i);
+
+                if (i > 0) {
+                    ChatMessage previousMessage = tempMessages.get(i - 1);
+                    message.setPreviousMessageData(previousMessage);
+                } else {
+                    message.setPreviousMessageData(null);
+                }
+
+                if (i < tempMessages.size() - 1) {
+                    ChatMessage nextMessage = tempMessages.get(i + 1);
+                    message.setNextMessageData(nextMessage);
+                } else {
+                    message.setNextMessageData(null);
+                }
+
+                nextMessages.add(message);
+            }
+        }
+        return nextMessages;
+    }
     public static boolean isThereMessagesOnSameDay(int mainUserId, int contactId, int messageId, String fullTime) {
         String sql = """
         SELECT 1 FROM chats
@@ -470,5 +518,15 @@ public class ChatsDataBase {
             }
         }
         return previousMessages;
+    }
+    public static ArrayList<Integer> getFoundMessageIds(int mainUserId,int contactId,String enteredTrimmedMessage) throws SQLException {
+        ArrayList<ChatMessage> allMessages = getAllMessages(mainUserId,contactId);
+        ArrayList<Integer> foundMessageIds = new ArrayList<>();
+        for (ChatMessage message: allMessages) {
+            if (message.message_text != null && message.message_text.toLowerCase().contains(enteredTrimmedMessage)) {
+                foundMessageIds.add(message.id);
+            }
+        }
+        return foundMessageIds;
     }
 }
