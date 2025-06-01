@@ -58,6 +58,7 @@ public class MainChatController extends MainContactController {
 
     private boolean isMessageTooLongVisible = false;
     private ArrayList<Integer> foundMessageIds;
+    private boolean suppressLazyLoading = false;
 
     // Chat Interface Initialization, Chat Loading
     public void setChatContactId(int contactId) {
@@ -77,7 +78,8 @@ public class MainChatController extends MainContactController {
         loadChat();
         scrollDown();
         setChatLazyLoadingListener();
-        //scrollLoadedChatDown();
+        deleteMessageSearchOverlay();
+        setMessageSearchLupeOnMouseAction();
     }
 
     // Chat Interface Initialization
@@ -94,7 +96,6 @@ public class MainChatController extends MainContactController {
         setSendMessageListener();
         removeTextFieldContextMenu();
         setAddPictureOnMouseAction();
-        setMessageSearchLupeOnMouseAction();
     }
     private void removeTitle() {
         Set<String> titlesToRemove = new HashSet<>(Arrays.asList("mainTitle", "mainSmallTitle", "logInTitle"));
@@ -225,6 +226,10 @@ public class MainChatController extends MainContactController {
             }
         });
     }
+    private void deleteMessageSearchOverlay() {
+        Node messageSearchOverlay = mainAnchorPane.lookup("#messageSearchOverlay");
+        mainAnchorPane.getChildren().remove(messageSearchOverlay);
+    }
     private void setMessageSearchLupeOnMouseAction() {
         messageSearchingLupe.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
@@ -232,7 +237,11 @@ public class MainChatController extends MainContactController {
                 if (messageSearchOverlay != null) {
                     mainAnchorPane.getChildren().remove(messageSearchOverlay);
                 } else {
-                    showMessageSearchingField();
+                    try {
+                        showMessageSearchingField();
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         });
@@ -406,11 +415,21 @@ public class MainChatController extends MainContactController {
     // Chat Lazy Loading
     private void setChatLazyLoadingListener() {
         chatScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
+            if (suppressLazyLoading) return;
             if (newVal.doubleValue() == 0.0 && !chatVBox.getChildren().isEmpty()) {
                 try {
-                    boolean hasMoreMessages = hasMoreMessages();
-                    if (hasMoreMessages) {
+                    boolean hasMorePreviousMessages = hasMorePreviousMessages();
+                    if (hasMorePreviousMessages) {
                         loadMoreMessagesUp();
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (newVal.doubleValue() == 1.0 && !chatVBox.getChildren().isEmpty()) {
+                try {
+                    boolean hasMoreNextMessages = hasMoreNextMessages();
+                    if (hasMoreNextMessages) {
+                        loadMoreMessagesDown();
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -682,14 +701,23 @@ public class MainChatController extends MainContactController {
         mainContactsVBox.getChildren().remove(contactAnchorPane);
         mainContactsVBox.getChildren().add(0,contactAnchorPane);
     }
-    private boolean hasMoreMessages() throws SQLException {
-        int lastMessageId = chatVBox.getChildren().stream()
+    private boolean hasMorePreviousMessages() throws SQLException {
+        int firstMessageId = chatVBox.getChildren().stream()
                 .filter(node -> node instanceof HBox)
                 .findFirst()
                 .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
                 .get();
-        boolean hasMoreMessages = ChatsDataBase.hasMoreMessages(mainUserId,contactId,lastMessageId);
-        return hasMoreMessages;
+        boolean hasMorePreviousMessages = ChatsDataBase.hasMorePreviousMessages(mainUserId,contactId,firstMessageId);
+        return hasMorePreviousMessages;
+    }
+    private boolean hasMoreNextMessages() throws SQLException {
+        int lastMessageId = chatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .reduce((first, second) -> second) // Gets the last HBox
+                .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
+                .get();
+        boolean hasMoreNextMessages = ChatsDataBase.hasMoreNextMessages(mainUserId,contactId,lastMessageId);
+        return hasMoreNextMessages;
     }
     private int getMessageHeight(HBox message) {
         VBox dummyVBox = new VBox();
@@ -713,19 +741,21 @@ public class MainChatController extends MainContactController {
             chatScrollPane.setVvalue(
                     chatScrollPane.getVvalue() + delta / (newHeight - chatScrollPane.getViewportBounds().getHeight())
             );
+            suppressLazyLoading = false;
         });
     }
     private void loadMoreMessagesUp() throws Exception {
         int maxHeight = 8000; // max additional height of new loaded messages
         int totalHeight = 0;
+        suppressLazyLoading = true;
 
-        int lastMessageId = chatVBox.getChildren().stream()
+        int firstMessageId = chatVBox.getChildren().stream()
                 .filter(node -> node instanceof HBox)
                 .findFirst()
                 .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
                 .get();
         List<ChatMessage> allMessages = new ArrayList<>(ChatsDataBase.getAllMessages(mainUserId,contactId));
-        List<ChatMessage> allLeftMessages = new ArrayList<>(ChatsDataBase.getAllLeftMessages(mainUserId,contactId,lastMessageId));
+        List<ChatMessage> allLeftMessages = new ArrayList<>(ChatsDataBase.getAllLeftMessages(mainUserId,contactId,firstMessageId));
         List<Node> nodesToLoad = new ArrayList<>();
 
         for (int i = allLeftMessages.size()-1;i >= 0;i--) {
@@ -754,6 +784,43 @@ public class MainChatController extends MainContactController {
         chatVBox.getChildren().addAll(0, nodesToLoad);
 
         adjustScrollPosition(oldHeight);
+    }
+    private void loadMoreMessagesDown() throws Exception {
+        int maxHeight = 8000;
+        int totalHeight = 0;
+        suppressLazyLoading = true;
+
+        int lastMessageId = chatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .reduce((first, second) -> second) // Gets the last HBox
+                .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
+                .get();
+        List<ChatMessage> allMessages = new ArrayList<>(ChatsDataBase.getAllMessages(mainUserId,contactId));
+        List<ChatMessage> nextMessages = ChatsDataBase.getNextMessages(mainUserId,contactId,lastMessageId);
+        List<Node> nodesToLoad = new ArrayList<>();
+
+        for (int i = 0;i <= nextMessages.size()-1;i++) {
+            ChatMessage message = nextMessages.get(i);
+            if (totalHeight < maxHeight) {
+                if (isDateLabelRequired(allMessages,message)) {
+                    String messageFullDate = message.time;
+                    String labelDate = getDateForDateLabel(messageFullDate);
+                    nodesToLoad.add(getChatDateLabel(labelDate,messageFullDate));
+                    short dateLabelHeight = 27;
+                    totalHeight += dateLabelHeight;
+                }
+
+                HBox loadedMessage = message.load(this,allMessages);
+                int nodeHeight = getMessageHeight(loadedMessage);
+
+                nodesToLoad.add(loadedMessage);
+                totalHeight += nodeHeight;
+            } else {
+                break;
+            }
+        }
+
+        chatVBox.getChildren().addAll(nodesToLoad);
     }
     private void showMessageTooLongException() {
         if (isMessageTooLongVisible) {
@@ -823,12 +890,14 @@ public class MainChatController extends MainContactController {
 
         delay.play();
     }
-    private void showMessageSearchingField() {
+    private void showMessageSearchingField() throws SQLException {
+        moveFirstMessageDown();
+
         Pane overlay = new Pane();
         overlay.setId("messageSearchOverlay");
         overlay.setPrefWidth(457);
         overlay.setPrefHeight(70);
-        overlay.setLayoutX(1461);
+        overlay.setLayoutX(1463);
         overlay.setLayoutY(81);
         overlay.getStyleClass().add("chat-message-search-overlay");
         Platform.runLater(() -> {
@@ -868,6 +937,8 @@ public class MainChatController extends MainContactController {
             boolean isNewValueEmpty = newValue.trim().isEmpty();
             if (isNewValueDifferent && !isNewValueEmpty) {
                 pause.playFromStart();
+            } else if (isNewValueEmpty) {
+                changeCounter(0,0);
             }
         });
 
@@ -909,8 +980,39 @@ public class MainChatController extends MainContactController {
         exitButton.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
                 mainAnchorPane.getChildren().remove(overlay);
+                try {
+                    moveFirstMessageUp();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
+    }
+    private void moveFirstMessageDown() throws SQLException {
+        int firstMessageId = ChatsDataBase.getFirstMessageId(mainUserId,contactId);
+        int firstChatMessageId = chatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .findFirst()
+                .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
+                .orElse(-1);
+
+        if (firstChatMessageId != -1 && firstChatMessageId == firstMessageId) {
+            HBox message = (HBox) chatVBox.lookup("#messageHBox"+firstMessageId);
+            VBox.setMargin(message,new Insets(32,0,0,0));
+        }
+    }
+    private void moveFirstMessageUp() throws SQLException {
+        int firstMessageId = ChatsDataBase.getFirstMessageId(mainUserId,contactId);
+        int firstChatMessageId = chatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .findFirst()
+                .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
+                .orElse(-1);
+
+        if (firstChatMessageId != -1 && firstChatMessageId == firstMessageId) {
+            HBox message = (HBox) chatVBox.lookup("#messageHBox"+firstMessageId);
+            VBox.setMargin(message,new Insets(5,0,0,0));
+        }
     }
     private void clearChat() {
         chatVBox.getChildren().clear();
@@ -921,13 +1023,14 @@ public class MainChatController extends MainContactController {
     }
     private void loadChatWithFoundMessage(int foundMessageId,String targetMessage) throws Exception {
         clearChat();
+        suppressLazyLoading = true;
         ArrayList<Node> newChatNode = new ArrayList<>();
         ArrayList<ChatMessage> allMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
 
         int maxPreviousHeight = 1000;
         int previousTotalHeight = 0;
         List<ChatMessage> previousMessages = ChatsDataBase.getAllLeftMessages(mainUserId,contactId,foundMessageId);
-        for (int i = previousMessages.size()-1;i >= 0;i--) {
+        for (int i = previousMessages.size() - 1;i >= 0;i--) {
             ChatMessage message = previousMessages.get(i);
             if (previousTotalHeight < maxPreviousHeight) {
                 HBox loadedMessage = message.load(this,allMessages);
@@ -985,8 +1088,13 @@ public class MainChatController extends MainContactController {
 
         Platform.runLater(() -> {
             double newChatPosition = getCenteredScrollPosition(loadedFoundMessage);
-            System.out.println(newChatPosition);
             chatScrollPane.setVvalue(newChatPosition);
+            suppressLazyLoading = false;
+            try {
+                moveFirstMessageDown();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
     private double getCenteredScrollPosition(HBox targetHBox) {

@@ -188,7 +188,7 @@ public class ChatMessage extends MainChatController {
         this.previousMessageReceived = previousMessageExists && (boolean) previousMessage.get(8);
     }
     public void setNextMessageDataWithList(List<Object> nextMessage) {
-        boolean nextMessageExists = (nextMessage != null);
+        boolean nextMessageExists = (!nextMessage.isEmpty());
         this.nextMessageId = nextMessageExists ? (int) nextMessage.get(0) : -1;
         this.nextMessageSenderId = nextMessageExists ? (int) nextMessage.get(1) : -1;
         this.nextMessageReceiverId = nextMessageExists ? (int) nextMessage.get(2) : -1;
@@ -709,11 +709,6 @@ public class ChatMessage extends MainChatController {
     private boolean messagesHaveOneDayDifference(String previousMessageFullDate, String currentMessageFullDate) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-MM-dd"); // Only extracts the date
-
-        if (allMessages == null) {
-            System.out.println("Previous message time: "+previousMessageFullDate);
-            System.out.println("Current message time: "+currentMessageFullDate);
-        }
 
         Date date1 = dateFormat.parse(previousMessageFullDate);
         Date date2 = dateFormat.parse(currentMessageFullDate);

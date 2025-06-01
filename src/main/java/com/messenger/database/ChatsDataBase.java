@@ -205,7 +205,7 @@ public class ChatsDataBase {
         return null;
     }
     public static List<Object> getNextMessage(int mainUserId,int contactId,int messageId) throws SQLException {
-        List<Object> previousMessage = new ArrayList<>();
+        List<Object> nextMessage = new ArrayList<>();
         String getMessageIdStatement = "SELECT * FROM chats WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND message_id > ?;";
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
@@ -219,22 +219,22 @@ public class ChatsDataBase {
 
             ResultSet messageResult = preparedStatement.executeQuery();
             if (messageResult.next()) {
-                previousMessage.add(messageResult.getInt("message_id"));
-                previousMessage.add(messageResult.getInt("sender_id"));
-                previousMessage.add(messageResult.getInt("receiver_id"));
-                previousMessage.add(messageResult.getString("message"));
-                previousMessage.add(messageResult.getBytes("picture"));
-                previousMessage.add((messageResult.getInt("reply_message_id") == 0) ? (-1) : (messageResult.getInt("reply_message_id")));
+                nextMessage.add(messageResult.getInt("message_id"));
+                nextMessage.add(messageResult.getInt("sender_id"));
+                nextMessage.add(messageResult.getInt("receiver_id"));
+                nextMessage.add(messageResult.getString("message"));
+                nextMessage.add(messageResult.getBytes("picture"));
+                nextMessage.add((messageResult.getInt("reply_message_id") == 0) ? (-1) : (messageResult.getInt("reply_message_id")));
                 Timestamp ts = messageResult.getTimestamp("message_time");
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
                 String formattedTime = sdf.format(ts);
-                previousMessage.add(formattedTime);
-                previousMessage.add(messageResult.getString("message_type"));
-                previousMessage.add(messageResult.getBoolean("received"));
-                return previousMessage;
+                nextMessage.add(formattedTime);
+                nextMessage.add(messageResult.getString("message_type"));
+                nextMessage.add(messageResult.getBoolean("received"));
+                return nextMessage;
             }
         }
-        return null;
+        return nextMessage;
     }
     public static int getSenderIdWithMessageId(int messageId) throws SQLException {
         String statement = "SELECT sender_id FROM chats WHERE message_id = ?";
@@ -448,7 +448,7 @@ public class ChatsDataBase {
 
         return false;
     }
-    public static boolean hasMoreMessages(int mainUserId, int contactId,int lastMessageId) throws SQLException {
+    public static boolean hasMorePreviousMessages(int mainUserId, int contactId,int lastMessageId) throws SQLException {
         String getMessageIdStatement = "SELECT * \n" +
                 "FROM chats \n" +
                 "WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) \n" +
@@ -457,6 +457,29 @@ public class ChatsDataBase {
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             // Second Query: Get previous message_id
+            PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(3, contactId);
+            preparedStatement.setInt(4, mainUserId);
+            preparedStatement.setInt(5, lastMessageId); // Now correctly setting the last parameter
+
+            ResultSet messageResult = preparedStatement.executeQuery();
+            if (messageResult.next()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public static boolean hasMoreNextMessages(int mainUserId, int contactId,int lastMessageId) throws SQLException {
+        String getMessageIdStatement = "SELECT * \n" +
+                "FROM chats \n" +
+                "WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) \n" +
+                "AND message_id > ?\n" +
+                "ORDER BY message_id DESC;";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            // Second Query: Get next message_id
             PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
             preparedStatement.setInt(1, mainUserId);
             preparedStatement.setInt(2, contactId);
@@ -499,6 +522,7 @@ public class ChatsDataBase {
             // Now set the nextMessageId for each message
             for (int i = 0; i < tempMessages.size(); i++) {
                 ChatMessage message = tempMessages.get(i);
+                List<Object> nextPotentialMessage = getNextMessage(mainUserId,contactId,tempMessages.get(i).id);
 
                 if (i > 0) {
                     ChatMessage previousMessage = tempMessages.get(i - 1);
@@ -509,6 +533,9 @@ public class ChatsDataBase {
 
                 if (i < tempMessages.size() - 1) {
                     ChatMessage nextMessage = tempMessages.get(i + 1);
+                    message.setNextMessageData(nextMessage);
+                } else if (i == tempMessages.size() - 1 && !nextPotentialMessage.isEmpty()) {
+                    ChatMessage nextMessage = getMessage(mainUserId,contactId,(int) nextPotentialMessage.getFirst());
                     message.setNextMessageData(nextMessage);
                 } else {
                     message.setNextMessageData(null);
