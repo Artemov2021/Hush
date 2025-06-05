@@ -20,6 +20,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 
 import java.io.ByteArrayInputStream;
@@ -73,7 +75,7 @@ public class ChatMessage extends MainChatController {
     private StackPane messageStackPane;
     private VBox messageVBox;
     private Label messagePictureLabel;
-    private Label messageTextLabel;
+    private TextFlow messageTextFlow;
     private StackPane messageReplyStackPane;
     private HBox messagePictureHBox;
     private Label messagePictureTimeLabel;
@@ -142,8 +144,10 @@ public class ChatMessage extends MainChatController {
         messageHBox = (HBox) chatVBox.lookup("#messageHBox"+id);
         messageHBox.getChildren().clear();
         switch (type) {
+            case "text" -> buildTextMessage();
             case "picture" -> buildPictureMessage();
             case "picture_with_text" -> buildPictureWithTextMessage();
+            case "reply_with_text" -> buildReplyWithTextMessage();
             case "reply_with_picture" -> buildReplyWithPictureMessage();
             case "reply_with_picture_and_text" -> buildReplyWithPictureAndTextMessage();
             default -> throw new Exception();
@@ -202,7 +206,6 @@ public class ChatMessage extends MainChatController {
 
     // Message Building
     private HBox buildTextMessage() throws SQLException, ParseException {
-        setMessageHBox();
         setMessageStackPane();
         setMessageTextLabel();
         setMessageTimeLabel();
@@ -285,23 +288,43 @@ public class ChatMessage extends MainChatController {
     }
     private void setMessageVBox() {
         messageVBox = new VBox();
+        messageVBox.setId("messageVBox"+id);
         messageVBox.setMouseTransparent(false);
         messageStackPane.getChildren().add(messageVBox);
     }
     private void setMessageTextLabel() {
-        Insets padding = getTextLabelPadding();
-        messageTextLabel = new Label(message_text);
-        StackPane.setAlignment(messageTextLabel,Pos.BOTTOM_LEFT);
-        messageTextLabel.setId("messageTextLabel"+id);
-        messageTextLabel.setWrapText(true);
-        messageTextLabel.getStyleClass().add("chat-message-text-label");
-        if (type.equals("picture_with_text") || type.equals("reply_with_picture_and_text")) {
-            VBox.setMargin(messageTextLabel,padding);
-            messageVBox.getChildren().add(messageTextLabel);
+        final Insets[] padding = new Insets[] { getTextLabelPadding() };
+
+        Text messageText = new Text(message_text);
+        messageText.setId("messageText"+id);
+        messageText.getStyleClass().add("chat-message-textflow-text");
+
+        messageTextFlow = new TextFlow(messageText);
+        StackPane.setAlignment(messageTextFlow, Pos.BOTTOM_LEFT);
+        messageTextFlow.setId("messageTextFlow"+id);
+
+        boolean hasPictureWithText = type.equals("picture_with_text") || type.equals("reply_with_picture_and_text");
+        if (hasPictureWithText) {
+            messageVBox.getChildren().add(messageTextFlow);
         } else {
-            StackPane.setMargin(messageTextLabel,padding);
-            messageStackPane.getChildren().add(messageTextLabel);
+            messageStackPane.getChildren().add(messageTextFlow);
         }
+
+        Platform.runLater(() -> {
+            double textHeight = messageText.getBoundsInLocal().getHeight();
+            double fontSize = messageText.getFont().getSize();
+            int approxLines = (int) Math.round(textHeight / fontSize);
+
+            if (approxLines > 1) {
+                padding[0] = new Insets(8, 50, 10, 13);
+            }
+
+            if (hasPictureWithText) {
+                VBox.setMargin(messageTextFlow, padding[0]);
+            } else {
+                StackPane.setMargin(messageTextFlow, padding[0]);
+            }
+        });
     }
     private void setMessageTimeLabel() {
         String messageTime = getMessageTime(time);
@@ -683,7 +706,7 @@ public class ChatMessage extends MainChatController {
     }
     private Insets getTextLabelPadding() {
         return switch (type) {
-            case "text" -> new Insets(5,50,9,13);
+            case "text" -> new Insets(10,50,0,13);
             case "reply_with_text" -> new Insets(48,50,7,12);
             case "picture_with_text" -> new Insets (8,50,7,13);
             case "reply_with_picture_and_text" -> new Insets(0,50,7,13);
@@ -979,7 +1002,7 @@ public class ChatMessage extends MainChatController {
             pictureMessagePane.setLayoutY(newLayoutY);
 
             double messagePrefWidth = (previewPictureMessage != null) ? previewPictureMessage.prefWidth(-1) : 0;
-            if (messagePrefWidth >= (newWidth - 40)) {
+            if (messagePrefWidth >= (newWidth - 40) && previewPictureMessage != null) {
                 previewPictureMessage.setVisible(false);
             } else if (previewPictureMessage != null) {
                 previewPictureMessage.setVisible(true);

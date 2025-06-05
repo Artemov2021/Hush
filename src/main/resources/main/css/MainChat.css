@@ -107,8 +107,8 @@
     -fx-background-color: #1D1C20;
     -fx-background-radius: 11;
 }
-.chat-message-text-label {
-    -fx-text-fill: #DBDBDB;
+.chat-message-textflow-text {
+    -fx-fill: #DBDBDB;
     -fx-font-size: 15;
 }
 .chat-time-label {

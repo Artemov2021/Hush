@@ -20,6 +20,8 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import javafx.scene.Cursor;
@@ -470,7 +472,7 @@ public class MainChatController extends MainContactController {
     private void scrollDown() {
         chatScrollPane.setVvalue(1.0);
     }
-    private void processMessageEdit() throws SQLException {
+    private void processMessageEdit() throws Exception {
         editChosenMessage();
         updatePotentialLastMessage();
     }
@@ -530,30 +532,57 @@ public class MainChatController extends MainContactController {
         String currentMessage = chatTextField.getText().trim();
         return !currentMessage.isEmpty();
     }
-    private void editChosenMessage() throws SQLException {
+    private void editChosenMessage() throws Exception {
        editChosenMessageInDB();
        editChosenMessageInChat();
     }
     private void editChosenMessageInDB() throws SQLException {
         String currentMessage = chatTextField.getText().trim();
         int chosenMessageId = getEditWrapperId();
+
         String oldMessageType = ChatsDataBase.getMessage(mainUserId,contactId,chosenMessageId).type;
+        String newMessageType = switch (oldMessageType) {
+            case "text" -> "text";
+            case "picture" -> "text";
+            case "picture_with_text" -> "picture_with_text";
+            case "reply_with_text" -> "reply_with_text";
+            case "reply_with_picture" -> "reply_with_text";
+            case "reply_with_picture_and_text" -> "reply_with_picture_and_text";
+            default -> null;
+        };
 
         boolean isMessageTooLong = (currentMessage.length() >= 1000);
         if (isMessageTooLong) {
             throw new IllegalArgumentException();
         } else {
-            ChatsDataBase.editMessage(chosenMessageId, currentMessage, null, oldMessageType);
+            ChatsDataBase.editMessage(chosenMessageId, currentMessage, null, newMessageType);
         }
     }
-    private void editChosenMessageInChat() {
+    private void editChosenMessageInChat() throws Exception {
         String currentMessage = chatTextField.getText().trim();
         int chosenMessageId = getEditWrapperId();
 
         HBox chosenHBox = (HBox) chatVBox.lookup("#messageHBox"+chosenMessageId);
         StackPane chosenStackPane = (StackPane) chosenHBox.lookup("#messageStackPane"+chosenMessageId);
-        Label chosenMessageTextLabel = (Label) chosenStackPane.lookup("#messageTextLabel"+chosenMessageId);
-        chosenMessageTextLabel.setText(currentMessage);
+        VBox chosenMessageVBox = (VBox) chosenHBox.lookup("#messageVBox"+chosenMessageId);
+
+        boolean isPicture = chosenMessageVBox != null;
+        boolean hasText = isPicture && (chosenMessageVBox.lookup("#messageTextFlow"+chosenMessageId) != null);
+
+        if (isPicture && hasText) {
+            TextFlow chosenMessageTextFlow = (TextFlow) chosenMessageVBox.lookup("#messageTextFlow"+chosenMessageId);
+            Text chosenMessageText = (Text) chosenMessageTextFlow.lookup("#messageText"+chosenMessageId);
+            chosenMessageText.setText(currentMessage);
+        } else if (isPicture) {
+            chosenHBox.getChildren().clear();
+            ChatMessage chosenMessage = ChatsDataBase.getMessage(mainUserId,contactId,chosenMessageId);
+            chosenMessage.reload(this);
+        } else {
+            TextFlow chosenMessageTextFlow = (TextFlow) chosenStackPane.lookup("#messageTextFlow"+chosenMessageId);
+            Text chosenMessageText = (Text) chosenMessageTextFlow.lookup("#messageText"+chosenMessageId);
+            chosenMessageText.setText(currentMessage);
+        }
+
     }
     private void updatePotentialLastMessage() throws SQLException {
         int chosenMessageId = getEditWrapperId();
@@ -721,16 +750,17 @@ public class MainChatController extends MainContactController {
     }
     private int getMessageHeight(HBox message) {
         VBox dummyVBox = new VBox();
-        mainAnchorPane.getChildren().add(dummyVBox);
-        dummyVBox.setVisible(false);
 
         dummyVBox.getChildren().add(message);
-        message.applyCss();
-        message.autosize();
-        int nodeHeight = (int) message.getBoundsInParent().getHeight();
-        mainAnchorPane.getChildren().remove(dummyVBox);
+        mainAnchorPane.getChildren().add(dummyVBox); // must be in scene graph
 
-        return nodeHeight;
+        // Force layout
+        mainAnchorPane.applyCss();
+        mainAnchorPane.layout();
+
+        int height = (int) message.getBoundsInParent().getHeight();
+
+        return height;
     }
     private void adjustScrollPosition(double oldChatVBoxHeight) {
         Platform.runLater(() -> {
@@ -1090,12 +1120,17 @@ public class MainChatController extends MainContactController {
             double newChatPosition = getCenteredScrollPosition(loadedFoundMessage);
             chatScrollPane.setVvalue(newChatPosition);
             suppressLazyLoading = false;
+            highlightWord(foundMessageId,targetMessage);
             try {
                 moveFirstMessageDown();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         });
+    }
+    private void highlightWord(int messageId,String word) {
+        HBox message = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+
     }
     private double getCenteredScrollPosition(HBox targetHBox) {
         double hboxY = targetHBox.localToScene(0, 0).getY(); // Y position of HBox in scene

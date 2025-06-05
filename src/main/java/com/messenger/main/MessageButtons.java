@@ -337,6 +337,7 @@ public class MessageButtons extends MainChatController {
         deletePreviousEditWrapper();
         deletePreviousReplyWrapper();
         setTextFieldFocused();
+        setText(messageId);
         setVBoxBottomPadding(65);
         raiseScrollDownButton();
 
@@ -407,7 +408,7 @@ public class MessageButtons extends MainChatController {
                 editWrapperMessagePhotoTitle.getStyleClass().add("chat-wrapper-photo-title");
             });
         } else {
-            String message = (String) ChatsDataBase.getMessage(mainUserId,contactId,messageId).message_text;
+            String message = ChatsDataBase.getMessage(mainUserId,contactId,messageId).message_text;
             Label editWrapperMessage = new Label(message);
             editWrapperMessage.setCursor(Cursor.HAND);
             editWrapperMessage.getStyleClass().add("chat-wrapper-message");
@@ -442,6 +443,7 @@ public class MessageButtons extends MainChatController {
                             .findFirst()
                             .orElse(null)
             );
+            clearText();
             setVBoxBottomPadding(20);
             moveBackScrollDownButton();
             updateScrollDownButtonVisibility();
@@ -556,6 +558,19 @@ public class MessageButtons extends MainChatController {
     private void setTextFieldFocused() {
         TextField chatTextField = (TextField) mainAnchorPane.lookup("#chatTextField");
         chatTextField.requestFocus();
+    }
+    private void setText(int messageId) throws SQLException {
+        String messageText = ChatsDataBase.getMessage(mainUserId,contactId,messageId).message_text;
+
+        if (messageText != null && !messageText.isEmpty()) {
+            TextField chatTextField = (TextField) mainAnchorPane.lookup("#chatTextField");
+            chatTextField.setText(messageText);
+            chatTextField.positionCaret(chatTextField.getText().length());
+        }
+    }
+    private void clearText() {
+        TextField chatTextField = (TextField) mainAnchorPane.lookup("#chatTextField");
+        chatTextField.setText("");
     }
     private void showDeleteMessageConfirmation(int messageId) {
         Pane confirmationOverlay = new Pane();

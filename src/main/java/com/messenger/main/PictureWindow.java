@@ -7,6 +7,7 @@ import javafx.animation.PauseTransition;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.event.Event;
+import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
@@ -143,6 +144,10 @@ public class PictureWindow extends MainChatController {
                 throw new RuntimeException(e);
             }
         });
+        Platform.runLater(() -> {
+            pictureSendingWindowTextField.requestFocus();
+            pictureSendingWindowTextField.positionCaret(pictureSendingWindowTextField.getText().length());
+        });
         pictureSendingWindowOverlay.getChildren().add(pictureSendingWindowTextField);
 
 
@@ -184,29 +189,37 @@ public class PictureWindow extends MainChatController {
     private void sendPicture() throws Exception {
         try {
             pictureMessageType pictureMessageType = getPictureMessageType();
+            int messageId;
 
             if (pictureMessageType == PictureWindow.pictureMessageType.EDIT_WITH_PICTURE || pictureMessageType == PictureWindow.pictureMessageType.EDIT_WITH_PICTURE_AND_TEXT) {
-                handlePictureMessageEditing();
+                messageId = handlePictureMessageEditing();
             } else {
-                handlePictureMessageSending();
+                messageId = handlePictureMessageSending();
                 updateLastInteraction();
                 updateLastMessageTime();
                 moveContactPaneUp();
             }
 
-            updateLastMessage(); // TODO
+            updateLastMessage(messageId);
             hideWindowSmoothly();
         } catch (IllegalArgumentException e) {
             showMessageTooLongException();
         }
     }
-    private void handlePictureMessageSending() throws Exception {
+    private int handlePictureMessageSending() throws Exception {
         int messageId = insertPictureMessageIntoDB();
         displayPictureMessage(messageId);
+        hideReplyWrapper();
+        setNormalPadding();
+        return messageId;
     }
-    private void handlePictureMessageEditing() throws Exception {
+    private int handlePictureMessageEditing() throws Exception {
+        int editedMessageId = getEditWrapperId();
         editPictureMessageInDB();
         editPictureMessageInChat();
+        hideEditWrapper();
+        setNormalPadding();
+        return editedMessageId;
     }
 
 
@@ -485,6 +498,16 @@ public class PictureWindow extends MainChatController {
         ChatMessage chatMessage = ChatsDataBase.getMessage(mainUserId,contactId,editedMessageId);
         chatMessage.reload(mainChatController);
     }
+    private void hideEditWrapper() {
+        mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#editWrapper"+getEditWrapperId()));
+    }
+    private void hideReplyWrapper() {
+        mainAnchorPane.getChildren().remove(mainAnchorPane.lookup("#replyWrapper"+getReplyWrapperId()));
+    }
+    private void setNormalPadding() {
+        byte defaultBottomPadding = 20;
+        chatVBox.setPadding(new Insets(0, 0, defaultBottomPadding, 0));
+    }
     private String getEditedMessageType() throws SQLException {
         int editedMessageId = getEditWrapperId();
         String originalMessageType = ChatsDataBase.getMessage(mainUserId,contactId,editedMessageId).type;
@@ -521,13 +544,17 @@ public class PictureWindow extends MainChatController {
     private void updateLastInteraction() throws SQLException {
         ContactsDataBase.updateInteractionTime(mainUserId,contactId,getCurrentFullTime());
     }
-    private void updateLastMessage() throws SQLException {
-        if (pictureSendingWindowTextField.getText().trim().isEmpty()) {
+    private void updateLastMessage(int messageId) throws SQLException {
+        boolean isLastMessage = ChatsDataBase.getLastMessageId(mainUserId,contactId) == messageId;
+        System.out.println("message id: "+messageId);
+        System.out.println("is last message: "+isLastMessage);
+
+        if (isLastMessage && pictureSendingWindowTextField.getText().trim().isEmpty()) {
             mainContactMessageLabel.setStyle("");
             mainContactMessageLabel.getStyleClass().clear();
             mainContactMessageLabel.setStyle("-fx-text-fill: white");
             mainContactMessageLabel.setText("Picture");
-        } else {
+        } else if (isLastMessage) {
             String lastMessage = ChatsDataBase.getLastMessage(mainUserId, contactId);
             mainContactMessageLabel.setStyle("");
             mainContactMessageLabel.getStyleClass().clear();
