@@ -222,8 +222,7 @@ public class PictureWindow extends MainChatController {
         return editedMessageId;
     }
 
-
-
+    
     private void hideWindowSmoothly() {
         FadeTransition fadeOut = new FadeTransition(Duration.millis(180),pictureSendingWindowOverlay);
         fadeOut.setFromValue(1);

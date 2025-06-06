@@ -3,7 +3,6 @@ package com.messenger.main;
 import com.messenger.database.ChatsDataBase;
 import com.messenger.database.ContactsDataBase;
 import com.messenger.database.UsersDataBase;
-import com.messenger.design.ChatLoadingCircle;
 import com.messenger.design.ScrollPaneEffect;
 import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import javafx.animation.*;
@@ -19,6 +18,7 @@ import javafx.scene.image.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -38,6 +38,8 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -61,6 +63,7 @@ public class MainChatController extends MainContactController {
     private boolean isMessageTooLongVisible = false;
     private ArrayList<Integer> foundMessageIds;
     private boolean suppressLazyLoading = false;
+    private int currentHighlightMessageId = -1;
 
     // Chat Interface Initialization, Chat Loading
     public void setChatContactId(int contactId) {
@@ -948,17 +951,27 @@ public class MainChatController extends MainContactController {
         PauseTransition pause = new PauseTransition(Duration.millis(400));
         pause.setOnFinished(event -> {
             try {
-                String targetTrimmedMessageText = messageSearchTextField.getText().trim().toLowerCase();
-                foundMessageIds = ChatsDataBase.getFoundMessageIds(mainUserId,contactId,targetTrimmedMessageText);
-                boolean messagesExist = !foundMessageIds.isEmpty();
-                if (messagesExist && !targetTrimmedMessageText.isEmpty()) {
-                    loadChatWithFoundMessage(foundMessageIds.getFirst(),targetTrimmedMessageText);
-                    changeCounter(1,foundMessageIds.size());
+                String searchQuery = messageSearchTextField.getText().trim().toLowerCase();
+
+                if (searchQuery.isEmpty()) {
+                    changeCounter(0, 0);
+                    clearCurrentHighlightMessageIfNeeded();
+                    return;
+                }
+
+                foundMessageIds = ChatsDataBase.getFoundMessageIds(mainUserId, contactId, searchQuery);
+
+                if (!foundMessageIds.isEmpty()) {
+                    clearCurrentHighlightMessageIfNeeded();
+                    loadChatWithFoundMessage(foundMessageIds.getFirst(), searchQuery);
+                    changeCounter(1, foundMessageIds.size());
                 } else {
-                    changeCounter(0,0);
+                    changeCounter(0, 0);
+                    clearCurrentHighlightMessageIfNeeded();
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                // Consider using a logger instead of printing or throwing
+                throw new RuntimeException("Failed to search messages", e);
             }
         });
         Platform.runLater(messageSearchTextField::requestFocus);
@@ -969,6 +982,13 @@ public class MainChatController extends MainContactController {
                 pause.playFromStart();
             } else if (isNewValueEmpty) {
                 changeCounter(0,0);
+                if (currentHighlightMessageId != -1) {
+                    try {
+                        clearCurrentHighlightMessage();
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
             }
         });
 
@@ -1017,6 +1037,23 @@ public class MainChatController extends MainContactController {
                 }
             }
         });
+    }
+    private void clearCurrentHighlightMessageIfNeeded() throws SQLException {
+        if (currentHighlightMessageId != -1) {
+            clearCurrentHighlightMessage();
+        }
+    }
+    private void clearCurrentHighlightMessage() throws SQLException {
+        String message = ChatsDataBase.getMessage(mainUserId,contactId,currentHighlightMessageId).message_text;
+        HBox messageHBox = (HBox) chatVBox.lookup("#messageHBox"+currentHighlightMessageId);
+        StackPane messageStackPane = (StackPane) messageHBox.lookup("#messageStackPane"+currentHighlightMessageId);
+        TextFlow messageTextFlow = (TextFlow) messageStackPane.lookup("#messageTextFlow"+currentHighlightMessageId);
+
+        messageTextFlow.getChildren().clear();
+        Text normalMessage = new Text(message);
+        normalMessage.getStyleClass().add("chat-message-textflow-text");
+
+        messageTextFlow.getChildren().add(normalMessage);
     }
     private void moveFirstMessageDown() throws SQLException {
         int firstMessageId = ChatsDataBase.getFirstMessageId(mainUserId,contactId);
@@ -1129,8 +1166,59 @@ public class MainChatController extends MainContactController {
         });
     }
     private void highlightWord(int messageId,String word) {
-        HBox message = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+        HBox messageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+        StackPane messageStackPane = (StackPane) messageHBox.lookup("#messageStackPane"+messageId);
+        TextFlow messageTextFlow = (TextFlow) messageStackPane.lookup("#messageTextFlow"+messageId);
 
+        addHighlightedText(messageTextFlow,word);
+    }
+    private void addHighlightedText(TextFlow textFlow,String word) {
+        int messageId = textFlow.getChildren().stream()
+                .map(Node::getId)
+                .filter(id -> id != null && id.startsWith("messageText"))
+                .map(id -> id.replaceAll("\\D+", ""))
+                .filter(num -> !num.isEmpty())
+                .mapToInt(Integer::parseInt)
+                .findFirst()
+                .orElse(-1);
+        currentHighlightMessageId = messageId;
+
+        Text messageText = (Text) textFlow.lookup("#messageText"+messageId);
+        String originalText = messageText.getText().trim();
+        textFlow.getChildren().clear();
+
+        Pattern pattern = Pattern.compile(Pattern.quote(word), Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(originalText);
+
+        int lastIndex = 0;
+        while (matcher.find()) {
+            int start = matcher.start();
+            int end = matcher.end();
+
+            // Add text before match
+            if (lastIndex < start) {
+                Text before = new Text(originalText.substring(lastIndex, start));
+                before.getStyleClass().add("chat-message-textflow-text");
+                textFlow.getChildren().add(before);
+            }
+
+            // Add highlighted match with background
+            Text highlightText = new Text(originalText.substring(start, end));
+            highlightText.getStyleClass().add("chat-message-textflow-text");
+
+            StackPane highlightWrapper = new StackPane(highlightText);
+            highlightWrapper.setStyle("-fx-background-color: #0D5D7B;");
+            textFlow.getChildren().add(highlightWrapper);
+
+            lastIndex = end;
+        }
+
+        // Add remaining text after last match
+        if (lastIndex < originalText.length()) {
+            Text remaining = new Text(originalText.substring(lastIndex));
+            remaining.getStyleClass().add("chat-message-textflow-text");
+            textFlow.getChildren().add(remaining);
+        }
     }
     private double getCenteredScrollPosition(HBox targetHBox) {
         double hboxY = targetHBox.localToScene(0, 0).getY(); // Y position of HBox in scene
