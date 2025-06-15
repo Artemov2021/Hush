@@ -94,7 +94,7 @@ public class AddContactWindowController extends MainWindowController {
         String identifier = addContactIdentifierField.getText().trim();
         int contactId = getIdentifierType(identifier).equals("name") ? UsersDataBase.getIdWithName(identifier) : UsersDataBase.getIdWithEmail(identifier);
         ContactsDataBase.addContact(mainUserId,contactId);
-        addContactPane(contactId);
+        addContactPaneFirst(contactId);
     }
 
 

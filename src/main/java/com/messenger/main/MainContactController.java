@@ -154,6 +154,20 @@ public class MainContactController extends MainWindowController {
         setPanesNormalStyle();
         setCurrentPaneFocusedStyle();
 
+        // shut down the previous chat background threads
+        for (Node child : mainAnchorPane.getChildren()) {
+            if ("chatAnchorPane".equals(child.getId())) {
+                Object data = child.getUserData();
+                if (data instanceof MainChatController controller) {
+                    controller.shutdown(); // Call shutdown to stop threads/listeners
+                }
+            }
+        }
+
+        mainAnchorPane.getChildren().removeIf(child ->
+                "chatAnchorPane".equals(child.getId())
+        );
+
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainChat.fxml"));
         Parent chatRoot = fxmlLoader.load();
 
@@ -163,8 +177,9 @@ public class MainContactController extends MainWindowController {
         mainChatController.injectContactUIElements(this);
         mainChatController.initializeChat();
 
-        mainAnchorPane.getChildren().removeIf(child -> Objects.equals(child.getId(), "chatAnchorPane"));
-        mainAnchorPane.getChildren().add(0,chatRoot);
+        chatRoot.setUserData(mainChatController);
+
+        mainAnchorPane.getChildren().add(0, chatRoot);
     }
 
 

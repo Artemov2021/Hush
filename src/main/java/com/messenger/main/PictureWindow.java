@@ -1,7 +1,9 @@
 package com.messenger.main;
 
+import com.messenger.database.ActionType;
 import com.messenger.database.ChatsDataBase;
 import com.messenger.database.ContactsDataBase;
+import com.messenger.database.LogsDataBase;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.TranslateTransition;
@@ -22,7 +24,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
-import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -208,6 +209,7 @@ public class PictureWindow extends MainChatController {
     }
     private int handlePictureMessageSending() throws Exception {
         int messageId = insertPictureMessageIntoDB();
+        updateChangesLog(messageId, ActionType.NEW);
         displayPictureMessage(messageId);
         hideReplyWrapper();
         setNormalPadding();
@@ -215,6 +217,7 @@ public class PictureWindow extends MainChatController {
     }
     private int handlePictureMessageEditing() throws Exception {
         int editedMessageId = getEditWrapperId();
+        updateChangesLog(editedMessageId, ActionType.EDITED);
         editPictureMessageInDB();
         editPictureMessageInChat();
         hideEditWrapper();
@@ -469,6 +472,11 @@ public class PictureWindow extends MainChatController {
         } else {
             return ChatsDataBase.addMessage(senderId,receiverId,message,picture,replyMessageId,messageTime,messageType,received);
         }
+    }
+    private void updateChangesLog(int addedMessageId, ActionType changeType) throws SQLException {
+        ChatMessage addedMessage = ChatsDataBase.getMessage(mainUserId,contactId,addedMessageId);
+        LogsDataBase.addAction(changeType,addedMessageId,addedMessage.sender_id,addedMessage.receiver_id,addedMessage.message_text,addedMessage.picture,
+                addedMessage.reply_message_id,addedMessage.time,addedMessage.type);
     }
     private void editPictureMessageInDB() throws SQLException {
         int editedMessageId = getEditWrapperId();

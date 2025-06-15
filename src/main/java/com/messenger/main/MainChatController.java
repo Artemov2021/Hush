@@ -1,13 +1,9 @@
 package com.messenger.main;
 
-import com.messenger.database.ChatsDataBase;
-import com.messenger.database.ContactsDataBase;
-import com.messenger.database.UsersDataBase;
+import com.messenger.database.*;
 import com.messenger.design.ScrollPaneEffect;
-import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation;
 import javafx.animation.*;
 import javafx.application.Platform;
-import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.event.Event;
@@ -18,11 +14,11 @@ import javafx.scene.image.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.scene.Cursor;
 
@@ -38,6 +34,9 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -55,14 +54,21 @@ public class MainChatController extends MainContactController {
     @FXML private Label sendMessageButton;
     @FXML private Label messageSearchingLupe;
 
+    List<ChatMessage> allMessages;
+
+    private ScheduledExecutorService messageListenerExecutor;
+    private int firstMessageId;
+
     protected byte[] mainUserDataBaseAvatar;
     protected byte[] contactDataBaseAvatar;
     protected ImageView mainUserMessageAvatar;
     protected ImageView contactMessageAvatar;
 
     private boolean isMessageTooLongVisible = false;
-    private ArrayList<Integer> foundMessageIds;
     private boolean suppressLazyLoading = false;
+
+    private boolean isMessageSearchOverlayVisible = false;
+    private ArrayList<Integer> foundMessageIds;
     private int currentHighlightMessageId = -1;
 
     // Chat Interface Initialization, Chat Loading
@@ -85,7 +91,9 @@ public class MainChatController extends MainContactController {
         setChatLazyLoadingListener();
         deleteMessageSearchOverlay();
         setMessageSearchLupeOnMouseAction();
+        setMessageListener();
     }
+
 
     // Chat Interface Initialization
     private void initializeChatInterface() throws SQLException {
@@ -159,23 +167,47 @@ public class MainChatController extends MainContactController {
             }
         });
     }
-    public void smoothScrollToTheBottom() {
-        double durationInSeconds = 0.2;
-        double startValue = chatScrollPane.getVvalue(); // Current scroll position
-        double distance = 1 - startValue; // How much to scroll
+    public void smoothScrollToTheBottomOrLoad() throws Exception {
+        int lastMessageId = ChatsDataBase.getLastMessageId(mainUserId,contactId);
+        int lastMessageInChatId = chatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .reduce((first, second) -> second) // gets the last HBox
+                .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
+                .orElse(-1);
+        boolean isLastMessageLoaded = (lastMessageInChatId == lastMessageId);
 
-        Timeline timeline = new Timeline();
-        int frames = (int) (durationInSeconds * 60); // 60 FPS
-        for (int i = 0; i <= frames; i++) {
-            double progress = (double) i / frames; // Progress from 0 to 1
-            double interpolatedValue = startValue + distance * progress; // Linear interpolation
+        if (isLastMessageLoaded) {
+            double durationInSeconds = 0.2;
+            double startValue = chatScrollPane.getVvalue(); // Current scroll position
+            double distance = 1 - startValue; // How much to scroll
 
-            timeline.getKeyFrames().add(new KeyFrame(Duration.millis(i * (1000.0 / 60)),
-                    event -> chatScrollPane.setVvalue(interpolatedValue)));
+            Timeline timeline = new Timeline();
+            int frames = (int) (durationInSeconds * 60); // 60 FPS
+            for (int i = 0; i <= frames; i++) {
+                double progress = (double) i / frames; // Progress from 0 to 1
+                double interpolatedValue = startValue + distance * progress; // Linear interpolation
+
+                timeline.getKeyFrames().add(new KeyFrame(Duration.millis(i * (1000.0 / 60)),
+                        event -> chatScrollPane.setVvalue(interpolatedValue)));
+            }
+
+            timeline.setCycleCount(1);
+            timeline.play();
+        } else {
+            List<ChatMessage> allMessages = new ArrayList<>(ChatsDataBase.getAllMessages(mainUserId,contactId));
+            List<Node> firstNodesToLoad = getFirstChatNodesToLoad(allMessages);
+
+            chatVBox.getChildren().clear();
+            chatVBox.getChildren().addAll(firstNodesToLoad);
+
+            PauseTransition delay = new PauseTransition(Duration.millis(50));
+            delay.setOnFinished(event -> {
+                Node lastNode = chatVBox.getChildren().getLast();
+                lastNode.requestFocus(); // Optionally bring focus
+                chatScrollPane.setVvalue(chatScrollPane.getVmax());
+            });
+            delay.play();
         }
-
-        timeline.setCycleCount(1);
-        timeline.play();
     }
     private void setScrollDownButtonListener() {
         // Fade-in Transition (0.2 seconds)
@@ -252,6 +284,117 @@ public class MainChatController extends MainContactController {
         });
     }
 
+    // Shut Down Background Thread
+    public void shutdown() {
+        if (messageListenerExecutor != null && !messageListenerExecutor.isShutdown()) {
+            messageListenerExecutor.shutdown(); // Stop accepting new tasks
+            try {
+                if (!messageListenerExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+                    messageListenerExecutor.shutdownNow(); // Force shutdown if not finished
+                }
+            } catch (InterruptedException e) {
+                messageListenerExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+
+    // Message Listener
+    private void setMessageListener() {
+        messageListenerExecutor = Executors.newSingleThreadScheduledExecutor();
+
+        messageListenerExecutor.scheduleAtFixedRate(() -> {
+            try {
+                // 🔁 Call methods to check for message changes
+                checkForNewMessages();
+                checkForEditedMessages();
+                checkForDeletedMessages();
+
+            } catch (Exception e) {
+                e.printStackTrace(); // Or use logging
+            }
+        }, 0, 2, TimeUnit.SECONDS); // Initial delay 0, repeat every 2 seconds
+
+        Stage currentStage = (Stage) mainAnchorPane.getScene().getWindow();
+
+        currentStage.setOnCloseRequest(event -> {
+            shutdown();
+        });
+    }
+    private void checkForNewMessages() throws Exception {
+        // Map old messages by ID
+        Map<Integer, ChatMessage> oldMap = allMessages.stream()
+                .collect(Collectors.toMap(m -> m.id, m -> m));
+
+        // Map new updated messages by ID
+        List<ChatMessage> newMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
+        Map<Integer, ChatMessage> newMap = newMessages.stream()
+                .collect(Collectors.toMap(m -> m.id, m -> m));
+
+        List<ChatMessage> newAddedMessages = newMessages.stream()
+                .filter(m -> !oldMap.containsKey(m.id))
+                .toList();
+
+        if (!newAddedMessages.isEmpty()) {
+
+            Platform.runLater(() -> {
+                try {
+                    loadNewMessages(newAddedMessages);
+                    updateLastMessage(newAddedMessages.getLast().message_text);
+                    updateLastMessageTime();
+                    allMessages = newMessages;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
+    }
+    private void checkForEditedMessages() throws Exception {
+        List<ChatMessage> newMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
+
+        Map<Integer, ChatMessage> editedMessages = new HashMap<>();
+
+        Map<Integer, ChatMessage> oldMessageMap = allMessages.stream()
+                .collect(Collectors.toMap(msg -> msg.id, msg -> msg));
+
+        for (ChatMessage newMsg : newMessages) {
+            ChatMessage oldMsg = oldMessageMap.get(newMsg.id);
+            if (oldMsg != null) {
+                // Compare relevant fields
+                if (!Objects.equals(newMsg.message_text, oldMsg.message_text) ||
+                        !Arrays.equals(newMsg.picture, oldMsg.picture)) {
+
+                    editedMessages.put(newMsg.id,newMsg); // Something changed
+                }
+            }
+        }
+
+        for (int messageId: editedMessages.keySet()) {
+            Platform.runLater(() -> {
+                try {
+                    ChatMessage message = ChatsDataBase.getMessage(mainUserId,contactId,messageId);
+                    boolean isMessageLoaded = chatVBox.lookup("#messageHBox"+message.id) != null;
+                    if (isMessageLoaded) {
+                        message.reload(this);
+                    }
+                    int lastMessageId = ChatsDataBase.getLastMessageId(mainUserId,contactId);
+                    if (message.id == lastMessageId) {
+                        updateLastMessage(message.message_text);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
+        allMessages = newMessages;
+    }
+    private void checkForDeletedMessages() {
+
+    }
+
 
     // Chat Interface Initialization - FXML functions
     @FXML
@@ -318,15 +461,10 @@ public class MainChatController extends MainContactController {
         }
     }
     public void loadChatHistory() throws Exception {
-        List<ChatMessage> allMessages = new ArrayList<>(ChatsDataBase.getAllMessages(mainUserId,contactId));
+        allMessages = new ArrayList<>(ChatsDataBase.getAllMessages(mainUserId,contactId));
         List<Node> firstNodesToLoad = getFirstChatNodesToLoad(allMessages);
 
         chatVBox.getChildren().addAll(firstNodesToLoad);
-
-
-//        chatVBox.layoutBoundsProperty().addListener((obs, oldBounds, newBounds) -> {
-//            System.out.println("Height of the VBox after layout: " + newBounds.getHeight());
-//        });
     }
     private List<Node> getFirstChatNodesToLoad(List<ChatMessage> allMessages) throws Exception {
         int maxHeight = 1600;
@@ -360,6 +498,28 @@ public class MainChatController extends MainContactController {
 
 
     // Chat Loading: Small Functions
+    private void loadNewMessages(List<ChatMessage> messagesToLoad) throws Exception {
+        for (ChatMessage message: messagesToLoad) {
+            if (message.sender_id == mainUserId) {
+                continue;
+            }
+
+            if (isDateLabelRequired(allMessages,message)) {
+                String messageFullDate = message.time;
+                String labelDate = getDateForDateLabel(messageFullDate);
+                chatVBox.getChildren().add(getChatDateLabel(labelDate,messageFullDate));
+            }
+
+
+            try {
+                HBox loadedMessage = message.render(this);
+                chatVBox.getChildren().add(loadedMessage);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+    }
     private void setCurrentDateLabel() {
         LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.ENGLISH);
@@ -418,29 +578,50 @@ public class MainChatController extends MainContactController {
 
 
     // Chat Lazy Loading
-    private void setChatLazyLoadingListener() {
+    private void setChatLazyLoadingListener() throws SQLException {
+        updateFirstMessageIdEverySecond();
         chatScrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
             if (suppressLazyLoading) return;
-            if (newVal.doubleValue() == 0.0 && !chatVBox.getChildren().isEmpty()) {
-                try {
+            try {
+                int firstChatMessageId = chatVBox.getChildren().stream()
+                        .filter(node -> node instanceof HBox)
+                        .findFirst()
+                        .map(node -> Integer.parseInt(node.getId().replaceAll("\\D+", "")))
+                        .orElse(-1);
+
+
+                if (newVal.doubleValue() == 0.0 && !chatVBox.getChildren().isEmpty()) {
                     boolean hasMorePreviousMessages = hasMorePreviousMessages();
                     if (hasMorePreviousMessages) {
                         loadMoreMessagesUp();
                     }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            } else if (newVal.doubleValue() == 1.0 && !chatVBox.getChildren().isEmpty()) {
-                try {
+                } else if (newVal.doubleValue() == 1.0 && !chatVBox.getChildren().isEmpty()) {
                     boolean hasMoreNextMessages = hasMoreNextMessages();
                     if (hasMoreNextMessages) {
                         loadMoreMessagesDown();
                     }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
                 }
+                if (isMessageSearchOverlayVisible && newVal.doubleValue() == 0.0 && firstChatMessageId == firstMessageId) {
+                    moveFirstMessageDown();
+                } else if (isMessageSearchOverlayVisible && firstChatMessageId == firstMessageId) {
+                    moveFirstMessageUp();
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
+
         });
+    }
+    private void updateFirstMessageIdEverySecond() {
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
+            try {
+                firstMessageId = ChatsDataBase.getFirstMessageId(mainUserId, contactId);
+            } catch (Exception e) {
+                e.printStackTrace(); // Or use a logger
+            }
+        }));
+        timeline.setCycleCount(Animation.INDEFINITE); // Runs forever
+        timeline.play();
     }
 
 
@@ -472,18 +653,24 @@ public class MainChatController extends MainContactController {
 
 
     // Small Functions
+    private void updateLastMessage(String message) {
+        mainContactMessageLabel.setStyle("");
+        mainContactMessageLabel.getStyleClass().clear();
+        mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
+        mainContactMessageLabel.setText(message);
+    }
     private void scrollDown() {
         chatScrollPane.setVvalue(1.0);
     }
     private void processMessageEdit() throws Exception {
         editChosenMessage();
-        updatePotentialLastMessage();
+        updatePotentialLastEditedMessage(chatTextField.getText().trim());
     }
     private void processMessageSend() throws Exception {
         ensureUserInContacts(contactId);
         insertAndDisplayMessage();
         updateInteractionTime();
-        updateLastMessage();
+        updateLastMessage(chatTextField.getText().trim());
         updateLastMessageTime();
         moveContactPaneUp();
     }
@@ -528,8 +715,14 @@ public class MainChatController extends MainContactController {
     private void insertAndDisplayMessage() throws Exception {
         int currentMessageId = insertCurrentMessageIntoDB();
         if (currentMessageId != -1) {
+            updateChangesLog(currentMessageId, ActionType.NEW);
             displayCurrentMessage(currentMessageId);
         }
+    }
+    private void updateChangesLog(int addedMessageId, ActionType changeType) throws SQLException {
+        ChatMessage addedMessage = ChatsDataBase.getMessage(mainUserId,contactId,addedMessageId);
+        LogsDataBase.addAction(changeType,addedMessageId,addedMessage.sender_id,addedMessage.receiver_id,addedMessage.message_text,addedMessage.picture,
+                addedMessage.reply_message_id,addedMessage.time,addedMessage.type);
     }
     private boolean getCurrentMessageValidity() {
         String currentMessage = chatTextField.getText().trim();
@@ -537,6 +730,7 @@ public class MainChatController extends MainContactController {
     }
     private void editChosenMessage() throws Exception {
        editChosenMessageInDB();
+       updateChangesLog(getEditWrapperId(), ActionType.EDITED);
        editChosenMessageInChat();
     }
     private void editChosenMessageInDB() throws SQLException {
@@ -587,12 +781,12 @@ public class MainChatController extends MainContactController {
         }
 
     }
-    private void updatePotentialLastMessage() throws SQLException {
+    private void updatePotentialLastEditedMessage(String message) throws SQLException {
         int chosenMessageId = getEditWrapperId();
         boolean isLastMessage = chosenMessageId == ChatsDataBase.getLastMessageId(mainUserId,contactId);
 
         if (isLastMessage) {
-            updateLastMessage();
+            updateLastMessage(message);
         }
     }
     private int insertCurrentMessageIntoDB() throws SQLException {
@@ -683,13 +877,6 @@ public class MainChatController extends MainContactController {
     }
     private void updateInteractionTime() throws SQLException {
         ContactsDataBase.updateInteractionTime(mainUserId,contactId,getCurrentFullTime());
-    }
-    private void updateLastMessage() {
-        String currentMessage = chatTextField.getText().trim();
-        mainContactMessageLabel.setStyle("");
-        mainContactMessageLabel.getStyleClass().clear();
-        mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
-        mainContactMessageLabel.setText(currentMessage);
     }
     private void updateLastMessageTime() {
         mainContactTimeLabel.setText(getMessageHours(getCurrentFullTime()));
@@ -924,7 +1111,7 @@ public class MainChatController extends MainContactController {
         delay.play();
     }
     private void showMessageSearchingField() throws SQLException {
-        moveFirstMessageDown();
+        isMessageSearchOverlayVisible = true;
 
         Pane overlay = new Pane();
         overlay.setId("messageSearchOverlay");
@@ -956,6 +1143,8 @@ public class MainChatController extends MainContactController {
                 if (searchQuery.isEmpty()) {
                     changeCounter(0, 0);
                     clearCurrentHighlightMessageIfNeeded();
+                    foundMessageIds = new ArrayList<>();
+                    currentHighlightMessageId = -1;
                     return;
                 }
 
@@ -968,6 +1157,8 @@ public class MainChatController extends MainContactController {
                 } else {
                     changeCounter(0, 0);
                     clearCurrentHighlightMessageIfNeeded();
+                    foundMessageIds = new ArrayList<>();
+                    currentHighlightMessageId = -1;
                 }
             } catch (Exception e) {
                 // Consider using a logger instead of printing or throwing
@@ -981,13 +1172,13 @@ public class MainChatController extends MainContactController {
             if (isNewValueDifferent && !isNewValueEmpty) {
                 pause.playFromStart();
             } else if (isNewValueEmpty) {
-                changeCounter(0,0);
-                if (currentHighlightMessageId != -1) {
-                    try {
-                        clearCurrentHighlightMessage();
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
+                try {
+                    changeCounter(0,0);
+                    clearCurrentHighlightMessage();
+                    foundMessageIds = new ArrayList<>();
+                    currentHighlightMessageId = -1;
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
                 }
             }
         });
@@ -1008,6 +1199,21 @@ public class MainChatController extends MainContactController {
         upButton.setLayoutY(16);
         upButton.getStyleClass().add("chat-message-search-up-button");
         upButton.setCursor(Cursor.HAND);
+        upButton.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                if (currentHighlightMessageId != -1 && currentHighlightMessageId != foundMessageIds.getFirst()) {
+                    try {
+                        int previousMessageId = foundMessageIds.get(foundMessageIds.indexOf(currentHighlightMessageId) - 1);
+                        String word = messageSearchTextField.getText().trim().toLowerCase();
+                        loadChatWithFoundMessage(previousMessageId,word);
+
+                        changeCounter(foundMessageIds.indexOf(previousMessageId) + 1,foundMessageIds.size());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        });
         overlay.getChildren().add(upButton);
 
         Label downButton = new Label();
@@ -1017,6 +1223,21 @@ public class MainChatController extends MainContactController {
         downButton.setLayoutY(16);
         downButton.getStyleClass().add("chat-message-search-down-button");
         downButton.setCursor(Cursor.HAND);
+        downButton.setOnMouseClicked(clickEvent -> {
+            if (clickEvent.getButton() == MouseButton.PRIMARY) {
+                if (currentHighlightMessageId != -1 && currentHighlightMessageId != foundMessageIds.getLast()) {
+                    try {
+                        int nextMessageId = foundMessageIds.get(foundMessageIds.indexOf(currentHighlightMessageId) + 1);
+                        String word = messageSearchTextField.getText().trim().toLowerCase();
+                        loadChatWithFoundMessage(nextMessageId,word);
+
+                        changeCounter(foundMessageIds.indexOf(nextMessageId) + 1,foundMessageIds.size());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        });
         overlay.getChildren().add(downButton);
 
         Label exitButton = new Label();
@@ -1029,9 +1250,14 @@ public class MainChatController extends MainContactController {
         overlay.getChildren().add(exitButton);
         exitButton.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
-                mainAnchorPane.getChildren().remove(overlay);
                 try {
+                    mainAnchorPane.getChildren().remove(overlay);
                     moveFirstMessageUp();
+
+                    clearCurrentHighlightMessage();
+                    foundMessageIds = new ArrayList<>();
+                    currentHighlightMessageId = -1;
+                    isMessageSearchOverlayVisible = false;
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }

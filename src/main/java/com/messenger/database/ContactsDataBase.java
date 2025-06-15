@@ -103,7 +103,30 @@ public class ContactsDataBase extends MainWindowController {
             throw new RuntimeException(e);
         }
     }
+    public static int[] sortContactsByLastInteraction(int mainUserId,int[] contactIds) throws SQLException {
+        List<Integer> sortedContacts = new ArrayList<>();
 
+        // Create placeholders like "?, ?, ?, ..."
+        String placeholders = String.join(",", Arrays.stream(contactIds)
+                .mapToObj(id -> "?")
+                .toArray(String[]::new));
+        String statement = "SELECT * FROM contacts WHERE user_id = ? AND contact_id IN (" + placeholders + ") ORDER BY last_interaction DESC;";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,mainUserId);
+
+            for (int i = 0;i < contactIds.length;i++) {
+                preparedStatement.setInt(i+2,contactIds[i]);
+            }
+
+            ResultSet result = preparedStatement.executeQuery();
+            while (result.next()) {
+                sortedContacts.add(result.getInt("contact_id"));
+            }
+        }
+        return sortedContacts.stream().mapToInt(Integer::intValue).toArray();
+    }
 
     private static boolean checkUserMatching(String enteredName,int userId) throws SQLException {
         String userName = UsersDataBase.getNameWithId(userId);

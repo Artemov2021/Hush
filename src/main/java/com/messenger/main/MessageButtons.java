@@ -1,9 +1,9 @@
 package com.messenger.main;
 
+import com.messenger.database.ActionType;
 import com.messenger.database.ChatsDataBase;
+import com.messenger.database.LogsDataBase;
 import com.messenger.database.UsersDataBase;
-import com.messenger.main.MainChatController;
-import com.messenger.main.MainContactController;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
@@ -12,9 +12,7 @@ import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Group;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -29,7 +27,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -650,11 +647,16 @@ public class MessageButtons extends MainChatController {
         int receiverId = ChatsDataBase.getReceiverIdWithMessageId(messageId);
         deleteMessageInChat(messageId,senderId,receiverId);
         deleteMessageFromDB(messageId);
+        updateChangesLog(messageId, ActionType.DELETED);
         changeReplyMessages(messageId,senderId,receiverId);
         deletePotentialWrapper(messageId);
     }
     private void deleteMessageFromDB(int messageId) throws SQLException {
         ChatsDataBase.deleteMessage(messageId);
+    }
+    private void updateChangesLog(int addedMessageId, ActionType changeType) throws SQLException {
+        LogsDataBase.addAction(changeType,addedMessageId,mainUserId,contactId,null,null,
+                -1,null,null);
     }
     private void deleteMessageInChat(int messageId,int senderId,int receiverId) throws SQLException {
         moveMessageAvatarBack(messageId,senderId,receiverId);

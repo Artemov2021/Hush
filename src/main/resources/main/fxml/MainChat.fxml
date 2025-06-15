@@ -41,7 +41,7 @@
                   <Cursor fx:constant="HAND" />
                </cursor>
             </Label>
-            <Label fx:id="scrollDownButton" layoutX="1384.0" layoutY="871.0" onMouseClicked="#smoothScrollToTheBottom" opacity="0.0" prefHeight="57.0" prefWidth="53.0" styleClass="chat-scroll-down-button">
+            <Label fx:id="scrollDownButton" layoutX="1384.0" layoutY="871.0" onMouseClicked="#smoothScrollToTheBottomOrLoad" opacity="0.0" prefHeight="57.0" prefWidth="53.0" styleClass="chat-scroll-down-button">
                <cursor>
                   <Cursor fx:constant="HAND" />
                </cursor>

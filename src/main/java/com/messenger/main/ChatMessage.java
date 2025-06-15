@@ -85,6 +85,19 @@ public class ChatMessage extends MainChatController {
     private MainChatController mainChatController;
     private List<ChatMessage> allMessages;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ChatMessage that = (ChatMessage) o;
+        return this.id == that.id; // assuming 'id' uniquely identifies a message
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
 
     public ChatMessage(ResultSet result) throws SQLException {
         this.id = result.getInt("message_id");
@@ -816,7 +829,7 @@ public class ChatMessage extends MainChatController {
                     return id != null && id.startsWith("messageHBox");
                 });
         boolean isChatLoading = allMessages != null;
-        boolean isFirstMessage = (allMessages == null) ? (ChatsDataBase.getFirstMessageId(mainUserId,contactId) == id) : (allMessages.get(0).id == id);
+        boolean isFirstMessage = (allMessages == null) ? (ChatsDataBase.getFirstMessageId(mainUserId,contactId) == id) : (allMessages.getFirst().id == id);
         boolean isPreviousMessageForeign = previousMessageExists && (sender_id != previousMessageSenderId);
         boolean isPreviousMessageOneDay =  previousMessageExists && messagesHaveOneDayDifference(previousMessageTime,time);
 

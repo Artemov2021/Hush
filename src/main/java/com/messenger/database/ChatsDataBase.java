@@ -101,7 +101,7 @@ public class ChatsDataBase {
             // Retrieve the generated keys
             try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
-                    return generatedKeys.getInt(1); // Return the first generated key
+                    return generatedKeys.getInt(1) == 0 ? -1 : generatedKeys.getInt(1); // Return the first generated key
                 } else {
                     throw new SQLException("Failed to retrieve generated key, no key was returned.");
                 }

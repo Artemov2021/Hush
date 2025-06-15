@@ -1,12 +1,13 @@
 package com.messenger.main;
 
-import com.messenger.database.ContactsDataBase;
-import com.messenger.database.UsersDataBase;
+import com.messenger.database.*;
 import com.messenger.design.ScrollPaneEffect;
 import com.messenger.design.ToastMessage;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
@@ -19,15 +20,22 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import javax.swing.*;
+import javax.swing.Action;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 public class MainWindowController {
@@ -46,7 +54,10 @@ public class MainWindowController {
     @FXML public VBox mainContactsVBox;
 
     public static int mainUserId;
+    private boolean isWindowInitialized;
 
+    private ScheduledExecutorService messageListenerExecutor;
+    int lastContactsActionId;
 
     public final void setMainUserId(int id) {
         mainUserId = id;
@@ -65,6 +76,9 @@ public class MainWindowController {
         setSettingsButtonListener();
         setEmailLabelListener();
         removeTextFieldContextMenu();
+        setNewMessageListener();
+        setLastContactsAction();
+        isWindowInitialized = true;
     }
 
 
@@ -179,6 +193,57 @@ public class MainWindowController {
     private void removeTextFieldContextMenu() {
         mainSearchField.setContextMenu(new ContextMenu());
     }
+    private void setNewMessageListener() {
+        messageListenerExecutor = Executors.newSingleThreadScheduledExecutor();
+
+        messageListenerExecutor.scheduleAtFixedRate(() -> {
+            try {
+                if (isWindowInitialized) {
+                    checkContactChatsForChanges();
+                }
+            } catch (Exception e) {
+                e.printStackTrace(); // Or use logging
+            }
+        }, 0, 2, TimeUnit.SECONDS); // Initial delay 0, repeat every 2 seconds
+
+        Platform.runLater(() -> {
+            Stage currentStage = (Stage) mainAnchorPane.getScene().getWindow();
+
+            currentStage.setOnCloseRequest(event -> {
+                shutdown();
+            });
+        });
+    }
+    private void shutdown() {
+        if (messageListenerExecutor != null && !messageListenerExecutor.isShutdown()) {
+            messageListenerExecutor.shutdown(); // Stop accepting new tasks
+            try {
+                // Wait up to 2 seconds for running tasks to finish
+                if (!messageListenerExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+                    messageListenerExecutor.shutdownNow(); // Force shutdown if not finished
+                }
+            } catch (InterruptedException e) {
+                messageListenerExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+    private void setLastContactsAction() throws SQLException {
+        lastContactsActionId = LogsDataBase.getLastContactsActionId(mainUserId);
+    }
+    private void checkContactChatsForChanges() throws SQLException, IOException {
+        int updatedLastContactsActionId = LogsDataBase.getLastContactsActionId(mainUserId);
+        if (lastContactsActionId != updatedLastContactsActionId) {
+            ArrayList<Integer> newActionIds = LogsDataBase.getNewActionIds(mainUserId,lastContactsActionId);
+            for (int actionId: newActionIds) {
+                displayAction(actionId);
+            }
+            lastContactsActionId = updatedLastContactsActionId;
+        }
+    }
+    private void displayAction(int actionId) {
+        da = new Action(actionId);
+    }
 
 
     // Contacts
@@ -188,7 +253,7 @@ public class MainWindowController {
         int[] allContactsId = ContactsDataBase.getContactsIdList(mainUserId);
         int[] lastContacts = Arrays.copyOfRange(allContactsId, allContactsId.length - Math.min(allContactsId.length, 20), allContactsId.length);
         for (int contactId: lastContacts) {
-            addContactPane(contactId);
+            addContactPaneFirst(contactId);
         }
     }
     private void loadMoreContacts() throws SQLException, IOException {
@@ -211,7 +276,7 @@ public class MainWindowController {
             mainContactsVBox.getChildren().add(contactRoot);
         }
     }
-    protected void addContactPane(int contactId) throws IOException, SQLException {
+    protected void addContactPaneFirst(int contactId) throws IOException, SQLException {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainContact.fxml"));
         Pane contactRoot = fxmlLoader.load();
 
@@ -224,7 +289,7 @@ public class MainWindowController {
     }
     private void loadCustomContacts(int[] contactsId) throws IOException, SQLException {
         for (int contactId: contactsId) {
-            addContactPane(contactId);
+            addContactPaneFirst(contactId);
         }
     }
     private void showFoundedContacts(String enteredName) {
