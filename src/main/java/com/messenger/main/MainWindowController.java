@@ -1,12 +1,14 @@
 package com.messenger.main;
 
 import com.messenger.database.*;
+import com.messenger.database.Action;
 import com.messenger.design.ScrollPaneEffect;
 import com.messenger.design.ToastMessage;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
@@ -17,6 +19,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
@@ -24,15 +27,17 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import javax.swing.*;
-import javax.swing.Action;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -236,13 +241,32 @@ public class MainWindowController {
         if (lastContactsActionId != updatedLastContactsActionId) {
             ArrayList<Integer> newActionIds = LogsDataBase.getNewActionIds(mainUserId,lastContactsActionId);
             for (int actionId: newActionIds) {
-                displayAction(actionId);
+                Platform.runLater(() -> {
+                    try {
+                        displayAction(actionId);
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
             }
             lastContactsActionId = updatedLastContactsActionId;
         }
     }
-    private void displayAction(int actionId) {
-        da = new Action(actionId);
+    private void displayAction(int actionId) throws SQLException {
+         Action action = new Action(actionId);
+
+         switch (action.change_type) {
+             case ActionType.NEW -> executeNewAction(action);
+//             case ActionType.EDITED -> executeEditAction();
+//             case ActionType.DELETED -> executeDeleteAction();
+             default -> throw new RuntimeException();
+         }
+    }
+    private void executeNewAction(Action action) throws SQLException {
+        moveUpContact(action);
+        changeLastMessage(action);
+        changeLastMessageTime(action);
+        changeNewMessageCounter(action);
     }
 
 
@@ -285,7 +309,7 @@ public class MainWindowController {
         contactPane.injectUIElements(this);
         contactPane.initializeContactPane();
 
-        mainContactsVBox.getChildren().add(0,contactRoot);
+        mainContactsVBox.getChildren().addFirst(contactRoot);
     }
     private void loadCustomContacts(int[] contactsId) throws IOException, SQLException {
         for (int contactId: contactsId) {
@@ -316,6 +340,75 @@ public class MainWindowController {
         int lastContactId = getVisibleBottomContactId();
         int[] allContactsIds = ContactsDataBase.getContactsIdList(mainUserId);
         return allContactsIds[0] != lastContactId;    // 3,5,15   15 != 3
+    }
+    private void moveUpContact(Action action) {
+        int contactId = action.sender_id;
+        AnchorPane contactAnchorPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+contactId);
+        mainContactsVBox.getChildren().remove(contactAnchorPane);
+        mainContactsVBox.getChildren().addFirst(contactAnchorPane);
+    }
+    private void changeLastMessage(Action action) throws SQLException {
+        String message = action.message;
+
+        AnchorPane contactAnchorPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+action.sender_id);
+        Pane contactPane = (Pane) contactAnchorPane.lookup("#mainContactPane");
+        Label mainContactMessageLabel = (Label) contactPane.lookup("#mainContactMessageLabel");
+
+        if (message == null || message.trim().isEmpty()) {
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.setStyle("-fx-text-fill: white");
+            mainContactMessageLabel.setText("Picture");
+        } else {
+            String lastMessage = ChatsDataBase.getLastMessage(mainUserId,action.sender_id);
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
+            mainContactMessageLabel.setText(lastMessage);
+        }
+    }
+    private void changeLastMessageTime(Action action) {
+        AnchorPane contactAnchorPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+action.sender_id);
+        Pane contactPane = (Pane) contactAnchorPane.lookup("#mainContactPane");
+        Label mainContactTimeLabel = (Label) contactPane.lookup("#mainContactTimeLabel");
+
+        mainContactTimeLabel.setText(getMessageHours(action.message_time));
+    }
+    private String getMessageHours(String messageFullTime) {
+        // Define the input and output formats
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        // Parse the input string to LocalDateTime
+        LocalDateTime dateTime = LocalDateTime.parse(messageFullTime, inputFormatter);
+
+        // Format and return the output as a string
+        return dateTime.format(outputFormatter);
+    }
+    private void changeNewMessageCounter(Action action) throws SQLException {
+        AnchorPane contactAnchorPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+action.sender_id);
+        Pane contactPane = (Pane) contactAnchorPane.lookup("#mainContactPane");
+        Label mainContactMessageCounterLabel = (Label) contactPane.lookup("#mainContactMessageCounterLabel");
+
+        boolean isContactChatOpen = mainAnchorPane.getChildren().stream()
+                .map(Node::getId)
+                .filter(Objects::nonNull)
+                .filter(id -> id.equals("chatAnchorPane"+action.sender_id))
+                .map(id -> id.replaceAll("\\D+", ""))
+                .anyMatch(num -> !num.isEmpty());
+
+        if (!isContactChatOpen) {
+            long newMessagesAmount = ChatsDataBase.getUnreadMessagesAmount(mainUserId,action.sender_id);
+            mainContactMessageCounterLabel.setVisible(true);
+            if (newMessagesAmount > 9) {
+                mainContactMessageCounterLabel.getStyleClass().clear();
+                mainContactMessageCounterLabel.getStyleClass().add("contact-new-message-counter-overflow-label");
+                mainContactMessageCounterLabel.setPadding(new Insets(5,2,5,2));
+                mainContactMessageCounterLabel.setText("9+");
+            } else {
+                mainContactMessageCounterLabel.setText(String.valueOf(newMessagesAmount));
+            }
+        }
     }
 
 

@@ -553,8 +553,6 @@ public class PictureWindow extends MainChatController {
     }
     private void updateLastMessage(int messageId) throws SQLException {
         boolean isLastMessage = ChatsDataBase.getLastMessageId(mainUserId,contactId) == messageId;
-        System.out.println("message id: "+messageId);
-        System.out.println("is last message: "+isLastMessage);
 
         if (isLastMessage && pictureSendingWindowTextField.getText().trim().isEmpty()) {
             mainContactMessageLabel.setStyle("");

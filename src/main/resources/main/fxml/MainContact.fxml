@@ -13,6 +13,7 @@
             <Label fx:id="mainContactNameLabel" layoutX="75.0" layoutY="11.0" prefHeight="17.0" prefWidth="174.0" styleClass="contact-name-label" text="Simple Text" />
             <Label fx:id="mainContactMessageLabel" layoutX="75.0" layoutY="38.0" prefHeight="17.0" prefWidth="180.0" styleClass="contact-last-message-label" text="Label" />
             <Label fx:id="mainContactTimeLabel" alignment="CENTER_RIGHT" layoutX="285.0" layoutY="13.0" prefHeight="17.0" prefWidth="120.0" styleClass="contact-time-label" text="10:57" textAlignment="RIGHT" />
+            <Label fx:id="mainContactMessageCounterLabel" layoutX="378.0" layoutY="35.0" styleClass="contact-new-message-counter-label" text="0" visible="false" />
          </children>
          <cursor>
             <Cursor fx:constant="HAND" />

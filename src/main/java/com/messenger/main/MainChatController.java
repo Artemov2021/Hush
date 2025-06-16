@@ -82,6 +82,7 @@ public class MainChatController extends MainContactController {
     public void injectContactUIElements(MainContactController mainContactController) {
         this.mainContactMessageLabel = mainContactController.mainContactMessageLabel;
         this.mainContactTimeLabel = mainContactController.mainContactTimeLabel;
+        this.mainContactMessageCounterLabel = mainContactController.mainContactMessageCounterLabel;
     }
     public final void initializeChat() throws Exception {
         initializeChatInterface();
@@ -92,6 +93,8 @@ public class MainChatController extends MainContactController {
         deleteMessageSearchOverlay();
         setMessageSearchLupeOnMouseAction();
         setMessageListener();
+        setAllMessagesRead();
+        deleteNewMessagesCounter();
     }
 
 
@@ -283,6 +286,13 @@ public class MainChatController extends MainContactController {
             }
         });
     }
+    private void setAllMessagesRead() throws SQLException {
+        ChatsDataBase.setAllMessagesRead(mainUserId,contactId);
+    }
+    private void deleteNewMessagesCounter() {
+        mainContactMessageCounterLabel.setText("0");
+        mainContactMessageCounterLabel.setVisible(false);
+    }
 
     // Shut Down Background Thread
     public void shutdown() {
@@ -307,9 +317,7 @@ public class MainChatController extends MainContactController {
         messageListenerExecutor.scheduleAtFixedRate(() -> {
             try {
                 // 🔁 Call methods to check for message changes
-                checkForNewMessages();
-                checkForEditedMessages();
-                checkForDeletedMessages();
+                checkForNewAction();
 
             } catch (Exception e) {
                 e.printStackTrace(); // Or use logging
@@ -321,6 +329,22 @@ public class MainChatController extends MainContactController {
         currentStage.setOnCloseRequest(event -> {
             shutdown();
         });
+    }
+    private vood checkForNewAction() {
+        int updatedLastContactsActionId = LogsDataBase.getLastContactsActionId(mainUserId);
+        if (lastContactsActionId != updatedLastContactsActionId) {
+            ArrayList<Integer> newActionIds = LogsDataBase.getNewActionIds(mainUserId,lastContactsActionId);
+            for (int actionId: newActionIds) {
+                Platform.runLater(() -> {
+                    try {
+                        displayAction(actionId);
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            lastContactsActionId = updatedLastContactsActionId;
+        }
     }
     private void checkForNewMessages() throws Exception {
         // Map old messages by ID

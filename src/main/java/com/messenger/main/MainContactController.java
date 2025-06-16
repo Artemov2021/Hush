@@ -9,6 +9,7 @@ import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -39,10 +40,10 @@ public class MainContactController extends MainWindowController {
     @FXML private Label mainContactNameLabel;
     @FXML protected Label mainContactMessageLabel;
     @FXML protected Label mainContactTimeLabel;
+    @FXML protected Label mainContactMessageCounterLabel;
     private MainWindowController mainWindowController;
 
     protected int contactId;
-
 
     public void injectUIElements(MainWindowController source) {
         this.mainWindowController = source;
@@ -54,6 +55,7 @@ public class MainContactController extends MainWindowController {
         setContactAvatar(UsersDataBase.getAvatarWithId(contactId));
         setContactLastMessage();
         setContactLastMessageTime();
+        setNewMessagesCounter();
         mainContactPane.setOnMouseClicked(clickEvent -> {
             if (clickEvent.getButton() == MouseButton.PRIMARY) {
                 try {
@@ -148,7 +150,20 @@ public class MainContactController extends MainWindowController {
             mainContactTimeLabel.setText(""); // Default to empty if no match
         }
     }
-
+    public final void setNewMessagesCounter() throws SQLException {
+        long newMessagesAmount = ChatsDataBase.getUnreadMessagesAmount(mainUserId,contactId);
+        if (newMessagesAmount > 0) {
+            mainContactMessageCounterLabel.setVisible(true);
+            if (newMessagesAmount > 9) {
+                mainContactMessageCounterLabel.getStyleClass().clear();
+                mainContactMessageCounterLabel.getStyleClass().add("contact-new-message-counter-overflow-label");
+                mainContactMessageCounterLabel.setPadding(new Insets(5,2,5,2));
+                mainContactMessageCounterLabel.setText("9+");
+            } else {
+                mainContactMessageCounterLabel.setText(String.valueOf(newMessagesAmount));
+            }
+        }
+    }
 
     private void showChat() throws Exception {
         setPanesNormalStyle();
@@ -165,7 +180,7 @@ public class MainContactController extends MainWindowController {
         }
 
         mainAnchorPane.getChildren().removeIf(child ->
-                "chatAnchorPane".equals(child.getId())
+                child.getId() != null && child.getId().contains("chatAnchorPane")
         );
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/fxml/MainChat.fxml"));
@@ -177,11 +192,11 @@ public class MainContactController extends MainWindowController {
         mainChatController.injectContactUIElements(this);
         mainChatController.initializeChat();
 
+        chatRoot.setId("chatAnchorPane"+contactId);
         chatRoot.setUserData(mainChatController);
 
         mainAnchorPane.getChildren().add(0, chatRoot);
     }
-
 
     private void setPanesNormalStyle() {
         VBox mainVBox = (VBox) mainAnchorPane.lookup("#mainContactsVBox");

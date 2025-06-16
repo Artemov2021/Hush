@@ -88,7 +88,7 @@ public class LogsDataBase {
                 action.add(result.getInt("reply_message_id"));
                 Timestamp ts = result.getTimestamp("message_time");
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                String formattedTime = sdf.format(ts);
+                String formattedTime = ts != null ? sdf.format(ts) : null;
                 action.add(formattedTime);
                 action.add(result.getString("message_type"));
             }
