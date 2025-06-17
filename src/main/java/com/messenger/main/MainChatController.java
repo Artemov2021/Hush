@@ -56,6 +56,10 @@ public class MainChatController extends MainContactController {
 
     List<ChatMessage> allMessages;
 
+    boolean isChatInitialized = false;
+
+    private int lastContactActionId;
+
     private ScheduledExecutorService messageListenerExecutor;
     private int firstMessageId;
 
@@ -95,6 +99,8 @@ public class MainChatController extends MainContactController {
         setMessageListener();
         setAllMessagesRead();
         deleteNewMessagesCounter();
+        setLastContactsAction();
+        isChatInitialized = true;
     }
 
 
@@ -293,6 +299,9 @@ public class MainChatController extends MainContactController {
         mainContactMessageCounterLabel.setText("0");
         mainContactMessageCounterLabel.setVisible(false);
     }
+    private void setLastContactsAction() throws SQLException {
+        lastContactActionId = LogsDataBase.getLastContactActionId(mainUserId,contactId);
+    }
 
     // Shut Down Background Thread
     public void shutdown() {
@@ -316,9 +325,9 @@ public class MainChatController extends MainContactController {
 
         messageListenerExecutor.scheduleAtFixedRate(() -> {
             try {
-                // 🔁 Call methods to check for message changes
-                checkForNewAction();
-
+                if (isChatInitialized) {
+                    checkForNewAction();
+                }
             } catch (Exception e) {
                 e.printStackTrace(); // Or use logging
             }
@@ -330,10 +339,11 @@ public class MainChatController extends MainContactController {
             shutdown();
         });
     }
-    private vood checkForNewAction() {
-        int updatedLastContactsActionId = LogsDataBase.getLastContactsActionId(mainUserId);
-        if (lastContactsActionId != updatedLastContactsActionId) {
-            ArrayList<Integer> newActionIds = LogsDataBase.getNewActionIds(mainUserId,lastContactsActionId);
+
+    private void checkForNewAction() throws SQLException {
+        int updatedLastContactActionId = LogsDataBase.getLastContactActionId(mainUserId,contactId);
+        if (lastContactActionId != updatedLastContactActionId) {
+            ArrayList<Integer> newActionIds = LogsDataBase.getNewActionIds(mainUserId,lastContactActionId);
             for (int actionId: newActionIds) {
                 Platform.runLater(() -> {
                     try {
@@ -343,37 +353,30 @@ public class MainChatController extends MainContactController {
                     }
                 });
             }
-            lastContactsActionId = updatedLastContactsActionId;
+            lastContactActionId = updatedLastContactActionId;
         }
     }
-    private void checkForNewMessages() throws Exception {
-        // Map old messages by ID
-        Map<Integer, ChatMessage> oldMap = allMessages.stream()
-                .collect(Collectors.toMap(m -> m.id, m -> m));
+    private void displayAction(int actionId) throws SQLException {
+        Action action = new Action(actionId);
 
-        // Map new updated messages by ID
-        List<ChatMessage> newMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
-        Map<Integer, ChatMessage> newMap = newMessages.stream()
-                .collect(Collectors.toMap(m -> m.id, m -> m));
-
-        List<ChatMessage> newAddedMessages = newMessages.stream()
-                .filter(m -> !oldMap.containsKey(m.id))
-                .toList();
-
-        if (!newAddedMessages.isEmpty()) {
-
-            Platform.runLater(() -> {
-                try {
-                    loadNewMessages(newAddedMessages);
-                    updateLastMessage(newAddedMessages.getLast().message_text);
-                    updateLastMessageTime();
-                    allMessages = newMessages;
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
+        switch (action.change_type) {
+            case ActionType.NEW -> displayNewMessage(action);
+//             case ActionType.EDITED -> executeEditAction();
+//             case ActionType.DELETED -> executeDeleteAction();
+            default -> throw new RuntimeException();
         }
-
+    }
+    private void displayNewMessage(Action action) {
+        Platform.runLater(() -> {
+            try {
+                ChatMessage newMessage = ChatsDataBase.getMessage(mainUserId,contactId,action.message_id);
+                loadNewMessage(newMessage);
+                makeMessageRead(newMessage);
+                allMessages.add(newMessage);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
     private void checkForEditedMessages() throws Exception {
         List<ChatMessage> newMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
@@ -522,27 +525,27 @@ public class MainChatController extends MainContactController {
 
 
     // Chat Loading: Small Functions
-    private void loadNewMessages(List<ChatMessage> messagesToLoad) throws Exception {
-        for (ChatMessage message: messagesToLoad) {
-            if (message.sender_id == mainUserId) {
-                continue;
-            }
-
-            if (isDateLabelRequired(allMessages,message)) {
-                String messageFullDate = message.time;
-                String labelDate = getDateForDateLabel(messageFullDate);
-                chatVBox.getChildren().add(getChatDateLabel(labelDate,messageFullDate));
-            }
-
-
-            try {
-                HBox loadedMessage = message.render(this);
-                chatVBox.getChildren().add(loadedMessage);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+    private void loadNewMessage(ChatMessage newMessage) throws Exception {
+        if (newMessage.sender_id == mainUserId) {
+            return;
         }
 
+        if (isDateLabelRequired(allMessages,newMessage)) {
+            String messageFullDate = newMessage.time;
+            String labelDate = getDateForDateLabel(messageFullDate);
+            chatVBox.getChildren().add(getChatDateLabel(labelDate,messageFullDate));
+        }
+
+        try {
+            HBox loadedMessage = newMessage.render(this);
+            chatVBox.getChildren().add(loadedMessage);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+    private void makeMessageRead(ChatMessage message) throws SQLException {
+        ChatsDataBase.setMessageRead(message.id);
     }
     private void setCurrentDateLabel() {
         LocalDate today = LocalDate.now();

@@ -9,6 +9,7 @@ import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
@@ -195,7 +196,8 @@ public class AuthLogInController {
             Stage newStage = new Stage();
             newStage.setResizable(false);
             newStage.setScene(scene);
-            newStage.setTitle("Main");
+            newStage.setTitle("Hush");
+            newStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/icon.png")));
             newStage.show();
         } catch (Exception e) {
             extraLabel.setText(e.getMessage());
@@ -214,6 +216,7 @@ public class AuthLogInController {
             stage.setResizable(false);
             stage.setScene(scene);
             stage.setTitle("Sing Up");
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/icon.png")));
             stage.show();
             ((Stage) (anchorPane.getScene().getWindow())).close();  // close current window
         } catch (Exception e) {

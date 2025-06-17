@@ -62,13 +62,13 @@ public class MainWindowController {
     private boolean isWindowInitialized;
 
     private ScheduledExecutorService messageListenerExecutor;
-    int lastContactsActionId;
+    private int lastContactsActionId;
 
     public final void setMainUserId(int id) {
         mainUserId = id;
     }
     public final void initializeWithValue() throws SQLException, IOException {
-        mainUserId = 1;
+        //mainUserId = 1;
         setMainLogInTitle();
         setProfileInfo();
         setAppropriateAvatar();
@@ -239,6 +239,7 @@ public class MainWindowController {
     private void checkContactChatsForChanges() throws SQLException, IOException {
         int updatedLastContactsActionId = LogsDataBase.getLastContactsActionId(mainUserId);
         if (lastContactsActionId != updatedLastContactsActionId) {
+            setNewMessagesAvatar(); //TODO
             ArrayList<Integer> newActionIds = LogsDataBase.getNewActionIds(mainUserId,lastContactsActionId);
             for (int actionId: newActionIds) {
                 Platform.runLater(() -> {
@@ -251,6 +252,12 @@ public class MainWindowController {
             }
             lastContactsActionId = updatedLastContactsActionId;
         }
+    }
+    private void setNewMessagesAvatar() {
+        Platform.runLater(() -> {
+            Stage currentStage = (Stage) mainAnchorPane.getScene().getWindow();
+            currentStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/iconNewMessages.png")));
+        });
     }
     private void displayAction(int actionId) throws SQLException {
          Action action = new Action(actionId);

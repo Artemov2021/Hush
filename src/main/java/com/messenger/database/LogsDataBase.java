@@ -50,6 +50,22 @@ public class LogsDataBase {
 
         return lastId;
     }
+    public static int getLastContactActionId(int mainUserId,int contactId) throws SQLException {
+        String statement = "SELECT id FROM logs WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY id DESC LIMIT 1";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1,mainUserId);
+            preparedStatement.setInt(2,contactId);
+            preparedStatement.setInt(3,contactId);
+            preparedStatement.setInt(4,mainUserId);
+            ResultSet result = preparedStatement.executeQuery();
+            if (result.next()) {
+                return result.getInt("id");
+            }
+        }
+        return -1;
+    }
     public static ArrayList<Integer> getNewActionIds(int mainUserId,int lastActionId) throws SQLException {
         ArrayList<Integer> newActionIds = new ArrayList<>();
         String statement = "SELECT id FROM logs WHERE (receiver_id = ?) AND id > ? ORDER BY message_id ASC;";

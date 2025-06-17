@@ -3,6 +3,7 @@ package com.messenger;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 // The programm starts with the sing up window
@@ -19,6 +20,7 @@ public class Main extends Application {
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Sing Up");
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/icon.png")));
         primaryStage.show();
     }
 

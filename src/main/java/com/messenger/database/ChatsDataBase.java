@@ -586,4 +586,14 @@ public class ChatsDataBase {
             preparedStatement.executeUpdate();
         }
     }
+    public static void setMessageRead(int messageId) throws SQLException {
+        String statement = "UPDATE chats SET received = 1 WHERE message_id = ?";
+
+        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement,Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setInt(1,messageId);
+
+            preparedStatement.executeUpdate();
+        }
+    }
 }
