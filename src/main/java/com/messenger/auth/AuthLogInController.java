@@ -1,5 +1,6 @@
 package com.messenger.auth;
 
+import com.messenger.database.ChatsDataBase;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.AuthField;
 import com.messenger.main.MainWindowController;
@@ -197,7 +198,11 @@ public class AuthLogInController {
             newStage.setResizable(false);
             newStage.setScene(scene);
             newStage.setTitle("Hush");
-            newStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/icon.png")));
+            if (ChatsDataBase.isThereUnreadMessages(userId)) {
+                newStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/iconNewMessages.png")));
+            } else {
+                newStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/icon.png")));
+            }
             newStage.show();
         } catch (Exception e) {
             extraLabel.setText(e.getMessage());

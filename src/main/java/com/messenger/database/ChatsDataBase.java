@@ -558,14 +558,12 @@ public class ChatsDataBase {
     }
     public static long getUnreadMessagesAmount(int mainUserId,int contactId) throws SQLException {
         long amount = 0;
-        String statement = "SELECT * FROM chats WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND received = 0";
+        String statement = "SELECT * FROM chats WHERE (receiver_id = ? AND sender_id = ?) AND received = 0";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,mainUserId);
             preparedStatement.setInt(2,contactId);
-            preparedStatement.setInt(3,contactId);
-            preparedStatement.setInt(4,mainUserId);
             ResultSet result = preparedStatement.executeQuery();
             while (result.next()) {
                 amount++;
@@ -574,14 +572,12 @@ public class ChatsDataBase {
         return amount;
     }
     public static void setAllMessagesRead(int mainUserId,int contactId) throws SQLException {
-        String statement = "UPDATE chats SET received = 1 WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))";
+        String statement = "UPDATE chats SET received = 1 WHERE receiver_id = ? AND sender_id = ?";
 
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement,Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setInt(1,mainUserId);
             preparedStatement.setInt(2,contactId);
-            preparedStatement.setInt(3,contactId);
-            preparedStatement.setInt(4,mainUserId);
 
             preparedStatement.executeUpdate();
         }
@@ -595,5 +591,22 @@ public class ChatsDataBase {
 
             preparedStatement.executeUpdate();
         }
+    }
+    public static boolean isThereUnreadMessages(int mainUserId) throws SQLException {
+        String query = "SELECT EXISTS (SELECT 1 FROM chats WHERE receiver_id = ? AND received = 0) AS has_unread";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, mainUserId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("has_unread") == 1;
+                }
+            }
+        }
+
+        return false;
     }
 }

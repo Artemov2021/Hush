@@ -171,7 +171,7 @@ public class MainContactController extends MainWindowController {
 
         // shut down the previous chat background threads
         for (Node child : mainAnchorPane.getChildren()) {
-            if ("chatAnchorPane".equals(child.getId())) {
+            if (child.getId() != null && child.getId().contains("chatAnchorPane")) {
                 Object data = child.getUserData();
                 if (data instanceof MainChatController controller) {
                     controller.shutdown(); // Call shutdown to stop threads/listeners

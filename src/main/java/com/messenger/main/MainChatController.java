@@ -99,6 +99,7 @@ public class MainChatController extends MainContactController {
         setMessageListener();
         setAllMessagesRead();
         deleteNewMessagesCounter();
+        resetPotentialNewMessagesIcon();
         setLastContactsAction();
         isChatInitialized = true;
     }
@@ -299,6 +300,13 @@ public class MainChatController extends MainContactController {
         mainContactMessageCounterLabel.setText("0");
         mainContactMessageCounterLabel.setVisible(false);
     }
+    private void resetPotentialNewMessagesIcon() throws SQLException {
+        if (!ChatsDataBase.isThereUnreadMessages(mainUserId)) {
+            Stage currentStage = (Stage) mainAnchorPane.getScene().getWindow();
+            currentStage.getIcons().clear();
+            currentStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/icon.png")));
+        }
+    }
     private void setLastContactsAction() throws SQLException {
         lastContactActionId = LogsDataBase.getLastContactActionId(mainUserId,contactId);
     }
@@ -332,16 +340,11 @@ public class MainChatController extends MainContactController {
                 e.printStackTrace(); // Or use logging
             }
         }, 0, 2, TimeUnit.SECONDS); // Initial delay 0, repeat every 2 seconds
-
-        Stage currentStage = (Stage) mainAnchorPane.getScene().getWindow();
-
-        currentStage.setOnCloseRequest(event -> {
-            shutdown();
-        });
     }
 
     private void checkForNewAction() throws SQLException {
         int updatedLastContactActionId = LogsDataBase.getLastContactActionId(mainUserId,contactId);
+        System.out.println("old: "+lastContactActionId+", new: "+updatedLastContactActionId);
         if (lastContactActionId != updatedLastContactActionId) {
             ArrayList<Integer> newActionIds = LogsDataBase.getNewActionIds(mainUserId,lastContactActionId);
             for (int actionId: newActionIds) {
@@ -358,12 +361,13 @@ public class MainChatController extends MainContactController {
     }
     private void displayAction(int actionId) throws SQLException {
         Action action = new Action(actionId);
-
-        switch (action.change_type) {
-            case ActionType.NEW -> displayNewMessage(action);
+        if (action.receiver_id == mainUserId) {
+            switch (action.change_type) {
+                case ActionType.NEW -> displayNewMessage(action);
 //             case ActionType.EDITED -> executeEditAction();
 //             case ActionType.DELETED -> executeDeleteAction();
-            default -> throw new RuntimeException();
+                default -> throw new RuntimeException();
+            }
         }
     }
     private void displayNewMessage(Action action) {
@@ -371,6 +375,7 @@ public class MainChatController extends MainContactController {
             try {
                 ChatMessage newMessage = ChatsDataBase.getMessage(mainUserId,contactId,action.message_id);
                 loadNewMessage(newMessage);
+                System.out.println("making message read....");
                 makeMessageRead(newMessage);
                 allMessages.add(newMessage);
             } catch (Exception e) {
@@ -417,9 +422,6 @@ public class MainChatController extends MainContactController {
         }
 
         allMessages = newMessages;
-    }
-    private void checkForDeletedMessages() {
-
     }
 
 
@@ -584,7 +586,6 @@ public class MainChatController extends MainContactController {
 
         boolean isFirstMessage = ChatsDataBase.getFirstMessageId(mainUserId,contactId) == message.id;
         boolean isPreviousMessageOneDay = previousMessageExists && messagesHaveOneDayDifference(previousMessageTime,message.time);
-        //System.out.println("message id: "+message.id+", previous message one day: "+isPreviousMessageOneDay+", message time: "+message.time+", previous message time: "+previousMessageTime+"\n\n");
         return isFirstMessage || isPreviousMessageOneDay;
     }
     private ChatMessage getPreviousMessage(List<ChatMessage> allMessages,ChatMessage message) {

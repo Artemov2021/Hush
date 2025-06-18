@@ -33,6 +33,7 @@ import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -41,6 +42,8 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 public class MainWindowController {
@@ -68,7 +71,7 @@ public class MainWindowController {
         mainUserId = id;
     }
     public final void initializeWithValue() throws SQLException, IOException {
-        //mainUserId = 1;
+        mainUserId = 1;
         setMainLogInTitle();
         setProfileInfo();
         setAppropriateAvatar();
@@ -83,6 +86,7 @@ public class MainWindowController {
         removeTextFieldContextMenu();
         setNewMessageListener();
         setLastContactsAction();
+        setAppropriateIcon();
         isWindowInitialized = true;
     }
 
@@ -207,15 +211,28 @@ public class MainWindowController {
                     checkContactChatsForChanges();
                 }
             } catch (Exception e) {
-                e.printStackTrace(); // Or use logging
+                e.printStackTrace();
             }
-        }, 0, 2, TimeUnit.SECONDS); // Initial delay 0, repeat every 2 seconds
+        }, 0, 2, TimeUnit.SECONDS);
 
         Platform.runLater(() -> {
             Stage currentStage = (Stage) mainAnchorPane.getScene().getWindow();
 
             currentStage.setOnCloseRequest(event -> {
-                shutdown();
+                // 1. Shut down the main window's executor
+                if (messageListenerExecutor != null && !messageListenerExecutor.isShutdown()) {
+                    messageListenerExecutor.shutdownNow();
+                }
+
+                // 2. Also shut down any open chat controller threads
+                for (Node child : mainAnchorPane.getChildren()) {
+                    if (child.getUserData() instanceof MainChatController controller) {
+                        controller.shutdown();
+                    }
+                }
+
+                // 3. Finally exit the app
+                Platform.exit();
             });
         });
     }
@@ -236,10 +253,22 @@ public class MainWindowController {
     private void setLastContactsAction() throws SQLException {
         lastContactsActionId = LogsDataBase.getLastContactsActionId(mainUserId);
     }
+    private void setAppropriateIcon() {
+        Platform.runLater(() -> {
+            try {
+                if (ChatsDataBase.isThereUnreadMessages(mainUserId)) {
+                    Stage currentStage = (Stage) mainAnchorPane.getScene().getWindow();
+                    currentStage.getIcons().clear();
+                    currentStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/iconNewMessages.png")));
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
     private void checkContactChatsForChanges() throws SQLException, IOException {
         int updatedLastContactsActionId = LogsDataBase.getLastContactsActionId(mainUserId);
         if (lastContactsActionId != updatedLastContactsActionId) {
-            setNewMessagesAvatar(); //TODO
             ArrayList<Integer> newActionIds = LogsDataBase.getNewActionIds(mainUserId,lastContactsActionId);
             for (int actionId: newActionIds) {
                 Platform.runLater(() -> {
@@ -253,10 +282,20 @@ public class MainWindowController {
             lastContactsActionId = updatedLastContactsActionId;
         }
     }
-    private void setNewMessagesAvatar() {
+    private void setNewMessagesIcon(Action action) {
         Platform.runLater(() -> {
-            Stage currentStage = (Stage) mainAnchorPane.getScene().getWindow();
-            currentStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/iconNewMessages.png")));
+            boolean isContactChatOpen = mainAnchorPane.getChildren().stream()
+                    .map(Node::getId)
+                    .filter(Objects::nonNull)
+                    .filter(id -> id.equals("chatAnchorPane"+action.sender_id))
+                    .map(id -> id.replaceAll("\\D+", ""))
+                    .anyMatch(num -> !num.isEmpty());
+
+            if (!isContactChatOpen) {
+                Stage currentStage = (Stage) mainAnchorPane.getScene().getWindow();
+                currentStage.getIcons().clear();
+                currentStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/iconNewMessages.png")));
+            }
         });
     }
     private void displayAction(int actionId) throws SQLException {
@@ -264,8 +303,8 @@ public class MainWindowController {
 
          switch (action.change_type) {
              case ActionType.NEW -> executeNewAction(action);
-//             case ActionType.EDITED -> executeEditAction();
-//             case ActionType.DELETED -> executeDeleteAction();
+             case ActionType.EDITED -> executeEditAction(action);
+             case ActionType.DELETED -> executeDeleteAction(action);
              default -> throw new RuntimeException();
          }
     }
@@ -274,6 +313,133 @@ public class MainWindowController {
         changeLastMessage(action);
         changeLastMessageTime(action);
         changeNewMessageCounter(action);
+        setNewMessagesIcon(action);
+    }
+    private void executeEditAction(Action action) throws SQLException {
+        boolean isLastMessage = ChatsDataBase.getLastMessageId(mainUserId,action.sender_id) == action.message_id;
+        boolean isText = action.message != null && !action.message.trim().isEmpty();
+
+        AnchorPane contactAnchorPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+action.sender_id);
+        Pane contactPane = (Pane) contactAnchorPane.lookup("#mainContactPane");
+        Label mainContactMessageLabel = (Label) contactPane.lookup("#mainContactMessageLabel");
+
+        if (isLastMessage && !isText) {
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.setStyle("-fx-text-fill: white");
+            mainContactMessageLabel.setText("Picture");
+        } else if (isLastMessage) {
+            String lastMessage = ChatsDataBase.getLastMessage(mainUserId,action.sender_id);
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
+            mainContactMessageLabel.setText(lastMessage);
+        }
+    }
+    private void executeDeleteAction(Action action) throws SQLException {
+        resetLastMessage(action);
+        resetLastMessageTime(action);
+        changeNewMessageCounter(action);
+        changeIcon();
+    }
+    private void resetLastMessage(Action action) throws SQLException {
+        int messageId = action.message_id;
+        int contactId = action.sender_id;
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId);
+        int nextMessageId = ChatsDataBase.getNextMessageId(mainUserId,contactId,messageId);
+        boolean previousMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,previousMessageId);
+        boolean nextMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,nextMessageId);
+        boolean previousMessageIsPicture = previousMessageExists && ChatsDataBase.getMessage(mainUserId,contactId,previousMessageId).picture != null;
+        boolean previousMessageHasText = previousMessageExists && ChatsDataBase.getMessage(mainUserId,contactId,previousMessageId).message_text != null;
+        boolean lastMessageIsPicture = ChatsDataBase.getMessage(mainUserId,contactId,ChatsDataBase.getLastMessageId(mainUserId,contactId)).picture != null;
+        boolean lastMessageHasText = ChatsDataBase.getMessage(mainUserId,contactId,ChatsDataBase.getLastMessageId(mainUserId,contactId)).message_text != null;
+
+        AnchorPane contactAnchorPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+action.sender_id);
+        Pane contactPane = (Pane) contactAnchorPane.lookup("#mainContactPane");
+        Label mainContactMessageLabel = (Label) contactPane.lookup("#mainContactMessageLabel");
+
+        if (!previousMessageExists && !nextMessageExists) {
+            mainContactMessageLabel.setText("");
+        } else if (!nextMessageExists && previousMessageIsPicture && !previousMessageHasText) {
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.setStyle("-fx-text-fill: white");
+            mainContactMessageLabel.setText("Picture");
+        } else if (!nextMessageExists && (!previousMessageIsPicture || previousMessageIsPicture && previousMessageHasText)){
+            String previousLastMessage = ChatsDataBase.getMessage(mainUserId,contactId,previousMessageId).message_text;
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
+            mainContactMessageLabel.setText(previousLastMessage);
+        } else if (nextMessageExists && lastMessageIsPicture && !lastMessageHasText) {
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.setStyle("-fx-text-fill: white");
+            mainContactMessageLabel.setText("Picture");
+        } else if (nextMessageExists && (!lastMessageIsPicture || lastMessageIsPicture && lastMessageHasText)) {
+            String lastMessage = ChatsDataBase.getLastMessage(mainUserId, contactId);
+            mainContactMessageLabel.setStyle("");
+            mainContactMessageLabel.getStyleClass().clear();
+            mainContactMessageLabel.getStyleClass().add("contact-last-message-label");
+            mainContactMessageLabel.setText(lastMessage);
+        }
+    }
+    private void resetLastMessageTime(Action action) throws SQLException {
+        int messageId = action.message_id;
+        int contactId = action.sender_id;
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId);
+        int nextMessageId = ChatsDataBase.getNextMessageId(mainUserId,contactId,messageId);
+        boolean previousMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,previousMessageId);
+        boolean nextMessageExists = ChatsDataBase.messageExists(mainUserId,contactId,nextMessageId);
+
+        AnchorPane contactAnchorPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+action.sender_id);
+        Pane contactPane = (Pane) contactAnchorPane.lookup("#mainContactPane");
+        Label mainContactTimeLabel = (Label) contactPane.lookup("#mainContactTimeLabel");
+
+        if (!previousMessageExists && !nextMessageExists) {
+            mainContactTimeLabel.setText("");
+        } else if (!nextMessageExists) {
+            String previousMessageTime = getMessageTime(previousMessageId,contactId);
+            mainContactTimeLabel.setText(previousMessageTime);
+        } else if (!previousMessageExists || (previousMessageExists && nextMessageExists)){
+            int lastMessageId = ChatsDataBase.getLastMessageId(mainUserId,contactId);
+            mainContactTimeLabel.setText(getMessageTime(lastMessageId,contactId));
+        }
+    }
+    private String getMessageTime(int messageId,int contactId) throws SQLException {
+        String lastMessageFullDate = ChatsDataBase.getMessage(mainUserId,contactId,messageId).time;
+        String pattern = "(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}:\\d{2})"; // Extracts YYYY, MM, DD, HH:mm
+        Pattern compiledPattern = Pattern.compile(pattern);
+        Matcher matcher = compiledPattern.matcher(lastMessageFullDate);
+
+        if (matcher.find()) {
+            String year = matcher.group(1);
+            String month = matcher.group(2);
+            String day = matcher.group(3);
+            String time = matcher.group(4);
+
+            LocalDate messageDate = LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day));
+            LocalDate today = LocalDate.now();
+            LocalDate yesterday = today.minusDays(1); // Calculate yesterday's date
+
+            if (messageDate.isEqual(today)) {
+                return time; // Show only HH:mm if it's today
+            } else if (messageDate.isEqual(yesterday)) {
+                return "yesterday"; // Show "yesterday" if the date is yesterday
+            } else {
+                return day + "." + month + "." + year; // Show full date if not today
+            }
+        } else {
+            return ""; // Default to empty if no match
+        }
+    }
+    private void changeIcon() throws SQLException {
+        boolean isThereUnreadMessages = ChatsDataBase.isThereUnreadMessages(mainUserId);
+        if (!isThereUnreadMessages) {
+            Stage currentStage = (Stage) mainAnchorPane.getScene().getWindow();
+            currentStage.getIcons().clear();
+            currentStage.getIcons().add(new Image(getClass().getResourceAsStream("/main/elements/icon.png")));
+        }
     }
 
 
@@ -412,6 +578,9 @@ public class MainWindowController {
                 mainContactMessageCounterLabel.getStyleClass().add("contact-new-message-counter-overflow-label");
                 mainContactMessageCounterLabel.setPadding(new Insets(5,2,5,2));
                 mainContactMessageCounterLabel.setText("9+");
+            } else if (newMessagesAmount == 0) {
+                mainContactMessageCounterLabel.setText("0");
+                mainContactMessageCounterLabel.setVisible(false);
             } else {
                 mainContactMessageCounterLabel.setText(String.valueOf(newMessagesAmount));
             }
