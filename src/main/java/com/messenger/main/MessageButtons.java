@@ -646,17 +646,18 @@ public class MessageButtons extends MainChatController {
         int senderId = ChatsDataBase.getSenderIdWithMessageId(messageId);
         int receiverId = ChatsDataBase.getReceiverIdWithMessageId(messageId);
         deleteMessageInChat(messageId,senderId,receiverId);
-        deleteMessageFromDB(messageId);
         updateChangesLog(messageId, ActionType.DELETED);
+        deleteMessageFromDB(messageId);
         changeReplyMessages(messageId,senderId,receiverId);
         deletePotentialWrapper(messageId);
     }
     private void deleteMessageFromDB(int messageId) throws SQLException {
         ChatsDataBase.deleteMessage(messageId);
     }
-    private void updateChangesLog(int addedMessageId, ActionType changeType) throws SQLException {
-        LogsDataBase.addAction(changeType,addedMessageId,mainUserId,contactId,null,null,
-                -1,null,null);
+    private void updateChangesLog(int deletedMessageId, ActionType changeType) throws SQLException {
+        ChatMessage deletedMessage = ChatsDataBase.getMessage(mainUserId,contactId,deletedMessageId);
+        LogsDataBase.addAction(changeType,deletedMessageId,mainUserId,contactId,deletedMessage.message_text,deletedMessage.picture,
+                deletedMessage.reply_message_id,deletedMessage.time,deletedMessage.type);
     }
     private void deleteMessageInChat(int messageId,int senderId,int receiverId) throws SQLException {
         moveMessageAvatarBack(messageId,senderId,receiverId);
@@ -807,17 +808,6 @@ public class MessageButtons extends MainChatController {
         clip.setLayoutY(20);
         clip.setRadius(20);
         avatar.setClip(clip);
-    }
-    public static String getMessageHours(String messageFullTime) {
-        // Define the input and output formats
-        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("HH:mm");
-
-        // Parse the input string to LocalDateTime
-        LocalDateTime dateTime = LocalDateTime.parse(messageFullTime, inputFormatter);
-
-        // Format and return the output as a string
-        return dateTime.format(outputFormatter);
     }
     public void changeReplyMessages(int messageId, int senderId, int receiverId) throws SQLException {
         // Get list of replied message IDs from DB

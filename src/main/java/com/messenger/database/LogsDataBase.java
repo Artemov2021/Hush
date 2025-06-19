@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LogsDataBase {
-    private static final String url = "jdbc:mysql://127.0.0.1:3306/messengerdb";
-    private static final String user = "root";
-    private static final String password = "112233";
+    private static final String url = "jdbc:mysql://mysql-hush-timurt005-6121.g.aivencloud.com:28163/hush?useSSL=true&requireSSL=true&verifyServerCertificate=false";
+    private static final String user = "avnadmin";
+    private static final String password = "AVNS_vqwfSDAjXWc9ViFtnRN";
 
     public static void addAction(ActionType changeType, int messageId, int senderId, int receiverId, String message, byte[] picture, int replyMessageId, String messageTime, String messageType) throws SQLException {
         String statement = "INSERT INTO logs (change_type,message_id,sender_id,receiver_id,message,picture,reply_message_id,message_time,message_type) VALUES (?,?,?,?,?,?,?,?,?)";

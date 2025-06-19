@@ -344,14 +344,13 @@ public class MainChatController extends MainContactController {
 
     private void checkForNewAction() throws SQLException {
         int updatedLastContactActionId = LogsDataBase.getLastContactActionId(mainUserId,contactId);
-        System.out.println("old: "+lastContactActionId+", new: "+updatedLastContactActionId);
         if (lastContactActionId != updatedLastContactActionId) {
             ArrayList<Integer> newActionIds = LogsDataBase.getNewActionIds(mainUserId,lastContactActionId);
             for (int actionId: newActionIds) {
                 Platform.runLater(() -> {
                     try {
                         displayAction(actionId);
-                    } catch (SQLException e) {
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
@@ -359,13 +358,13 @@ public class MainChatController extends MainContactController {
             lastContactActionId = updatedLastContactActionId;
         }
     }
-    private void displayAction(int actionId) throws SQLException {
+    private void displayAction(int actionId) throws Exception {
         Action action = new Action(actionId);
         if (action.receiver_id == mainUserId) {
             switch (action.change_type) {
                 case ActionType.NEW -> displayNewMessage(action);
-//             case ActionType.EDITED -> executeEditAction();
-//             case ActionType.DELETED -> executeDeleteAction();
+                case ActionType.EDITED -> displayEditedMessage(action);
+                case ActionType.DELETED -> displayDeletedMessage(action);
                 default -> throw new RuntimeException();
             }
         }
@@ -375,7 +374,6 @@ public class MainChatController extends MainContactController {
             try {
                 ChatMessage newMessage = ChatsDataBase.getMessage(mainUserId,contactId,action.message_id);
                 loadNewMessage(newMessage);
-                System.out.println("making message read....");
                 makeMessageRead(newMessage);
                 allMessages.add(newMessage);
             } catch (Exception e) {
@@ -383,46 +381,34 @@ public class MainChatController extends MainContactController {
             }
         });
     }
-    private void checkForEditedMessages() throws Exception {
-        List<ChatMessage> newMessages = ChatsDataBase.getAllMessages(mainUserId,contactId);
+    private void displayEditedMessage(Action action) throws Exception {
+        ChatMessage message = ChatsDataBase.getMessage(mainUserId,contactId,action.message_id);
+        boolean isMessageLoaded = chatVBox.lookup("#messageHBox"+message.id) != null;
+        if (isMessageLoaded) {
+            message.reload(this);
+        }
 
-        Map<Integer, ChatMessage> editedMessages = new HashMap<>();
-
-        Map<Integer, ChatMessage> oldMessageMap = allMessages.stream()
-                .collect(Collectors.toMap(msg -> msg.id, msg -> msg));
-
-        for (ChatMessage newMsg : newMessages) {
-            ChatMessage oldMsg = oldMessageMap.get(newMsg.id);
-            if (oldMsg != null) {
-                // Compare relevant fields
-                if (!Objects.equals(newMsg.message_text, oldMsg.message_text) ||
-                        !Arrays.equals(newMsg.picture, oldMsg.picture)) {
-
-                    editedMessages.put(newMsg.id,newMsg); // Something changed
-                }
+        for (int i = 0;i < allMessages.size();i++) {
+            if (allMessages.get(i).id == message.id) {
+                allMessages.remove(i);
+                allMessages.add(i,message);
+                break;
             }
         }
-
-        for (int messageId: editedMessages.keySet()) {
-            Platform.runLater(() -> {
-                try {
-                    ChatMessage message = ChatsDataBase.getMessage(mainUserId,contactId,messageId);
-                    boolean isMessageLoaded = chatVBox.lookup("#messageHBox"+message.id) != null;
-                    if (isMessageLoaded) {
-                        message.reload(this);
-                    }
-                    int lastMessageId = ChatsDataBase.getLastMessageId(mainUserId,contactId);
-                    if (message.id == lastMessageId) {
-                        updateLastMessage(message.message_text);
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
-
-        allMessages = newMessages;
     }
+    private void displayDeletedMessage(Action action) throws SQLException {
+        moveMessageAvatarBack(action.message_id,action.sender_id);
+        deleteDateLabel(action.message_id,action.message_time);
+        removeMessageHBox(action.message_id);
+
+        for (int i = 0;i < allMessages.size();i++) {
+            if (allMessages.get(i).id == action.message_id) {
+                allMessages.remove(i);
+                break;
+            }
+        }
+    }
+
 
 
     // Chat Interface Initialization - FXML functions
@@ -1486,6 +1472,69 @@ public class MainChatController extends MainContactController {
 
         // Ensure the value is between 0 and 1
         return Math.max(0, Math.min(1, position));
+    }
+    private void moveMessageAvatarBack(int messageId,int senderId) throws SQLException {
+        HBox targetMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+        HBox previousMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId));
+        int previousMessageId = ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId);
+
+        boolean hasAvatarLabel = targetMessageHBox.lookup("#messageAvatarLabel"+messageId) != null;
+        boolean isSameSender = (previousMessageHBox != null) && senderId == ChatsDataBase.getMessage(mainUserId,contactId,previousMessageId).sender_id;
+        boolean previousMessageNoAvatarLabel = (previousMessageHBox != null) && previousMessageHBox.lookup("#messageAvatarLabel"+ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId)) == null;
+
+        if (hasAvatarLabel && isSameSender && previousMessageNoAvatarLabel) {
+            addNewAvatarLabel(previousMessageHBox,ChatsDataBase.getPreviousMessageId(mainUserId,contactId,messageId),senderId);
+        }
+    }
+    private void addNewAvatarLabel(HBox messageHBox,int messageId,int senderId) throws SQLException {
+        Label newAvatarLabel = new Label();
+        newAvatarLabel.setId("messageAvatarLabel"+messageId);
+        setMessageAvatar(newAvatarLabel,senderId);
+        messageHBox.getChildren().addFirst(newAvatarLabel);
+
+        StackPane messageStackPane = (StackPane) messageHBox.lookup("#messageStackPane"+messageId);
+        HBox.setMargin(newAvatarLabel, (senderId == mainUserId) ? new Insets(0, 115, 0, 0) : new Insets(0, 0, 0, 105));
+        HBox.setMargin(messageStackPane, (senderId == mainUserId) ? new Insets(0, 13, 0, 0) : new Insets(0, 0, 0, 13));
+    }
+    private void setMessageAvatar(Label avatar,int senderId) throws SQLException {
+        byte[] blobBytes = UsersDataBase.getAvatarWithId(senderId);
+        if (blobBytes == null) {
+            avatar.getStyleClass().clear();
+            avatar.getStyleClass().add("chat-message-default-avatar");
+            avatar.setPrefHeight(40);
+            avatar.setPrefWidth(40);
+            return;
+        }
+        ByteArrayInputStream byteStream = new ByteArrayInputStream(blobBytes);
+        ImageView imageView = new ImageView(new Image(byteStream));
+        imageView.setFitHeight(40);
+        imageView.setFitWidth(40);
+        imageView.setSmooth(true);
+        avatar.setGraphic(imageView);
+        Circle clip = new Circle();
+        clip.setLayoutX(20);
+        clip.setLayoutY(20);
+        clip.setRadius(20);
+        avatar.setClip(clip);
+    }
+    private void deleteDateLabel(int messageId,String messageTime) throws SQLException {
+        Label dateLabel = (Label) chatVBox.lookup("#dateLabel"+getDateLabelDate(messageTime));
+
+        boolean isThereMessageOnSameDate = ChatsDataBase.isThereMessagesOnSameDay(mainUserId,contactId,messageId,messageTime);
+
+        if (!isThereMessageOnSameDate) {
+            chatVBox.getChildren().remove(dateLabel);
+        }
+    }
+    private String getDateLabelDate(String fullTime) {
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        LocalDateTime dateTime = LocalDateTime.parse(fullTime, inputFormatter);
+
+        return dateTime.toLocalDate().toString(); // Outputs in yyyy-MM-dd format
+    }
+    private void removeMessageHBox(int messageId) {
+        HBox targetMessageHBox = (HBox) chatVBox.lookup("#messageHBox"+messageId);
+        chatVBox.getChildren().remove(targetMessageHBox);
     }
 
 

@@ -15,9 +15,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class ContactsDataBase extends MainWindowController {
-    private static final String url = "jdbc:mysql://127.0.0.1:3306/messengerdb";
-    private static final String user = "root";
-    private static final String password = "112233";
+    private static final String url = "jdbc:mysql://mysql-hush-timurt005-6121.g.aivencloud.com:28163/hush?useSSL=true&requireSSL=true&verifyServerCertificate=false";
+    private static final String user = "avnadmin";
+    private static final String password = "AVNS_vqwfSDAjXWc9ViFtnRN";
 
     public static int[] getContactsIdList(int mainUserId) throws SQLException {
         List<Integer> contactsIdList = new ArrayList<>();
@@ -102,30 +102,6 @@ public class ContactsDataBase extends MainWindowController {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-    public static int[] sortContactsByLastInteraction(int mainUserId,int[] contactIds) throws SQLException {
-        List<Integer> sortedContacts = new ArrayList<>();
-
-        // Create placeholders like "?, ?, ?, ..."
-        String placeholders = String.join(",", Arrays.stream(contactIds)
-                .mapToObj(id -> "?")
-                .toArray(String[]::new));
-        String statement = "SELECT * FROM contacts WHERE user_id = ? AND contact_id IN (" + placeholders + ") ORDER BY last_interaction DESC;";
-
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
-            PreparedStatement preparedStatement = connection.prepareStatement(statement);
-            preparedStatement.setInt(1,mainUserId);
-
-            for (int i = 0;i < contactIds.length;i++) {
-                preparedStatement.setInt(i+2,contactIds[i]);
-            }
-
-            ResultSet result = preparedStatement.executeQuery();
-            while (result.next()) {
-                sortedContacts.add(result.getInt("contact_id"));
-            }
-        }
-        return sortedContacts.stream().mapToInt(Integer::intValue).toArray();
     }
 
     private static boolean checkUserMatching(String enteredName,int userId) throws SQLException {

@@ -64,14 +64,13 @@ public class MainWindowController {
     public static int mainUserId;
     private boolean isWindowInitialized;
 
-    private ScheduledExecutorService messageListenerExecutor;
+    private static ScheduledExecutorService messageListenerExecutor;
     private int lastContactsActionId;
 
     public final void setMainUserId(int id) {
         mainUserId = id;
     }
     public final void initializeWithValue() throws SQLException, IOException {
-        mainUserId = 1;
         setMainLogInTitle();
         setProfileInfo();
         setAppropriateAvatar();
@@ -92,6 +91,11 @@ public class MainWindowController {
 
 
     // Interface Initialization
+    public static void shutDown() {
+        if (messageListenerExecutor != null && !messageListenerExecutor.isShutdown()) {
+            messageListenerExecutor.shutdownNow();
+        }
+    }
     private void setMainLogInTitle() throws SQLException {
         /* set main title on the right side. If the person has no contacts,
            there is going to be the default title ( pointing how to add a new contact ). If the person
@@ -236,20 +240,6 @@ public class MainWindowController {
             });
         });
     }
-    private void shutdown() {
-        if (messageListenerExecutor != null && !messageListenerExecutor.isShutdown()) {
-            messageListenerExecutor.shutdown(); // Stop accepting new tasks
-            try {
-                // Wait up to 2 seconds for running tasks to finish
-                if (!messageListenerExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
-                    messageListenerExecutor.shutdownNow(); // Force shutdown if not finished
-                }
-            } catch (InterruptedException e) {
-                messageListenerExecutor.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
     private void setLastContactsAction() throws SQLException {
         lastContactsActionId = LogsDataBase.getLastContactsActionId(mainUserId);
     }
@@ -316,8 +306,9 @@ public class MainWindowController {
         setNewMessagesIcon(action);
     }
     private void executeEditAction(Action action) throws SQLException {
+        ChatMessage editedMessage = ChatsDataBase.getMessage(mainUserId,action.sender_id,action.message_id);
         boolean isLastMessage = ChatsDataBase.getLastMessageId(mainUserId,action.sender_id) == action.message_id;
-        boolean isText = action.message != null && !action.message.trim().isEmpty();
+        boolean isText = editedMessage.message_text != null && !editedMessage.message_text.trim().isEmpty();
 
         AnchorPane contactAnchorPane = (AnchorPane) mainContactsVBox.lookup("#mainContactAnchorPane"+action.sender_id);
         Pane contactPane = (Pane) contactAnchorPane.lookup("#mainContactPane");

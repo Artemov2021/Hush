@@ -1,5 +1,6 @@
 package com.messenger.auth;
 
+import com.messenger.Main;
 import com.messenger.database.UsersDataBase;
 import com.messenger.design.AuthField;
 import com.messenger.main.MainWindowController;
@@ -10,11 +11,13 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
+import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,6 +46,8 @@ public class AuthSingUpController {
         setFieldsStyle();
         setSingUpButtonAction();
         setAccountButtonAction();
+        setIdentifierTextFieldEnterListener();
+        setPasswordFieldTextFieldEnterListener();
     }
     private void setFieldsUnfocused() {
         identifierTextField.setFocusTraversable(false);
@@ -86,6 +91,24 @@ public class AuthSingUpController {
             if (event.getButton() == MouseButton.PRIMARY) {
                 openLogInWindow();
                 closeSingUpWindow();
+            }
+        });
+    }
+    private void setIdentifierTextFieldEnterListener() {
+        identifierTextField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                passwordField.requestFocus(); // Moves focus to password field
+            }
+        });
+    }
+    private void setPasswordFieldTextFieldEnterListener() {
+        passwordField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                try {
+                    handleSignupClick();
+                } catch (SQLException e) {
+                    extraLabel.setText(e.getMessage());
+                }
             }
         });
     }
@@ -204,6 +227,8 @@ public class AuthSingUpController {
             controller.setMainUserId(userId);
             controller.initializeWithValue(); // now it's safe to load user dat
 
+            saveUserId(userId);
+
             Scene scene = new Scene(root);
             Stage newStage = new Stage();
             newStage.setResizable(false);
@@ -233,6 +258,10 @@ public class AuthSingUpController {
         } catch (Exception e) {
             extraLabel.setText(e.getMessage());
         }
+    }
+    public void saveUserId(int userId) {
+        Preferences prefs = Preferences.userNodeForPackage(Main.class);
+        prefs.putInt("user_id",userId);
     }
 
 

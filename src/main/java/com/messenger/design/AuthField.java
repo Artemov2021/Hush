@@ -36,7 +36,6 @@ public class AuthField {
         Field.textProperty().addListener((observable, oldValue, newValue) -> { handleTextProperty(newValue); });
     }
 
-
     private void handleFocusProperty(boolean focus) {
         String text = Field.getText();
         if (focus && text.isEmpty()) {
@@ -56,7 +55,6 @@ public class AuthField {
             Field.setText("");
         }
     }
-
 
     private void move(String direction,Label label) {
         if (direction.equals("up")) {
@@ -80,21 +78,6 @@ public class AuthField {
         translateTransition.setByX(signedMoveX);
         translateTransition.setByY(signedMoveY);
         translateTransition.play();
-    }
-
-
-    public static void setErrorStyle(TextInputControl textField,Label errorLabel,String message) {
-        textField.getStyleClass().clear();
-        textField.getStyleClass().add("input-field-error");
-
-        errorLabel.setText(message);
-        errorLabel.setVisible(true);
-    }
-    public static void deleteErrorStyle(TextInputControl textField,Label errorLabel) {
-        textField.getStyleClass().clear();
-        textField.getStyleClass().add("input-field");
-
-        errorLabel.setVisible(false);
     }
 
 }

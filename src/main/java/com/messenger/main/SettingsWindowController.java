@@ -1,5 +1,6 @@
 package com.messenger.main;
 
+import com.messenger.Main;
 import com.messenger.database.UsersDataBase;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
@@ -8,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -24,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
+import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -408,6 +411,18 @@ public class SettingsWindowController extends MainWindowController {
             newLoginStage.setScene(scene);
             newLoginStage.setTitle("Log In");
             newLoginStage.show();  // Show the login window
+
+            Preferences prefs = Preferences.userNodeForPackage(Main.class);
+            prefs.remove("user_id");
+
+            // Shut down any open chat controller threads
+            for (Node child : mainAnchorPane.getChildren()) {
+                if (child.getUserData() instanceof MainChatController controller) {
+                    controller.shutdown();
+                }
+            }
+
+            MainWindowController.shutDown();
         } catch (Exception e) {
             // Handle any exceptions (like FXML loading issues)
             settingsEmailErrorMessage.setText(e.getMessage());

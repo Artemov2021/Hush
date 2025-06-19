@@ -4,6 +4,7 @@ module com.main.messenger {
     requires java.desktop;
     requires java.sql;
     requires mysql.connector.j;
+    requires java.prefs;
 
 
     opens com.messenger.auth to javafx.fxml;

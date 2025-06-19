@@ -13,9 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ChatsDataBase {
-    private static final String url = "jdbc:mysql://127.0.0.1:3306/messengerdb";
-    private static final String user = "root";
-    private static final String password = "112233";
+    private static final String url = "jdbc:mysql://mysql-hush-timurt005-6121.g.aivencloud.com:28163/hush?useSSL=true&requireSSL=true&verifyServerCertificate=false";
+    private static final String user = "avnadmin";
+    private static final String password = "AVNS_vqwfSDAjXWc9ViFtnRN";
 
     public static String getLastMessage(int senderId,int receiverId) throws SQLException {
         String statement = "SELECT message FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id DESC LIMIT 1";

@@ -7,10 +7,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class UsersDataBase {
-
-    private static final String url = "jdbc:mysql://127.0.0.1:3306/messengerdb";
-    private static final String user = "root";
-    private static final String password = "112233";
+    private static final String url = "jdbc:mysql://mysql-hush-timurt005-6121.g.aivencloud.com:28163/hush?useSSL=true&requireSSL=true&verifyServerCertificate=false";
+    private static final String user = "avnadmin";
+    private static final String password = "AVNS_vqwfSDAjXWc9ViFtnRN";
 
     public static int addUser(String identifier, String userPassword) throws SQLException {
         String statement = "INSERT INTO users (name, password, email, avatar_picture) VALUES (?, ?, ?, ?)";
@@ -60,7 +59,6 @@ public class UsersDataBase {
         }
         return false;
     }
-
     private static String isEmailOrName(String identifier) {
         String emailPattern = "@\\S*\\.[a-z]{2,}$";
         Pattern pattern = Pattern.compile(emailPattern);
@@ -70,7 +68,6 @@ public class UsersDataBase {
         }
         return "name";
     }
-
     public static boolean getPasswordValidity(String identifier, String givenPassword) throws SQLException {
         // works only with a name or an email
         String identifierType = isEmailOrName(identifier);
@@ -86,7 +83,6 @@ public class UsersDataBase {
         }
         return false;
     }
-
     public static String getNameWithId(int id) throws SQLException {
         String statement = "SELECT name FROM users WHERE id = ?";
         try (var conn = DriverManager.getConnection(url,user,password)) {
@@ -99,7 +95,6 @@ public class UsersDataBase {
         }
         return "";
     }
-
     public static String getEmailWithId(int id) throws SQLException {
         String statement = "SELECT email FROM users WHERE id = ?";
         try (var conn = DriverManager.getConnection(url,user,password)) {
@@ -112,7 +107,6 @@ public class UsersDataBase {
         }
         return "";
     }
-
     public static int getIdWithName(String name) throws SQLException {
         String statement = "SELECT id FROM users WHERE name = ?";
         try (var conn = DriverManager.getConnection(url,user,password)) {
@@ -125,7 +119,6 @@ public class UsersDataBase {
         }
         return -1;
     }
-
     public static int getIdWithEmail(String email) throws SQLException {
         String statement = "SELECT id FROM users WHERE email = ?";
         try (var conn = DriverManager.getConnection(url,user,password)) {
@@ -138,8 +131,6 @@ public class UsersDataBase {
         }
         return -1;
     }
-
-
     public static int getContactsAmount(int userId) throws SQLException {
         String statement = "SELECT COUNT(*) AS contacts_amount FROM contacts WHERE user_id = ?";
         try (var conn = DriverManager.getConnection(url,user,password)) {
@@ -152,7 +143,6 @@ public class UsersDataBase {
         }
         return -1;
     }
-
     public static int getLength() throws SQLException {
         String statement = "SELECT MAX(id) AS last_id FROM users";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
@@ -164,7 +154,6 @@ public class UsersDataBase {
         }
         return 0;
     }
-
     public static byte[] getAvatarWithId(int id) throws SQLException {
         String statement = "SELECT avatar_picture FROM users WHERE id = ?";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
@@ -177,7 +166,6 @@ public class UsersDataBase {
         }
         return null;
     }
-
     public static void deleteAvatar(int id) throws SQLException {
         String statement = "UPDATE users SET avatar_picture = NULL WHERE id = ?";
         try (Connection connection = DriverManager.getConnection(url,user,password)) {
