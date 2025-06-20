@@ -1,6 +1,9 @@
 package com.messenger.database;
 
 import com.messenger.main.ChatMessage;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import javafx.scene.chart.PieChart;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -13,14 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ChatsDataBase {
-    private static final String url = "jdbc:mysql://mysql-hush-timurt005-6121.g.aivencloud.com:28163/hush?useSSL=true&requireSSL=true&verifyServerCertificate=false";
-    private static final String user = "avnadmin";
-    private static final String password = "AVNS_vqwfSDAjXWc9ViFtnRN";
-
     public static String getLastMessage(int senderId,int receiverId) throws SQLException {
         String statement = "SELECT message FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id DESC LIMIT 1";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,senderId);
             preparedStatement.setInt(2,receiverId);
@@ -36,7 +35,7 @@ public class ChatsDataBase {
     public static String getLastMessageTime(int mainUserId,int contactId) throws SQLException {
         String statement = "SELECT message_time FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id DESC LIMIT 1";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,mainUserId);
             preparedStatement.setInt(2,contactId);
@@ -52,7 +51,7 @@ public class ChatsDataBase {
     public static int getLastMessageId(int mainUserId,int contactId) throws SQLException {
         String statement = "SELECT message_id FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id DESC LIMIT 1";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,mainUserId);
             preparedStatement.setInt(2,contactId);
@@ -68,7 +67,7 @@ public class ChatsDataBase {
     public static int getFirstMessageId(int mainUserId, int contactId) throws SQLException {
         String statement = "SELECT message_id FROM chats WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY message_id ASC LIMIT 1";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1, mainUserId);
             preparedStatement.setInt(2, contactId);
@@ -85,7 +84,7 @@ public class ChatsDataBase {
         String statement = "INSERT INTO chats (sender_id,receiver_id,message,picture,reply_message_id,message_time,message_type,received) VALUES (?,?,?,?,?,?,?,?)";
         InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement,Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setInt(1,senderId);
             preparedStatement.setInt(2,receiverId);
@@ -113,7 +112,7 @@ public class ChatsDataBase {
         ArrayList<ChatMessage> messages = new ArrayList<>();
         String statement = "SELECT * FROM chats WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY message_time ASC;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1, mainUserId);
             preparedStatement.setInt(2, contactId);
@@ -156,7 +155,7 @@ public class ChatsDataBase {
         ChatMessage message = null;
         String statement = "SELECT * FROM chats WHERE message_id = ?";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,messageId);
             ResultSet result = preparedStatement.executeQuery();
@@ -176,7 +175,7 @@ public class ChatsDataBase {
                 "AND message_id < ?\n" +
                 "ORDER BY message_id DESC;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             // Second Query: Get previous message_id
             PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
             preparedStatement.setInt(1, mainUserId);
@@ -208,7 +207,7 @@ public class ChatsDataBase {
         List<Object> nextMessage = new ArrayList<>();
         String getMessageIdStatement = "SELECT * FROM chats WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND message_id > ?;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             // Second Query: Get previous message_id
             PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
             preparedStatement.setInt(1, mainUserId);
@@ -239,7 +238,7 @@ public class ChatsDataBase {
     public static int getSenderIdWithMessageId(int messageId) throws SQLException {
         String statement = "SELECT sender_id FROM chats WHERE message_id = ?";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,messageId);
             ResultSet result = preparedStatement.executeQuery();
@@ -252,7 +251,7 @@ public class ChatsDataBase {
     public static int getReceiverIdWithMessageId(int messageId) throws SQLException {
         String statement = "SELECT receiver_id FROM chats WHERE message_id = ?";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,messageId);
             ResultSet result = preparedStatement.executeQuery();
@@ -266,7 +265,7 @@ public class ChatsDataBase {
         String statement = "UPDATE chats SET message = ?,picture = ?,message_type = ? WHERE message_id = ?";
         InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setString(1,newMessage);
             preparedStatement.setBlob(2,inputStreamPicture);
@@ -278,7 +277,7 @@ public class ChatsDataBase {
     public static void deleteMessage(int messageId) throws SQLException {
         String statement = "DELETE FROM chats WHERE message_id = ?";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,messageId);
             preparedStatement.executeUpdate();
@@ -287,7 +286,7 @@ public class ChatsDataBase {
     public static boolean messageExists(int mainUserId,int contactId,int messageId) throws SQLException {
         String statement = "SELECT * FROM chats WHERE message_id = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,messageId);
             preparedStatement.setInt(2,mainUserId);
@@ -305,7 +304,7 @@ public class ChatsDataBase {
         List<Integer> ids = new ArrayList<>();
         String statement = "SELECT message_id FROM chats WHERE reply_message_id = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,messageId);
             preparedStatement.setInt(2,senderId);
@@ -326,7 +325,7 @@ public class ChatsDataBase {
                 "AND message_id < ?\n" +
                 "ORDER BY message_id DESC;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
                 // Second Query: Get previous message_id
                 PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
                 preparedStatement.setInt(1, mainUserId);
@@ -348,7 +347,7 @@ public class ChatsDataBase {
     public static int getNextMessageId(int mainUserId,int contactId,int messageId) throws SQLException {
         String getMessageIdStatement = "SELECT message_id FROM chats WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND message_id > ?;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             // Second Query: Get previous message_id
             PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
             preparedStatement.setInt(1, mainUserId);
@@ -375,7 +374,7 @@ public class ChatsDataBase {
                 "AND message_id > ?\n" +
                 "ORDER BY message_id ASC;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1, mainUserId);
             preparedStatement.setInt(2, contactId);
@@ -428,7 +427,7 @@ public class ChatsDataBase {
         LIMIT 1
         """;
 
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = DataBaseConnectionPool.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Set parameters
@@ -455,7 +454,7 @@ public class ChatsDataBase {
                 "AND message_id < ?\n" +
                 "ORDER BY message_id DESC;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             // Second Query: Get previous message_id
             PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
             preparedStatement.setInt(1, mainUserId);
@@ -478,7 +477,7 @@ public class ChatsDataBase {
                 "AND message_id > ?\n" +
                 "ORDER BY message_id DESC;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             // Second Query: Get next message_id
             PreparedStatement preparedStatement = connection.prepareStatement(getMessageIdStatement);
             preparedStatement.setInt(1, mainUserId);
@@ -502,7 +501,7 @@ public class ChatsDataBase {
                 "AND message_id < ?\n" +
                 "ORDER BY message_id ASC;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1, mainUserId);
             preparedStatement.setInt(2, contactId);
@@ -560,7 +559,7 @@ public class ChatsDataBase {
         long amount = 0;
         String statement = "SELECT * FROM chats WHERE (receiver_id = ? AND sender_id = ?) AND received = 0";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,mainUserId);
             preparedStatement.setInt(2,contactId);
@@ -574,7 +573,7 @@ public class ChatsDataBase {
     public static void setAllMessagesRead(int mainUserId,int contactId) throws SQLException {
         String statement = "UPDATE chats SET received = 1 WHERE receiver_id = ? AND sender_id = ?";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement,Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setInt(1,mainUserId);
             preparedStatement.setInt(2,contactId);
@@ -585,7 +584,7 @@ public class ChatsDataBase {
     public static void setMessageRead(int messageId) throws SQLException {
         String statement = "UPDATE chats SET received = 1 WHERE message_id = ?";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement,Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setInt(1,messageId);
 
@@ -595,7 +594,7 @@ public class ChatsDataBase {
     public static boolean isThereUnreadMessages(int mainUserId) throws SQLException {
         String query = "SELECT EXISTS (SELECT 1 FROM chats WHERE receiver_id = ? AND received = 0) AS has_unread";
 
-        try (Connection conn = DriverManager.getConnection(url, user, password);
+        try (Connection conn = DataBaseConnectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setInt(1, mainUserId);

@@ -3,9 +3,9 @@ module com.main.messenger {
     requires javafx.fxml;
     requires java.desktop;
     requires java.sql;
-    requires mysql.connector.j;
     requires java.prefs;
 
+    requires com.zaxxer.hikari;
 
     opens com.messenger.auth to javafx.fxml;
     exports com.messenger.auth;
@@ -14,5 +14,4 @@ module com.main.messenger {
     exports com.messenger.main;
 
     opens com.messenger to javafx.graphics;
-
 }

@@ -762,9 +762,11 @@ public class MessageButtons extends MainChatController {
         String messageTime = ChatsDataBase.getMessage(mainUserId,contactId,messageId).time;
         Label dateLabel = (Label) chatVBox.lookup("#dateLabel"+getDateLabelDate(messageTime));
 
+        int firstMessageId = ChatsDataBase.getFirstMessageId(mainUserId,contactId);
+        boolean isFirstMessage = (firstMessageId == messageId);
         boolean isThereMessageOnSameDate = ChatsDataBase.isThereMessagesOnSameDay(mainUserId,contactId,messageId,messageTime);
 
-        if (!isThereMessageOnSameDate) {
+        if (!isFirstMessage && !isThereMessageOnSameDate) {
             chatVBox.getChildren().remove(dateLabel);
         }
     }

@@ -7,17 +7,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class UsersDataBase {
-    private static final String url = "jdbc:mysql://mysql-hush-timurt005-6121.g.aivencloud.com:28163/hush?useSSL=true&requireSSL=true&verifyServerCertificate=false";
-    private static final String user = "avnadmin";
-    private static final String password = "AVNS_vqwfSDAjXWc9ViFtnRN";
-
     public static int addUser(String identifier, String userPassword) throws SQLException {
         String statement = "INSERT INTO users (name, password, email, avatar_picture) VALUES (?, ?, ?, ?)";
 
         String userName = isEmailOrName(identifier).equals("name") ? identifier : "User" + (getLength() + 1);
         String userEmail = isEmailOrName(identifier).equals("email") ? identifier : null;
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             // Prepare the statement and request generated keys
             PreparedStatement prepareStatement = connection.prepareStatement(statement, Statement.RETURN_GENERATED_KEYS);
 
@@ -49,7 +45,7 @@ public class UsersDataBase {
         String identifierType = isEmailOrName(identifier);
         String statement = "SELECT " + identifierType + " FROM users WHERE " + identifierType + " = ?";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement stmt = connection.prepareStatement(statement);
             stmt.setString(1,identifier);
             ResultSet result = stmt.executeQuery();
@@ -73,7 +69,7 @@ public class UsersDataBase {
         String identifierType = isEmailOrName(identifier);
         String statement = "SELECT password FROM users WHERE " + identifierType + " = ?";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement stmt = connection.prepareStatement(statement);
             stmt.setString(1, identifier);
             ResultSet result = stmt.executeQuery();
@@ -85,7 +81,7 @@ public class UsersDataBase {
     }
     public static String getNameWithId(int id) throws SQLException {
         String statement = "SELECT name FROM users WHERE id = ?";
-        try (var conn = DriverManager.getConnection(url,user,password)) {
+        try (var conn = DataBaseConnectionPool.getConnection()) {
             var stmt = conn.prepareStatement(statement);
             stmt.setInt(1,id);
             ResultSet result = stmt.executeQuery();
@@ -97,7 +93,7 @@ public class UsersDataBase {
     }
     public static String getEmailWithId(int id) throws SQLException {
         String statement = "SELECT email FROM users WHERE id = ?";
-        try (var conn = DriverManager.getConnection(url,user,password)) {
+        try (var conn = DataBaseConnectionPool.getConnection()) {
             var stmt = conn.prepareStatement(statement);
             stmt.setInt(1,id);
             ResultSet result = stmt.executeQuery();
@@ -109,7 +105,7 @@ public class UsersDataBase {
     }
     public static int getIdWithName(String name) throws SQLException {
         String statement = "SELECT id FROM users WHERE name = ?";
-        try (var conn = DriverManager.getConnection(url,user,password)) {
+        try (var conn = DataBaseConnectionPool.getConnection()) {
             var stmt = conn.prepareStatement(statement);
             stmt.setString(1,name);
             ResultSet result = stmt.executeQuery();
@@ -121,7 +117,7 @@ public class UsersDataBase {
     }
     public static int getIdWithEmail(String email) throws SQLException {
         String statement = "SELECT id FROM users WHERE email = ?";
-        try (var conn = DriverManager.getConnection(url,user,password)) {
+        try (var conn = DataBaseConnectionPool.getConnection()) {
             var stmt = conn.prepareStatement(statement);
             stmt.setString(1,email);
             ResultSet result = stmt.executeQuery();
@@ -133,7 +129,7 @@ public class UsersDataBase {
     }
     public static int getContactsAmount(int userId) throws SQLException {
         String statement = "SELECT COUNT(*) AS contacts_amount FROM contacts WHERE user_id = ?";
-        try (var conn = DriverManager.getConnection(url,user,password)) {
+        try (var conn = DataBaseConnectionPool.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(statement);
             stmt.setInt(1, userId);
             ResultSet result = stmt.executeQuery();
@@ -145,7 +141,7 @@ public class UsersDataBase {
     }
     public static int getLength() throws SQLException {
         String statement = "SELECT MAX(id) AS last_id FROM users";
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             Statement stmt = connection.createStatement();
             ResultSet result = stmt.executeQuery(statement);
             if (result.next()) {
@@ -156,7 +152,7 @@ public class UsersDataBase {
     }
     public static byte[] getAvatarWithId(int id) throws SQLException {
         String statement = "SELECT avatar_picture FROM users WHERE id = ?";
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement stmt = connection.prepareStatement(statement);
             stmt.setInt(1,id);
             ResultSet result = stmt.executeQuery();
@@ -168,7 +164,7 @@ public class UsersDataBase {
     }
     public static void deleteAvatar(int id) throws SQLException {
         String statement = "UPDATE users SET avatar_picture = NULL WHERE id = ?";
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement stmt = connection.prepareStatement(statement);
             stmt.setInt(1,id);
             stmt.executeUpdate();
@@ -176,7 +172,7 @@ public class UsersDataBase {
     }
     public static void setAvatar(int id,String path) throws SQLException, FileNotFoundException {
         String statement = "UPDATE users SET avatar_picture = ? WHERE id = ?";
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement stmt = connection.prepareStatement(statement);
             InputStream inputStream = new FileInputStream(path);
             stmt.setBlob(1,inputStream);
@@ -187,7 +183,7 @@ public class UsersDataBase {
     public static void setName(int id,String name) throws SQLException {
         name = name.isEmpty() ? null : name;
         String statement = "UPDATE users SET name = ? WHERE id = ?";
-        try (Connection connection3 = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection3 = DataBaseConnectionPool.getConnection()) {
             PreparedStatement stmt3 = connection3.prepareStatement(statement);
             stmt3.setString(1,name);
             stmt3.setInt(2,id);
@@ -197,7 +193,7 @@ public class UsersDataBase {
     public static void setEmail(int id,String email) throws SQLException {
         email = email.isEmpty() ? null : email;
         String statement = "UPDATE users SET email = ? WHERE id = ?";
-        try (Connection connection3 = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection3 = DataBaseConnectionPool.getConnection()) {
             PreparedStatement stmt3 = connection3.prepareStatement(statement);
             stmt3.setString(1,email);
             stmt3.setInt(2,id);

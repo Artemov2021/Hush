@@ -345,7 +345,7 @@ public class MainChatController extends MainContactController {
     private void checkForNewAction() throws SQLException {
         int updatedLastContactActionId = LogsDataBase.getLastContactActionId(mainUserId,contactId);
         if (lastContactActionId != updatedLastContactActionId) {
-            ArrayList<Integer> newActionIds = LogsDataBase.getNewActionIds(mainUserId,lastContactActionId);
+            ArrayList<Integer> newActionIds = LogsDataBase.getNewContactActionIds(mainUserId,contactId,lastContactActionId);
             for (int actionId: newActionIds) {
                 Platform.runLater(() -> {
                     try {
@@ -1520,9 +1520,13 @@ public class MainChatController extends MainContactController {
     private void deleteDateLabel(int messageId,String messageTime) throws SQLException {
         Label dateLabel = (Label) chatVBox.lookup("#dateLabel"+getDateLabelDate(messageTime));
 
+        boolean isFirstMessage = chatVBox.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .map(node -> node.getId())
+                .noneMatch(id -> id != null && id.startsWith("#messageHBox"));
         boolean isThereMessageOnSameDate = ChatsDataBase.isThereMessagesOnSameDay(mainUserId,contactId,messageId,messageTime);
 
-        if (!isThereMessageOnSameDate) {
+        if (!isFirstMessage && !isThereMessageOnSameDate) {
             chatVBox.getChildren().remove(dateLabel);
         }
     }

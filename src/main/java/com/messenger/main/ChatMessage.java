@@ -660,18 +660,14 @@ public class ChatMessage extends MainChatController {
 
     // Small Functions
     private void setPotentialDateLabel() throws SQLException, ParseException {
-        boolean isFirstMessage = chatVBox.getChildren().stream()
-                .filter(node -> node instanceof HBox)
-                .map(node -> node.getId())
-                .noneMatch(id -> id != null && id.startsWith("messageHBox"));
+        int firstMessageId = ChatsDataBase.getFirstMessageId(mainUserId,contactId);
+        boolean isFirstMessage = (firstMessageId == id);
         boolean isPreviousMessageOneDay = !isFirstMessage && messagesHaveOneDayDifference(ChatsDataBase.getMessage(mainUserId,contactId,previousMessageId).time,time);
 
-        if (isFirstMessage || isPreviousMessageOneDay) {
-
+        if (isPreviousMessageOneDay) {
             String labelDate = getDateForDateLabel(time);
             setChatDateLabel(labelDate);
-
-            }
+        }
     }
     private void setChatDateLabel(String date) {
         Label chatDateLabel = new Label(date);

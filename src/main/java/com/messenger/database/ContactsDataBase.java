@@ -15,15 +15,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class ContactsDataBase extends MainWindowController {
-    private static final String url = "jdbc:mysql://mysql-hush-timurt005-6121.g.aivencloud.com:28163/hush?useSSL=true&requireSSL=true&verifyServerCertificate=false";
-    private static final String user = "avnadmin";
-    private static final String password = "AVNS_vqwfSDAjXWc9ViFtnRN";
-
     public static int[] getContactsIdList(int mainUserId) throws SQLException {
         List<Integer> contactsIdList = new ArrayList<>();
         String statement = "SELECT contact_id FROM contacts WHERE user_id = ? ORDER BY last_interaction ASC;";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,mainUserId);
             ResultSet result = preparedStatement.executeQuery();
@@ -54,7 +50,7 @@ public class ContactsDataBase extends MainWindowController {
         DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
         String formattedDateTimeNow = now.format(formatter1);
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1, user_id);
             preparedStatement.setInt(2, contact_id);
@@ -66,7 +62,7 @@ public class ContactsDataBase extends MainWindowController {
         List<Integer> contactsIdList = new ArrayList<>();
         String statement = "SELECT * FROM contacts WHERE last_interaction < ? ORDER BY last_interaction ASC;";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setTimestamp(1,getContactLastInteractionTime(mainUserId,lastContactId));
             ResultSet result = preparedStatement.executeQuery();
@@ -81,7 +77,7 @@ public class ContactsDataBase extends MainWindowController {
                 "WHERE (user_id = ? AND contact_id = ?) " +
                 "OR (user_id = ? AND contact_id = ?)";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setString(1,newTime);
             preparedStatement.setInt(2,mainUserId);
@@ -94,7 +90,7 @@ public class ContactsDataBase extends MainWindowController {
     public static void deleteContact(int mainUserId, int contactId) {
         String statement = "DELETE FROM contacts WHERE user_id = ? AND contact_id = ?;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = DataBaseConnectionPool.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(statement)) {
             preparedStatement.setInt(1, mainUserId);
             preparedStatement.setInt(2, contactId);
@@ -115,7 +111,7 @@ public class ContactsDataBase extends MainWindowController {
     private static Timestamp getContactLastInteractionTime(int mainUserId,int lastContactId) throws SQLException {
         String statement = "SELECT last_interaction FROM contacts WHERE user_id = ? AND contact_id = ?";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,mainUserId);
             preparedStatement.setInt(2,lastContactId);

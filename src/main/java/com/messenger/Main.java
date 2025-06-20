@@ -1,6 +1,7 @@
 package com.messenger;
 
 import com.messenger.database.ChatsDataBase;
+import com.messenger.database.DataBaseConnectionPool;
 import com.messenger.main.MainWindowController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -15,7 +16,9 @@ import java.util.prefs.Preferences;
 
 public class Main extends Application {
     public static void main(String[] args) {
-            launch();
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "error");
+
+        launch();
     }
 
     @Override
@@ -54,5 +57,8 @@ public class Main extends Application {
         }
     }
 
-
+    @Override
+    public void stop() {
+        DataBaseConnectionPool.closePool(); // ✅ close the HikariCP pool here
+    }
 }

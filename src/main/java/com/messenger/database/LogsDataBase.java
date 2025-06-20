@@ -10,15 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LogsDataBase {
-    private static final String url = "jdbc:mysql://mysql-hush-timurt005-6121.g.aivencloud.com:28163/hush?useSSL=true&requireSSL=true&verifyServerCertificate=false";
-    private static final String user = "avnadmin";
-    private static final String password = "AVNS_vqwfSDAjXWc9ViFtnRN";
-
     public static void addAction(ActionType changeType, int messageId, int senderId, int receiverId, String message, byte[] picture, int replyMessageId, String messageTime, String messageType) throws SQLException {
         String statement = "INSERT INTO logs (change_type,message_id,sender_id,receiver_id,message,picture,reply_message_id,message_time,message_type) VALUES (?,?,?,?,?,?,?,?,?)";
         InputStream inputStreamPicture = (picture == null) ? (null) : (new ByteArrayInputStream(picture));
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement, Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setString(1,changeType.name().toLowerCase());
             preparedStatement.setInt(2,messageId);
@@ -38,7 +34,7 @@ public class LogsDataBase {
         int lastId = -1;  // default value if no result found
         String statement = "SELECT id FROM logs WHERE receiver_id = ? ORDER BY id DESC LIMIT 1";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1, mainUserId);
             ResultSet result = preparedStatement.executeQuery();
@@ -53,7 +49,7 @@ public class LogsDataBase {
     public static int getLastContactActionId(int mainUserId,int contactId) throws SQLException {
         String statement = "SELECT id FROM logs WHERE sender_id IN (?,?) AND receiver_id IN (?,?) ORDER BY id DESC LIMIT 1";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,mainUserId);
             preparedStatement.setInt(2,contactId);
@@ -70,13 +66,29 @@ public class LogsDataBase {
         ArrayList<Integer> newActionIds = new ArrayList<>();
         String statement = "SELECT id FROM logs WHERE (receiver_id = ?) AND id > ? ORDER BY message_id ASC;";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1, mainUserId);
-            preparedStatement.setInt(2, lastActionId);
+            preparedStatement.setInt(3, lastActionId);
             ResultSet result = preparedStatement.executeQuery();
 
-            ArrayList<ChatMessage> tempMessages = new ArrayList<>();
+            // First load all messages and their IDs
+            while (result.next()) {
+                newActionIds.add(result.getInt("id"));
+            }
+        }
+        return newActionIds;
+    }
+    public static ArrayList<Integer> getNewContactActionIds(int mainUserId,int contactId,int lastActionId) throws SQLException {
+        ArrayList<Integer> newActionIds = new ArrayList<>();
+        String statement = "SELECT id FROM logs WHERE (receiver_id = ? AND sender_id = ?) AND id > ? ORDER BY message_id ASC;";
+
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(statement);
+            preparedStatement.setInt(1, mainUserId);
+            preparedStatement.setInt(2, contactId);
+            preparedStatement.setInt(3, lastActionId);
+            ResultSet result = preparedStatement.executeQuery();
 
             // First load all messages and their IDs
             while (result.next()) {
@@ -89,7 +101,7 @@ public class LogsDataBase {
         ArrayList<Object> action = new ArrayList<>();
         String statement = "SELECT * FROM logs WHERE id = ?";
 
-        try (Connection connection = DriverManager.getConnection(url,user,password)) {
+        try (Connection connection = DataBaseConnectionPool.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(statement);
             preparedStatement.setInt(1,actionId);
             ResultSet result = preparedStatement.executeQuery();
