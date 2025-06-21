@@ -292,11 +292,12 @@ public class MainWindowController {
          Action action = new Action(actionId);
 
          switch (action.change_type) {
-             case ActionType.NEW -> executeNewAction(action);
-             case ActionType.EDITED -> executeEditAction(action);
-             case ActionType.DELETED -> executeDeleteAction(action);
-             default -> throw new RuntimeException();
-         }
+                 case ActionType.NEW -> executeNewAction(action);
+                 case ActionType.EDITED -> executeEditAction(action);
+                 case ActionType.DELETED -> executeDeleteAction(action);
+                 default -> throw new RuntimeException();
+             }
+
     }
     private void executeNewAction(Action action) throws SQLException {
         moveUpContact(action);

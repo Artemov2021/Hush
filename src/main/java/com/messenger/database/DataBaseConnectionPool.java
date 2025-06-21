@@ -7,7 +7,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public class DataBaseConnectionPool {
-    private static final String url = "jdbc:mysql://mysql-hush-timurt005-6121.g.aivencloud.com:28163/hush?useSSL=true&requireSSL=true&verifyServerCertificate=false";
+    private static final String url = "jdbc:mysql://mysql-hush-timurt005-6121.g.aivencloud.com:28163/hush" +
+            "?useSSL=true&requireSSL=true&verifyServerCertificate=false";
     private static final String user = "avnadmin";
     private static final String password = "AVNS_vqwfSDAjXWc9ViFtnRN";
 
@@ -18,11 +19,20 @@ public class DataBaseConnectionPool {
         config.setJdbcUrl(url);
         config.setUsername(user);
         config.setPassword(password);
-        config.setMaximumPoolSize(10);           // Number of concurrent DB connections
-        config.setConnectionTimeout(5000);       // 5 seconds timeout to get a connection
-        config.setIdleTimeout(6000000);           // 10 min idle timeout
-        config.setMaxLifetime(1800000);          // 30 min max lifetime for a connection
-        config.addDataSourceProperty("cachePrepStmts", "true");  // Optional MySQL optimization
+
+        // Connection pool settings
+        config.setMaximumPoolSize(10);             // Max concurrent connections
+        config.setConnectionTimeout(5000);         // 5 sec timeout for getting a connection
+        config.setIdleTimeout(6000000);             // 100 min idle timeout (600000 ms)
+        config.setMaxLifetime(18000000);            // 300 min max lifetime (1800000 ms)
+
+        // Health check and reconnection support
+        config.setConnectionTestQuery("SELECT 1");
+        config.setValidationTimeout(3000);         // 3 sec validation timeout
+        config.setInitializationFailTimeout(-1);   // Don't fail on startup if DB is down
+
+        // MySQL driver performance optimizations
+        config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 

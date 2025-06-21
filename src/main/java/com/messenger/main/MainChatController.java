@@ -127,7 +127,11 @@ public class MainChatController extends MainContactController {
                 .filter(node -> node instanceof Label && titlesToRemove.contains(node.getId())) // Check type and ID
                 .map(node -> (Label) node)
                 .toList(); // Collect into List<Label>
-        mainAnchorPane.getChildren().removeAll(titles);
+
+        for (Label title: titles) {
+            title.setVisible(false);
+        }
+
     }
     private void setChatPosition() {
         chatBackground.setLayoutX(461);

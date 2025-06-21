@@ -328,6 +328,8 @@ public class MainContactController extends MainWindowController {
             ContactsDataBase.deleteContact(mainUserId,contactId);
             mainContactsVBox.getChildren().remove(mainContactAnchorPane);
             mainAnchorPane.getChildren().remove(confirmationOverlay);
+            removePotentialChat();
+            setMainTitleVisible();
         });
 
         Label confirmationCancelButton = new Label();
@@ -355,6 +357,25 @@ public class MainContactController extends MainWindowController {
         translateIn.setFromX(0);
         translateIn.setToX(-35);
         translateIn.play();
+    }
+    private void removePotentialChat() {
+        Pane chatPane = mainAnchorPane.lookupAll("*").stream()
+                .filter(node -> node instanceof Pane && node.getId() != null &&
+                        (node.getId().startsWith("chatAnchorPane")))
+                .findFirst()
+                .map(node -> (Pane) node)
+                .orElse(null);
+        mainAnchorPane.getChildren().remove(chatPane);
+    }
+    private void setMainTitleVisible() {
+        Label mainTitle = (Label) mainAnchorPane.lookup("#mainTitle");
+        Label mainSmallTitle = (Label) mainAnchorPane.lookup("#mainSmallTitle");
+        Label loginTitle = (Label) mainAnchorPane.lookup("#logInTitle");
+        mainTitle.setVisible(true);
+        mainSmallTitle.setVisible(true);
+        if (loginTitle != null) {
+            loginTitle.setVisible(false);
+        }
     }
 
 }
